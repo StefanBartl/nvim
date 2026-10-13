@@ -389,3 +389,70 @@ zu "kostet Guthaben" zu "braucht den Account statt API-Key":
   `lua/documentation/mcp/tools.lua`, `PROTOCOLS_AND_AGENTS.md`.
 - `docmap-desktop`: `README.md` (Abschnitte "Get the app", "What already
   exists, and what this adds").
+
+---
+
+## 11. Ergebnis des Live-Durchlaufs (2026-10-12)
+
+Ausgeführt wurden `ai.nvim` (Abschnitt 2) und `loomAI` (Abschnitt 3) mit einem
+echten Key (Organisation "StWork's Individual Org", 200 USD Guthaben). Nicht
+ausgeführt: `rules.nvim` mit Agent-Bewertung (nur die Engine headless:
+`DEP` 6 pass / 1 manual, `ERR` 1 pass / 34 manual), `documentation.nvim`-MCP,
+`docmap-desktop`. Kosten: einstellig im Cent-Bereich, nicht einzeln erfasst
+(Modelle: `claude-sonnet-5-5` für `ai.nvim`, `claude-haiku-5-5` für `loomAI`).
+
+| Punkt | Ergebnis |
+| --- | --- |
+| `:checkhealth ai` | `claude: available` erst nach dem ersten Insert-Modus (Plugin lädt lazy, `event = "InsertEnter"`) |
+| `:Ai ask` | OK (`PONG`) |
+| `:Ai stream` | Antwort vollständig; Panel zeigte nur die erste Zeile und liess sich nicht schliessen, behoben in `ai.nvim@63950d8` (Größe, `nice_quit`, folgt dem Stream) |
+| Fehlerpfad `ai.nvim` | OK: `[error] claude API error: invalid x-api-key` |
+| Inline-Completion | OK |
+| `auto`-Resolution | OK, in der Console bestätigt; `:Ai info` zeigt bei `auto` nicht den aufgelösten Provider |
+| `loomAI` `/ask` | OK: `PONG`, mit `usage` und `stop_reason` |
+| `loomAI` `/ask/stream` | OK, aber ohne `usage` und `stop_reason` (Task `docmap-desktop/loomai-stream-usage-und-cancel`) |
+| Fehlerpfad `loomAI` | OK: `anthropic: invalid x-api-key` (`/health` meldet nur das Vorhandensein eines Keys) |
+| `ai.nvim` über `loomai`-Provider | OK, sobald `model = { loomai = "claude-haiku-5-5" }` gesetzt ist; ohne Modell leitet loomAI an Ollama weiter ("Could not establish connection") |
+
+### 11.1 `rules.nvim`: Agent-Bewertung der manuellen ERR-Regeln
+
+`rules.nvim` wurde headless gegen `ai.nvim` gefahren (`DEP`: 6 pass / 1 manual,
+`ERR`: 1 pass / 34 manual, Exit 0). Die 15 `critical`-Regeln mit Status
+`manual` (`ERR-01/02/03/10/11/20/22/30/31/33/50/51/53/54/60`) bewertete ein
+Agent (Claude Code, kein API-Guthaben) lesend gegen `lua/ai`: **15 von 15
+bestanden**, keine echten Verstoesse. Nicht bewertet sind die 19
+`recommended`/`nice-to-have`-Regeln und alle anderen Familien. Der Agent hat
+gezielt gegrept und im Kontext gelesen, das ist kein Vollbeweis ueber das ganze
+Repo.
+
+Hinweise ohne Verstoss, als Tasks erfasst:
+
+- `ai.nvim/rewrite-aktion-nvim-buf-set-lines-ohne-pcall-bei-nomodifiabl` (ERR-01, niedrig): `actions.lua:203/215/227`.
+- `ai.nvim/config-issues-gibt-die-interne-liste-ohne-kopie-heraus` (ERR-54, niedrig): `config/init.lua:440`.
+- ERR-22 (Auslegung): `policy`/`bulk` schliessen bei ungueltigen Werten (fail-closed) statt auf den Default zu fallen; begruendet, ob die Regel diese Ausnahme zulaesst, ist offen.
+
+### 11.2 `documentation.nvim`: MCP-Server gegen Claude Code
+
+Registriert mit `claude mcp add documentation --scope local -e
+LIB_NVIM_DIR=E:/repos/lib.nvim -- nvim --headless -l scripts/mcp_server.lua`,
+gestartet aus dem Repo-Verzeichnis (der Server nimmt das Arbeitsverzeichnis als
+Repo-Wurzel; aus einem anderen Verzeichnis bricht er mit `source directory not
+found` bzw. `lib.nvim not found` ab).
+
+- Erster Versuch: `CONNECT_TIMEOUT` nach 30 s. Ursache: `io.stdout:setvbuf("line")`
+  wirkt unter Windows wie Vollpufferung, die Antworten blieben im Puffer bis zum
+  Schliessen von stdin. Behoben in `documentation.nvim@60dda39` (explizites
+  `flush()` nach jeder Antwort). Das Logfile steht unter
+  `%LOCALAPPDATA%\claude-cli-nodejs\Cache\<projekt>\mcp-logs-<server>\`.
+- Danach: Server verbunden, die Tools werden aufgerufen. Ohne ausdruecklichen
+  Hinweis griff Claude bei einer einfachen Frage zuerst zu `Glob` und `Read`
+  statt zu `docmap_modules` (Verbindung war damals noch gestoert, nicht erneut
+  ohne Hinweis geprueft).
+- Knoten-IDs sind Pfade (`lua/documentation/hover.lua`), nicht Modulnamen mit
+  Punkten; ein Prefix wie `documentation.mcp` liefert 0 Treffer.
+- Nicht geprueft: Konsistenz mit `docmap-desktop` (Abschnitt 6), `docmap_rescan`
+  nach einer Dateiaenderung und die Bedienung ohne ausdrueckliche Tool-Nennung.
+
+Stolpersteine: Eine PowerShell-Sitzung behielt den Test-Key
+(`$env:ANTHROPIC_API_KEY`) und gab ihn an Neovim und den Server weiter.
+Ungültige Keys deshalb nur mit `:lua vim.env.ANTHROPIC_API_KEY = "x"` testen.
