@@ -3,7 +3,7 @@
 Alle Features/Fixes aus diesem Chat, die noch nicht live (sichtbarer Browser-Tab, echte
 60fps-Bedienung) getestet wurden — in dieser Sandbox war das teils technisch nicht
 möglich (`requestAnimationFrame` läuft bei ausgeblendetem Browser-Pane nicht/kaum, siehe
-`Backlog/wkd_Completed.md` in wkdbook-wkd). Checkbox-Konvention: `- [ ]` offen, `- [x]`
+`Backlog/wkd_Completed.md` in wkdbook-native/wkd). Checkbox-Konvention: `- [ ]` offen, `- [x]`
 verifiziert. Bei jedem Punkt eine Zeile `Notiz:` zum Eintragen von Beobachtungen.
 
 **Wichtig für den Fight-Tab:** unbedingt auch auf der echten deployten Seite
@@ -327,5 +327,5 @@ Plan und Phasenstatus: `../wkd/handovers/wkd_FightingGame_Implementierungsplan.m
 
 *Erstellt aus dem Chat-Verlauf der wkd-Handover-Fortsetzungs-Session vom 2026-09-29
 (T13/T14/T15/T7 + alle Nachfixe + T7-Folgerunde nach Live-Test-Feedback). Vollständige
-Historie/Details in `$REPOS_DIR/WKDBooks/Development/wkdbook-wkd/Backlog/wkd_Completed.md`
+Historie/Details in `$REPOS_DIR/WKDBooks/Development/wkdbook-native/wkd/Backlog/wkd_Completed.md`
 bzw. `Handover/wkd_Handover.md`.*
