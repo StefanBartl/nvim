@@ -763,7 +763,7 @@ return {
     opts = {
       -- Tabline: group the buffers of one case next to each other and colour
       -- each case (docs/tabline-groups.md in casedesk.nvim). Off by default.
-      tabline_groups = { enabled = true, marker = "both" },
+      tabline_groups = { enabled = true, marker = "underline" },
 
       -- Paths. Normally only `repo_root` needs setting; `root`, `cases_root`,
       -- `workflow_templates_dir`, `sla_doc_path` and every built-in area's `dir`
