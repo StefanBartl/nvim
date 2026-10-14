@@ -176,6 +176,8 @@ return function(H)
     { "! grep -q x file", "! grep -q y file" },
     "in a bash block a leading ! is a negation"
   )
+  plan = assert(kind.build({ "!git status" }, "auto", "text"))
+  eq(plan.commands, { "git status" }, "a block that is no shell block still has the ! marker")
   plan = assert(kind.build({ "!git status", "!not a marker" }, "shell"))
   eq(
     plan.commands,
@@ -237,6 +239,7 @@ return function(H)
     "call system('x')",
     "lua os.execute('x')",
     "py3 import os; os.system('x')",
+    "py3 import subprocess",
   }) do
     ok(kind.ex_is_risky(cmd), cmd .. " reaches the shell (behind a bar, modifier, mark or script)")
   end
