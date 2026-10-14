@@ -33,6 +33,10 @@ Werden von `setup-claude-code.ps1` pro Maschine gesetzt (User-Scope):
   `$REPOS_DIR/repos`). Wert ist pro Maschine unterschiedlich.
 - `$NVIM_CONFIG_DIR` - `vim.fn.stdpath('config')`, also das nvim-Config-Repo. Wird
   vom Setup-Skript automatisch aus dessen eigenem Pfad ermittelt.
+- `$RULES_VAULT` - Wurzel des Repos `rules-vault` (die Regelwerke: `rulesets/lua`
+  mit `regeln/`, `gates/`, `belege/`, `nachschlagen/` und `rulesets/native`). Wird
+  gesetzt, wenn `$REPOS_DIR/rules-vault` existiert; sonst Repo klonen und das
+  Setup-Skript erneut laufen lassen.
 
 ## Doku-Struktur (nicht verwechseln)
 
