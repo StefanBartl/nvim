@@ -1,6 +1,6 @@
 # terminal.nvim — Handover
 
-Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). **Single source of truth** für terminal.nvim: Chat-Übergaben werden hier eingearbeitet, nicht daneben geführt. Stand: **2026-10-15: funktional fertig, alle `cdx`-Tasks erledigt, CI grün (8 Jobs: ubuntu/windows/macos stable, ubuntu Neovim 0.11.0, Modulkarte mit Schichtregeln, luacheck, stylua, echtes tmux), 587 Specs lokal (Windows, 0.12), LuaLS bei 0.** Offen sind nur Dinge, die dich brauchen (Tabelle unten, alles als Task angelegt): das **Tag** (nach dem Live-Check), die Handprüfung (`live-check`, Plan `docs/ROADMAP/Final_Checks/terminal.nvim.md`), Demo-GIF/Logo, `shell-cheatsheet` (`pair`), der `ultracode`-Review und die Entscheidung zum Trailer in `fe35ca8`.
+Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). **Single source of truth** für terminal.nvim: Chat-Übergaben werden hier eingearbeitet, nicht daneben geführt. Stand: **2026-10-15: funktional fertig, alle `cdx`-Tasks erledigt, CI grün (8 Jobs: ubuntu/windows/macos stable, ubuntu Neovim 0.11.0, Modulkarte mit Schichtregeln, luacheck, stylua, echtes tmux), 587 Specs lokal (Windows, 0.12), LuaLS bei 0.** Offen sind nur Dinge, die dich brauchen (Tabelle unten, alles als Task angelegt): das **Tag** (nach dem Live-Check), die Handprüfung (`live-check`, Plan `docs/ROADMAP/Final_Checks/terminal.nvim.md`), Demo-GIF/Logo, `shell-cheatsheet` (`pair`), die Entscheidung zum Trailer in `fe35ca8`.
 
 ## Orte
 
@@ -52,17 +52,17 @@ Abfrage: `nvim --headless -u NONE -l $REPOS_DIR/tasks.nvim/scripts/tasks.lua nex
 | `live-check` | `open`, **bei dir**: Handprüfung in WezTerm (Windows) und tmux (Linux/WSL), Plan in `Final_Checks/terminal.nvim.md` |
 | `ruleset-release-media` | Demo-GIF und Logo (S), **bei dir** (Handarbeit) |
 | `shell-cheatsheet` | Cheatsheet im offenen Terminal (L, `pair`; die Inhalte je Shell sind der größere Teil) |
-| `ultracode-review-offene-commits` | `ultracode`-Review über die Commits mit 🟡/⬜ (Liste im Task), auf Zuruf mit dem Stichwort `ultracode` |
 | `fe35ca8-co-author-trailer` | Entscheidung: `sessions.nvim` `fe35ca8` trägt versehentlich einen `Co-Authored-By`-Trailer; entfernen = Umschreiben + Force-Push auf `main`, oder so lassen |
 
 Andere Areas mit Bezug: `images.nvim/bilder-in-tmux-osc-1337-sequenz-in-die-passthrough-huelle-pa` (Zeichenweg ohne tmux-Hülle, braucht Live-Prüfung), `nvim-config/insert-ctrl-hjkl-moves` (`<C-j>/<C-k>` im Insert-Modus, nur in laufender Sitzung klärbar), `gitsuite.nvim/eigene-git-engine-fallback-tui-float-ueber-terminal-nvim-sta`.
 
-## Review-Stand (Haken-Regel: `ultracode`-Review oder reine Doku)
+## Review-Stand (Haken-Regel: ✅ höheres Reasoning als normal oder reine Doku, ★ `ultracode`-Agenten oder von dir auf `ultracode` gestelltes Reasoning; Fix-Commits werden nicht erneut geprüft)
 
-- Ohne `ultracode`-Review (Code): `terminal.nvim` `ab986b7` (`@types` je Ebene), `e791ab5` (Sessions-Integration); `sessions.nvim` `28038d2` (User-Events), `3f87893` (README, Doku).
-- Gelb (mit hohem Reasoning geprüft, kein `ultracode`): seit 2026-10-15 `sessions.nvim` `fe35ca8`; `terminal.nvim` `b56a7c8`, `81faca7`, `68b4d63`; `ui.nvim` `1bf63db`; `testing.nvim` `1f2ddb0`; `sandbox.nvim` `128ef7f`; `dap.nvim` `fce89a4` (Befunde behoben: `terminal.nvim` `ed4b649`, `ui.nvim` `1cdc5e2`, `dap.nvim` `188d273`); `lib.nvim` `f9bba25`; `terminal.nvim` `bafb80c`, `5ba815e`, `33a1b81`, `623cd88`, `d226a95`, `670a409`. Seit 2026-10-14 (spät): `terminal.nvim` `296bd2c`, `b45f65f`, `96fd516`, `be0f99c`, `23f77e6`, `05564a2` und `lib.nvim` `e411923`.
-- Der letzte volle `ultracode`-Durchgang (56 Agenten) lief über `d204e89`, `6918c14`, `68a7f57`, `32db127`, `9f0c114`, `c3a1f7c`, `0e3f081`; Befunde behoben.
-- Befunde der gelben Prüfung (alle drei behoben): `terminal.nvim` `54ce3b4` (Hinweis nur aus der ersten Zeile, gekürzte Einzelzeile ins Debug-Log, synchroner `publish`/`clear` des tmux-Exporters nennt den Timeout) und `lib.nvim` `a7a0417` (Fall "leeres `$TMUX`" wieder in `terminal_host_osc_spec`). Diese beiden Fix-Commits brauchen laut Stefan keinen Review (eigene Prüfung + Specs genügen).
+- Stand 2026-10-15: **kein Code-Commit ohne Review mehr.** Am 2026-10-15 liefen die letzten drei offenen (`terminal.nvim` `ab986b7`, `e791ab5`; `sessions.nvim` `28038d2`) als ★-Durchgang (Workflow `wf_43b0d4b5-7c1`, 6 Agenten nacheinander): `ab986b7` und `28038d2` ohne Befund, `e791ab5` mit zwei bestätigten Befunden (Bestätigungsabfrage beim Laden zeigte unmaskierten Text des Sidecars und kein Verzeichnis; nicht wiederhergestellte Definitionen gingen beim nächsten Speichern verloren), behoben in `terminal.nvim` `95ea3dc` (CI 8 von 8 grün). Ein dritter Befund (`os.remove` mit Nicht-ASCII-Pfad unter Windows) war nicht reproduzierbar.
+- ✅ (hohes Reasoning, 2026-10-15): `sessions.nvim` `fe35ca8`; `terminal.nvim` `b56a7c8`, `81faca7`, `68b4d63`; `ui.nvim` `1bf63db`; `testing.nvim` `1f2ddb0`; `sandbox.nvim` `128ef7f`; `dap.nvim` `fce89a4`. Ihre Befunde sind behoben: `terminal.nvim` `ed4b649`, `ui.nvim` `1cdc5e2`, `dap.nvim` `188d273`.
+- ✅ (früher): `lib.nvim` `f9bba25`, `e411923`; `terminal.nvim` `bafb80c`, `5ba815e`, `33a1b81`, `623cd88`, `d226a95`, `670a409`, `296bd2c`, `b45f65f`, `96fd516`, `be0f99c`, `23f77e6`, `05564a2`; Fixes `terminal.nvim` `54ce3b4`, `lib.nvim` `a7a0417`.
+- ★: der letzte volle `ultracode`-Durchgang davor (56 Agenten) über `d204e89`, `6918c14`, `68a7f57`, `32db127`, `9f0c114`, `c3a1f7c`, `0e3f081`; Befunde behoben.
+- Bekannte Eigenheit: Der Trailer in `sessions.nvim` `fe35ca8` bleibt vorerst (Task `fe35ca8-co-author-trailer`).
 
 ## API für andere Plugins
 
