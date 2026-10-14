@@ -86,7 +86,7 @@ ersten Analyse) ist mit UI noch nicht gemessen.
   Start" und der Keymap-Reihenfolge (`UIReady` läuft **vor** `VeryLazy`):
   [`docs/NOTES/ARCHITECTURE/startup.md`](../../NOTES/ARCHITECTURE/startup.md).
 - Allgemeine Regeln `PERF-94` bis `PERF-97`:
-  `WKDBooks/Development/wkdbook-Lua/Checklists/regeln/PERFORMANCE.md`.
+  `rules-vault/rulesets/lua/regeln/PERFORMANCE.md`.
 - lazys Checker läuft nur in der Session, in der der wöchentliche Check fällig
   ist (`lua/config/lazy/init.lua`). Dazwischen zeigt `:Lazy` anstehende Updates
   erst nach `C`.

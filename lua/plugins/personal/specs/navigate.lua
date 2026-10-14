@@ -633,7 +633,7 @@ return {
           },
           {
             name = "checklists",
-            dir = repos .. "/WKDBooks/Development/wkdbook-Lua/Checklists",
+            dir = repos .. "/rules-vault/rulesets/lua",
             keys = { files = "<leader>chf", grep = "<leader>chg" },
           },
           {

@@ -15,7 +15,7 @@ Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). **Single source of 
 | Installations-Spec | `nvim/lua/plugins/personal/specs/project.lua` (Eintrag `StefanBartl/terminal.nvim`, alle Optionen auskommentiert, deutsch kommentiert) |
 | Gegenstücke | `$REPOS_DIR/Configs/terminals/{wezterm,tmux}` (`nvim_status.lua`, Right-Status, Tab-Titel, `tmux.conf` mit `@terminal_status_segment`, Prüfskripte; erledigt) |
 | Live-Check-Plan | `$NVIM_CONFIG_DIR/docs/ROADMAP/Final_Checks/terminal.nvim.md` (Abschnitte 0 bis M; Task `live-check`) |
-| Regelwerk | `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/gates/NEW_PROJECT.md` (+ `regeln/PRINCIPLES.md`, `LUA_NVIM.md`, `PERFORMANCE.md`) |
+| Regelwerk | `$RULES_VAULT/rulesets/lua/gates/NEW_PROJECT.md` (+ `regeln/PRINCIPLES.md`, `LUA_NVIM.md`, `PERFORMANCE.md`) |
 
 ## Was es kann (gebaut)
 

@@ -191,7 +191,7 @@ weiterverarbeiten kann.
 
 Bereits verdrahtet in `lua/plugins/personal/init.lua:781` mit den drei
 Gates `new_project`/`release`/`review`, `rulesets` zeigt auf
-`$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists`. Keine
+`$RULES_VAULT/rulesets/lua`. Keine
 Claude-spezifische Konfiguration nötig.
 
 ### 4.2 Testreihenfolge

@@ -9,8 +9,8 @@
   zusätzlich per globalem Hook `check-hook.js` erzwungen).
 - Neue Features nach Möglichkeit im plugin-eigenen `/TESTS/`-Ordner testen.
 - Lua-Tools: `$REPOS_DIR/tasks-vault/TOOLS/lua-plugin-tools.md`
-- Performance: `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/PERFORMANCE.md`
-- Lua-Projekte für Neovim: `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/LUA_NVIM.md`
+- Performance: `$RULES_VAULT/rulesets/lua/regeln/PERFORMANCE.md`
+- Lua-Projekte für Neovim: `$RULES_VAULT/rulesets/lua/regeln/LUA_NVIM.md`
 
 ## Bindings
 

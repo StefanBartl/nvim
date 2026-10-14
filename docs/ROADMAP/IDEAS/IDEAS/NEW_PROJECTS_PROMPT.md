@@ -6,7 +6,7 @@
 | Öffentliches Repo | `github.com/StefanBartl/ai.nvim` → `$REPOS_DIR/ai.nvim` |
 | Privat (Roadmap/Notes, nicht fürs öffentliche Repo) | `$REPOS_DIR/tasks-vault\ai.nvim\{ROADMAP,NOTES}` |
 | Diese Handover-Datei | `nvim/docs/ROADMAP/handovers/terminal.nvim.md` anlegen alss aymlionk aus den wkdbook |
-| Regelwerk für neue Projekte | `$REPOS_DIR/WKDBooks\Development\wkdbook-Lua\Checklists\gates\NEW_PROJECT.md` (+ `PRINCIPLES.md`, `LUA_NVIM.md`) |
+| Regelwerk für neue Projekte | `$RULES_VAULT/rulesets/lua\gates\NEW_PROJECT.md` (+ `PRINCIPLES.md`, `LUA_NVIM.md`) |
 
 wir implementieren jetzt terminal.nvim - dazu musst du ein öffentlich gh repo stefanbartl/terminal.nvim anlegen und in $REPOS_DIR/ anlegen
 
@@ -17,7 +17,7 @@ zu begin auch ein `$REPOS_DIR/tasks-vault/terminal.nvim` anelgen - doirt komten 
 
 Außérdem von anfang an eine handover file führen, diese ausnahsmweiß0e nach $NVIM_CONFIG_DIR/docs\ROADMAP\handovers schreiebn
 
-in `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/` gibt es eine ruleslist für neue projekte - lese dir bitte eram anfan an auch durch, damit wir sie einhalten. wir klnnen auch immer weider mit rules.nvim arbeiten, aein weteres meiner nivm polugin sdie die ruleslisten ach integfriert andausführen kann
+in `$RULES_VAULT/rulesets/lua/` gibt es eine ruleslist für neue projekte - lese dir bitte eram anfan an auch durch, damit wir sie einhalten. wir klnnen auch immer weider mit rules.nvim arbeiten, aein weteres meiner nivm polugin sdie die ruleslisten ach integfriert andausführen kann
 
 Außerdem - wenn möglich - halte bitte auch die performance, security usw... rulesets darin ein. Das sind 400 regelen und mir ist klar das das nicht alles glech einhaltbalr ist, wir egehen dan wenns fertig ist mit rules.nvim sowieso drüber, aber um dann nicht alles umschreiebn zu müssen, wäresn vor allemdie architketur, struktur, usw... fragen wichtiig.
 
