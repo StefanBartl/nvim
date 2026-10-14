@@ -12,13 +12,31 @@
     - [interessant](#interessant)
   - [Tasks](#tasks)
     - [Nice-to-Have wenn Limit über ist](#nice-to-have-wenn-limit-ber-ist)
+  - [Übergabe: terminal.nvim, Stand 2026-10-14 abends](#bergabe-terminalnvim-stand-2026-10-14-abends)
     - [Live-Testing (braucht laufende, interaktive nvim-Session)](#live-testing-braucht-laufende-interaktive-nvim-session)
     - [Ganz zum Schluss erst erledigen - wenn alles fertig ist](#ganz-zum-schluss-erst-erledigen-wenn-alles-fertig-ist)
       - [Git & Repo-Hygiene / Docs, Comments,...](#git-repo-hygiene-docs-comments)
 
 ---
 
-![tabline farbe chip]($NVIM_CONFIG_DIR/docs/ROADMAP/assets/00_ROADMAP-1791898201.png)
+- ein usrcmd, mit dem ich sofort das backlog eines meier plugins/nativen apps augfamchen kann in nvim und eines, das genau gleich ist aber rin *Clipboard suffix als usrcmd hat, also zb `:Backlog {pluginname} [clipboard/paste/find/grep] ` hat, um den pfad des backlogs ins clipboard zu kopieren, paste um es am aktuellebn cursor einzufügen, find und grep um entsprechende poickers.nvim picker aszuführen.
+
+pickers.nvim `:Pickers []` neue optionen für den tasks-vault, den rules-vault, WKDBook-Tricentis, WKDBooks/Development/wkdbok-native als bative-apps und wkdbook-myplugins als myplugins
+
+- Doppelklick auf markdown http link - auch wenn im hover die seite korrekt fetched und angezeigt wurde - kann manchmal nicht geöäffnet werden. also es werden nach Doppleklick/`ma` oder usrcmd zwar auch die korrekt notify ausgegeben, dass der link geöffnet wird, amber im browser öffnet isch kein tab. Das ist nicht immer so, ich würde sagen es passiert so 3-4 mal im monat. es sit aber ärgerlich, iuch muss dann nvimn neu starten, damit es wieder funkltiert. Daher denke ich auch, dass esvl irgendeine race condition ist möglicherwei´e?
+
+
+Nicht behoben, als Tasks erfasst:
+
+insights (ps_quote_spec) und filetree (powershell_quote_spec): Beide Specs hängen auf dem Windows-Runner, auch mit 180 s Limit. Das ist ein Hänger, kein langsamer Lauf.
+Lokal laufen sie in 9 bis 14 s grün.
+Meine Vermutung ist ein offenes Anführungszeichen durch die Zeichenkodierung (Pfade mit ’), sodass PowerShell auf stdin wartet. Geprüft habe ich das nicht.
+Die Timeout-Erhöhung habe ich wieder zurückgenommen (d8ed12a, 47eecec).
+Tasks: insights.nvim/ps-quote-spec-haengt-auf-dem-windows-runner und filetree.nvim/powershell-quote-spec-haengt-auf-dem-windows-runner. Diese beiden Repos bleiben auf Windows rot.
+casedesk und my.nvim: Ihre CI startet wegen der GitHub-Abrechnung nicht. Das kann nur Sie lösen.
+
+---
+
 
 :Cdx prompt soll alle files in dem ordner auta5isch als ooraramter akeotieren und auh autocompoeltion haben
 
@@ -48,6 +66,8 @@
 - `:Git dashboard` wenn es staret, macht es eione initale action, ich dachte fetch aller repos, aber wenn dahbaord offen ist, dann muss ihc oftmals manuell fetchen oder gf ausführe, um alles zu fetchen. also warum macht der ddas nicht beim start des dashbpards zuverlässig?
 
 -  `:Clipboard remove` - den `remove` parameter auf `usrcmds` ändern -> Hier kommt alles hinein, das als usrcmds gedacht ist
+
+- ui.nvim tabline feraatures wie mit maus verschiebbare tabs in den docs prominent nennen.
 
 ---
 
@@ -139,7 +159,58 @@ $REPOS_DIR/tasks-vault/ALL/Zentral-App-Report-Inventur-2026-10-08.md
    -> Task (parked): `ALL/ultracode-pass-all-plugins`
 2. alle bindings und features durchegehen und einen wunderbaren workflow doc machen, in der ich auch "fragen" nacheghen kann, also "ich wil xyy" -> dann hiehrin
    -> Task (parked): `ALL/workflow-guide-doc`
-3. $NVIM_CONFIG_DIR/docs\ROADMAP\LONG_RUN
+3. $NVIM_CONFIG_DIR/docs\ROADMAP\LONG_RUNDer Handover ist aktualisiert und gepusht (`b6cb461b`, Datei `nvim/docs/ROADMAP/handovers/terminal.nvim.md`). Das ist die Zusammenfassung zum Einfügen im nächsten Chat:
+
+---
+
+## Übergabe: terminal.nvim, Stand 2026-10-14 abends
+
+**Quelle der Wahrheit:** `nvim/docs/ROADMAP/handovers/terminal.nvim.md`. Dort stehen Orte, Fähigkeiten, offene Tasks, Review-Stand und Log. Tasks liegen in `E:\repos\tasks-vault\terminal.nvim\ROADMAP\tasks\`.
+
+**Arbeitsregeln** (globale `CLAUDE.md`):
+- Antworten auf Deutsch, Code und Kommentare auf Englisch.
+- Nie mehr als 1 Agent gleichzeitig.
+- Direkt auf `main` committen und pushen, keine PRs, keine Co-Autorenschaft.
+- Am Ende jeder Ausgabe die Commit-Liste mit Haken. ✅ gilt für `ultracode`-Review oder reine Dokumentation, 🟡 für ein Review mit hohem Reasoning.
+- Offene Arbeit gehört als Task in den Vault, nicht in Prosa.
+- Das Tag setze ich nicht ohne deine Zustimmung.
+
+**Gebaut:**
+- Das Plugin ist funktional fertig: native, WezTerm- und tmux-Backend, Statusexport, Navigation, Pin/Adopt, Health.
+- In dieser Sitzung neu: `terminal.teardown()`, nicht blockierender tmux-Statuspublish und adopt-Refresh, Zeitgrenzen als Config-Schlüssel, `core/errors.lua`, `core/env.lua`, `status/nested.lua`, LuaLS-Skript, Modulkarte mit Schichtregeln.
+- Nach `lib.nvim` gehoben: `terminal.host`, `terminal.osc`, `cross.shell_quote`.
+- CI: 8 Jobs grün (ubuntu/windows/macos stable, ubuntu Neovim 0.11.0, Modulkarte, luacheck, stylua, echtes tmux). Lokal 543 Specs, LuaLS bei 0.
+
+**Offene Tasks** (`terminal.nvim/<id>`):
+- `release-docs`: alles fertig außer dem **Tag**. Vorschlag `v0.1.0`, das README sagt „Beta“.
+- `live-check` (bei dir): Handprüfung in WezTerm unter Windows und tmux unter Linux/WSL. Ich kann die Schritte liefern.
+- `ruleset-nested-nvim-failopen` (bei dir, Entscheidung): tmux-Exporter bei verschachteltem Neovim fail-open oder fail-closed (heute fail-closed).
+- `repo-scaffold`: steht noch auf `doing`; der Rest ist durch die `ruleset-*`-Arbeit erledigt, prüfen und schließen.
+- Bereit für `cdx`: `ruleset-types-per-level`, `ruleset-release-media`, `wezterm-status-veraltete-uservars-in-wrapper-panes-wsl-tmux`, `shell-cheatsheet`, `integrate-pickers-ui`, `integrate-sessions`, `integrate-run-hooks`.
+- Andere Areas:
+  - `images.nvim/bilder-in-tmux-osc-1337-sequenz-in-die-passthrough-huelle-pa`
+  - `nvim-config/insert-ctrl-hjkl-moves`
+  - `gitsuite.nvim/eigene-git-engine-fallback-tui-float-ueber-terminal-nvim-sta`
+
+**Review-Stand** (Details im Handover):
+- ⬜ **Ohne** `ultracode`-Review (Code): `terminal.nvim` `296bd2c`, `b45f65f`, `96fd516`, `be0f99c`, `23f77e6`, `05564a2`; `lib.nvim` `e411923`.
+- 🟡 Mit hohem Reasoning geprüft: `lib.nvim` `f9bba25`; `terminal.nvim` `bafb80c`, `5ba815e`, `33a1b81`, `623cd88`, `d226a95`, `670a409`.
+- ✅ Alle Dokumentations-Commits und die im ersten `ultracode`-Durchgang reviewten.
+- Vorschlag für den Einstieg im nächsten Chat: ein `ultracode`-Review über die ⬜-Commits, bevor weitere Features dazukommen.
+
+**Fallen**, die ich in dieser Sitzung getroffen habe:
+- Live-Skripte (`TESTS/live/*`, gegen echtes tmux in WSL) vor dem Push laufen lassen, wenn eine Funktion verschoben wird.
+- Kein `git stash`: Ein Hintergrundlauf hat dadurch kurz Änderungen weggenommen.
+- Python schreibt unter Windows CRLF und verdoppelt Backslashes im Tool-Aufruf. Bei Escape-Sequenzen in Lua `chr(92)` benutzen und `stylua` danach laufen lassen.
+- Der Checkout `E:\repos\lib.nvim` gehört einer anderen Sitzung (Contract-Arbeit). Dort nur über einen eigenen Worktree arbeiten und per `git push origin HEAD:main` pushen.
+- Unter Windows mit Neovim 0.11.0 stürzt der Editor in den Teardown-Specs ab (0xC0000005, in `docs/requirements.md` dokumentiert).
+- Im Scratchpad liegen Neovim-0.11.0-Builds (Windows und Linux), die du mir erlaubt hattest; es ist nichts installiert.
+
+---
+
+**Commits dieser Sitzung** (Auszug, Repos):
+- 🟡/✅ siehe Review-Stand.
+- ✅ `b6cb461b` (`nvim`): Handover, `0eaf466` (`tasks-vault`): `ruleset-startup-measure-ui` erledigt (beides Dokumentation).
    -> den Ordner gibt es im Baum nicht (geprüft 2026-10-04); gemeint? (siehe Task `nvim-config/docs-roadmap-pointers-catch-up`)
 4. Repos abchecken, ob
   6. Design-Patterns gezielt eingestzt werden können
