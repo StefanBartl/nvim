@@ -18,6 +18,7 @@ Konvention: `- [ ]` offen, `- [x]` verifiziert. Unter jedem Punkt eine Zeile `No
   - [I — Fehlerfälle](#i--fehlerfälle)
   - [J — Last und Gefühl](#j--last-und-gefühl)
   - [K — Familien-Integrationen](#k--familien-integrationen)
+  - [K2 — Cheatsheet](#k2--cheatsheet)
   - [L — Skripte (`TESTS/live/*`)](#l--skripte-testslive)
   - [M — Abschluss](#m--abschluss)
 
@@ -217,6 +218,33 @@ Jeder Fall meldet **einmal** und stört nicht.
 - [ ] `dap.nvim` mit `terminal = { enable = true }` (`dap.nvim@fce89a4`): eine Debug-Sitzung mit Programmstart im Terminal (z. B. Python/Node-Launch) öffnet ein Terminal `dap:<Konfigurationsname>` als Split, die Programmausgabe steht dort, nach dem Ende bleibt es mit Exit-Code offen; ein neuer Lauf derselben Konfiguration ersetzt es; `:Terminal list` zeigt es; ohne `enable` unverändert nvim-dap-Puffer.
   Notiz:
 - [ ] `require("terminal").run({ "lazygit" }, { direct = true, ... })` aus einem anderen Plugin (gitsuite-Fallback): TUI läuft, Fenster schließt/bleibt nach `close`-Einstellung.
+  Notiz:
+
+---
+
+## K2 — Cheatsheet
+
+`terminal.nvim@f1341eb`, Doku `docs/cheatsheet.md`. Headless und mit Specs geprüft, nie als Bild gesehen.
+
+- [ ] `:Terminal cheat` aus einem offenen Terminal: das Float sitzt am rechten Rand, das Terminal links bleibt lesbar (bei dem 80-%-Float-Terminal überdeckt es dessen rechten Rand: stört das?), Titel `bash · 1/9 About`, Markdown sieht gut aus (Tabellen, Backticks ausgeblendet).
+  Notiz:
+- [ ] `]]` / `[[` / `<Tab>` / `<S-Tab>` blättern, nach dem letzten kommt der erste.
+  Notiz:
+- [ ] `/` fragt nach einem Suchwort, springt in den passenden Abschnitt (auch ein anderer als der aktuelle), markiert den Treffer; `n` / `N` wandern über alle Treffer.
+  Notiz:
+- [ ] `g?` zeigt die `common`-Seite, nochmal `g?` zurück; `s` wählt eine andere Shell (`powershell`).
+  Notiz:
+- [ ] Windows: in einem PowerShell-Terminal (Shell `pwsh`) erscheint die PowerShell-Seite von selbst; in Git Bash oder WSL die bash-Seite; in einem tmux-/WezTerm-Pane `common`. Stimmen die Inhalte (Befehle ausprobieren: `Where-Object`, `Select-String`, `2>&1`, `<(cmd)`)?
+  Notiz:
+- [ ] `<CR>` auf einer Tabellenzeile tippt den Befehl (ohne Enter) ins Terminal und schließt das Float, du landest im Terminal-Modus; auf einer Kopfzeile oder Taste (`<C-r>`) passiert nichts außer einer Meldung.
+  Notiz:
+- [ ] `q` / `<Esc>` schließen; aus dem Terminal-Modus geöffnet kommst du im Terminal-Modus zurück.
+  Notiz:
+- [ ] Taste: `keymaps = { cheatsheet = "<A-?>" }` öffnet es im Terminal- und im Normal-Modus.
+  Notiz:
+- [ ] Eigene Sheets: `cheatsheet.dir` mit einer `bash.md` ersetzt die eingebaute Seite; eine leere Datei fällt auf die eingebaute zurück; `cheatsheet.shells = { fish = "..." }` fügt eine Shell hinzu und `:Terminal cheat <Tab>` kennt sie.
+  Notiz:
+- [ ] Inhalt: fehlt dir ein Bereich oder ein Befehl, den du ständig brauchst? (Wunschliste hier eintragen, daraus wird eine Task.)
   Notiz:
 
 ---

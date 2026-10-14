@@ -1,6 +1,6 @@
 # terminal.nvim — Handover
 
-Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). **Single source of truth** für terminal.nvim: Chat-Übergaben werden hier eingearbeitet, nicht daneben geführt. Stand: **2026-10-15: funktional fertig, alle `cdx`-Tasks erledigt, CI grün (8 Jobs: ubuntu/windows/macos stable, ubuntu Neovim 0.11.0, Modulkarte mit Schichtregeln, luacheck, stylua, echtes tmux), 587 Specs lokal (Windows, 0.12), LuaLS bei 0.** Offen sind nur Dinge, die dich brauchen (Tabelle unten, alles als Task angelegt): das **Tag** (nach dem Live-Check), die Handprüfung (`live-check`, Plan `docs/ROADMAP/Final_Checks/terminal.nvim.md`), Demo-GIF/Logo, `shell-cheatsheet` (`pair`), die Entscheidung zum Trailer in `fe35ca8`.
+Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). **Single source of truth** für terminal.nvim: Chat-Übergaben werden hier eingearbeitet, nicht daneben geführt. Stand: **2026-10-15: funktional fertig, alle `cdx`-Tasks erledigt, CI grün (8 Jobs: ubuntu/windows/macos stable, ubuntu Neovim 0.11.0, Modulkarte mit Schichtregeln, luacheck, stylua, echtes tmux), 643 Specs lokal (Windows, 0.12), LuaLS bei 0.** Offen sind nur Dinge, die dich brauchen (Tabelle unten, alles als Task angelegt): das **Tag** (nach dem Live-Check), die Handprüfung (`live-check`, Plan `docs/ROADMAP/Final_Checks/terminal.nvim.md`), Demo-GIF/Logo, die Entscheidung zum Trailer in `fe35ca8`.
 
 ## Orte
 
@@ -23,11 +23,12 @@ Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). **Single source of 
 - `:Terminal` (Composer), Keymaps als benannte Aktionen (`<A-h>` toggle, `<Esc>/<C-c>`, `<C-hjkl>`, `<A-l>`), Autocmds (Fensteroptionen, Kitty-Padding, Auto-Insert), `:checkhealth terminal`.
 - Backends `native`, `wezterm`, `tmux`; Statusexport (WezTerm-UserVars, tmux-`@`-Optionen), Navigation über Pane-Ränder, Pin/Adopt, `terminal.teardown()`, `:checkhealth terminal`.
 - Sessions: mit sessions.nvim werden Terminal-Definitionen (Name, Layout, cwd, `direct`-Befehl) neben der Session gespeichert und versteckt wieder geöffnet (`lua/terminal/sessions.lua`, `docs/sessions.md`).
-- 587 Specs auf `testing.nvim` (Windows lokal + CI ubuntu/windows/macos grün, Neovim 0.11.0 auf ubuntu), `TESTS/live/*` gegen echtes tmux/WezTerm, `TESTS/live/smoke.lua` für den echten UI-Pfad.
+- 643 Specs auf `testing.nvim` (Windows lokal + CI ubuntu/windows/macos grün, Neovim 0.11.0 auf ubuntu), `TESTS/live/*` gegen echtes tmux/WezTerm, `TESTS/live/smoke.lua` für den echten UI-Pfad.
 - Picker (`:Terminal list`, `terminal.pick()`): Kit von `lib.nvim` mit Vorschau und Aktionen öffnen/schließen (`<C-x>`)/Zeile senden (`<C-s>`), Fallback `vim.ui.select`. `terminal.summary()` (`{ count, visible, current }`) für Statuslines; `ui.nvim` rendert es als Modul `terminal_count`.
 - Events (`User`): `TerminalCommandPost` (ausgeführte Zeile oder `direct`-Job gestartet), `TerminalExitPost` (Exit-Code eines `direct`-Jobs); `docs/BINDINGS.md`.
 - Sessions folgen auch Rename/Delete (`SessionsRenamePost` / `SessionsDeletePost` aus `sessions.nvim`).
 - Familien-Integrationen: `:Testing terminal` (testing.nvim), `exec_target = "terminal"` (sandbox.nvim), Option `terminal` (dap.nvim, `runInTerminal` als Terminal `dap:<Konfiguration>`); Bestandsaufnahme `NOTES/run-hooks-bestandsaufnahme.md`.
+- Cheatsheet (`:Terminal cheat`, `terminal.cheatsheet()`, `keymaps.cheatsheet`): ein Float am rechten Rand zeigt je Shell einen Abschnitt nach dem anderen (`]]`/`[[`, `/` über alle Abschnitte, `g?` common, `s` Shell wählen, `<CR>` tippt den Befehl einer Tabellenzeile ins Terminal); Sheets `docs/cheatsheets/{common,bash,powershell}.md`, eigene über `cheatsheet.{dir,shells,shell}`; Doku `docs/cheatsheet.md`. zsh nutzt die bash-Seite, fish/cmd die common-Seite, bis es eigene Dateien gibt.
 - Nach `lib.nvim` gehoben: `terminal.host`, `terminal.osc`, `cross.shell_quote`.
 
 ## Entscheidungen
@@ -51,7 +52,6 @@ Abfrage: `nvim --headless -u NONE -l $REPOS_DIR/tasks.nvim/scripts/tasks.lua nex
 | `release-docs` | `doing`: alles fertig außer **Tag/Release** (nach außen sichtbar, braucht Zustimmung; Vorschlag `v0.1.0`, README sagt "Beta"); setzen **nach** dem Live-Check |
 | `live-check` | `open`, **bei dir**: Handprüfung in WezTerm (Windows) und tmux (Linux/WSL), Plan in `Final_Checks/terminal.nvim.md` |
 | `ruleset-release-media` | Demo-GIF und Logo (S), **bei dir** (Handarbeit) |
-| `shell-cheatsheet` | Cheatsheet im offenen Terminal (L, `pair`; die Inhalte je Shell sind der größere Teil) |
 | `fe35ca8-co-author-trailer` | Entscheidung: `sessions.nvim` `fe35ca8` trägt versehentlich einen `Co-Authored-By`-Trailer; entfernen = Umschreiben + Force-Push auf `main`, oder so lassen |
 
 Andere Areas mit Bezug: `images.nvim/bilder-in-tmux-osc-1337-sequenz-in-die-passthrough-huelle-pa` (Zeichenweg ohne tmux-Hülle, braucht Live-Prüfung), `nvim-config/insert-ctrl-hjkl-moves` (`<C-j>/<C-k>` im Insert-Modus, nur in laufender Sitzung klärbar), `gitsuite.nvim/eigene-git-engine-fallback-tui-float-ueber-terminal-nvim-sta`.
@@ -105,5 +105,6 @@ Andere Areas mit Bezug: `images.nvim/bilder-in-tmux-osc-1337-sequenz-in-die-pass
 - 2026-10-15 (Rest): `terminal.nvim` `68b4d63` feuert `User`-Events `TerminalCommandPost` / `TerminalExitPost` (docs/BINDINGS.md). Entscheidungen: Stale-UserVars hinter Wrappern bleiben nur dokumentiert; `cmdlog.nvim` bleibt reiner Recall (beide Tasks geschlossen). 586 Specs.
 - 2026-10-15 (dap): `dap-run-in-terminal` gewünscht und umgesetzt: `dap.nvim` `fce89a4`, Option `terminal` (Default aus), `reverse_request_handlers.runInTerminal` startet den Debuggee als Terminal `dap:<Konfiguration>`. Live-Check-Plan: `docs/ROADMAP/Final_Checks/terminal.nvim.md`.
 - 2026-10-15 (Review, hohes Reasoning, 8 Commits): 5 Befunde behoben: `terminal.nvim` `ed4b649` (Rename ließ ein verwaistes Sidecar des neuen Namens stehen, wenn das alte keins hatte; der Picker fiel nicht auf `vim.ui.select` zurück, wenn das Kit beim Öffnen wirft; die Vorschau las den ganzen Puffer), `ui.nvim` `1cdc5e2` (`terminal_count` maskierte `%` im Terminal-Namen nicht), `dap.nvim` (`jobpid` wirft bei schon beendetem Job). Rest ohne Befund (Events, `:Testing terminal`, `exec_target`, `sessions.nvim`-Events).
+- 2026-10-15 (Cheatsheet): `shell-cheatsheet` erledigt, `terminal.nvim` `f1341eb` (CI 8 von 8 grün, 643 Specs). Entscheidungen wie im Entwurf (`NOTES/shell-cheatsheet-entwurf.md`): Float am rechten Rand, `<CR>` tippt die Zeile ohne Enter, erster Schnitt PowerShell + bash + common, Taste standardmäßig aus, Suche über alle Abschnitte. Live-Prüfung im Plan, Abschnitt K2. Der Commit hat noch keinen Review.
 - Lehren: die CI fand `nested.lua` erst nachträglich, weil das Live-Skript nach einer Verschiebung nicht lief; kein `git stash` (geteilter Stash, ein Hintergrundlauf hat Änderungen kurz weggenommen; auch `git pull --autostash` stasht); Python unter Windows schreibt CRLF, `stylua --check` meldet das lokal, Git normalisiert beim Commit (die Fallen oben).
 - 2026-10-14 (spät, Review): die offenen Code-Commits mit hohem Reasoning geprüft (🟡), drei kleine Befunde behoben (`terminal.nvim` `54ce3b4`, `lib.nvim` `a7a0417`); die Fix-Commits brauchen laut Stefan keinen Review. Die Chat-Übergabe `Temp/terminal.md` ist hier eingearbeitet und als Notiz im Vault abgelegt (`terminal.nvim/Backlog/TASKS/2026-10-14_uebergabe-abend.md`).
