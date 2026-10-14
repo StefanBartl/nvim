@@ -1,1 +1,0 @@
-E:/repos/tasks-vault/markdown.nvim/handovers/markdown-nvim-review-stand-2026-10-14_HANDOVER.md
