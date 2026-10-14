@@ -53,7 +53,7 @@ Andere Areas mit Bezug: `images.nvim/bilder-in-tmux-osc-1337-sequenz-in-die-pass
 - Ohne `ultracode`-Review (Code): keine mehr offen.
 - Gelb (mit hohem Reasoning geprüft, kein `ultracode`): `lib.nvim` `f9bba25`; `terminal.nvim` `bafb80c`, `5ba815e`, `33a1b81`, `623cd88`, `d226a95`, `670a409`. Seit 2026-10-14 (spät): `terminal.nvim` `296bd2c`, `b45f65f`, `96fd516`, `be0f99c`, `23f77e6`, `05564a2` und `lib.nvim` `e411923`.
 - Der letzte volle `ultracode`-Durchgang (56 Agenten) lief über `d204e89`, `6918c14`, `68a7f57`, `32db127`, `9f0c114`, `c3a1f7c`, `0e3f081`; Befunde behoben.
-- Befunde der gelben Prüfung (alle drei behoben): `terminal.nvim` `54ce3b4` (Hinweis nur aus der ersten Zeile, gekürzte Einzelzeile ins Debug-Log, synchroner `publish`/`clear` des tmux-Exporters nennt den Timeout) und `lib.nvim` `a7a0417` (Fall "leeres `$TMUX`" wieder in `terminal_host_osc_spec`). Diese beiden Fix-Commits haben noch keinen Review (nur eigene Prüfung + Specs); Vorschlag: ein `ultracode`-Review bei Gelegenheit, dann ✅ für alle gelben.
+- Befunde der gelben Prüfung (alle drei behoben): `terminal.nvim` `54ce3b4` (Hinweis nur aus der ersten Zeile, gekürzte Einzelzeile ins Debug-Log, synchroner `publish`/`clear` des tmux-Exporters nennt den Timeout) und `lib.nvim` `a7a0417` (Fall "leeres `$TMUX`" wieder in `terminal_host_osc_spec`). Diese beiden Fix-Commits brauchen laut Stefan keinen Review (eigene Prüfung + Specs genügen).
 
 ## API für andere Plugins
 
