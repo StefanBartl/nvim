@@ -121,7 +121,8 @@ local function ex_commands(lines)
   for _, raw in ipairs(lines) do
     local line = vim.trim(raw)
     if line:sub(1, 1) == "\\" and #out > 0 then
-      out[#out] = out[#out] .. vim.trim(line:sub(2))
+      -- Vim keeps what follows the backslash as written (`\ wrap` adds " wrap"), only the indent before it goes
+      out[#out] = out[#out] .. line:sub(2)
     elseif line ~= "" and line:sub(1, 1) ~= '"' then
       out[#out + 1] = unmark(line, "ex")
     end
@@ -132,11 +133,23 @@ end
 ---Shell command lines of `lines`: one per entry. Blank lines and `#` comments are dropped; a line that ends
 ---in a space and a backslash continues on the next one. The backslash needs the space in front of it: on
 ---Windows a path such as `dir C:\` also ends in one.
+---
+---A leading `!` is the marker of `` `!git status` ``, so it is stripped from the first command only, and only
+---when `strip_bang` says the text is no code block: in a bash block `! grep -q x file` is a negation.
 ---@param lines string[]
+---@param strip_bang boolean
 ---@return string[]
-local function shell_commands(lines)
+local function shell_commands(lines, strip_bang)
   local out = {}
   local pending
+  local function add(line)
+    if #out > 0 or not strip_bang then
+      -- only the "$ " prompt is a marker here
+      out[#out + 1] = (line:gsub("^%$%s+", ""))
+    else
+      out[#out + 1] = unmark(line, "shell")
+    end
+  end
   for _, raw in ipairs(lines) do
     local line = vim.trim(raw)
     if pending then
@@ -146,31 +159,215 @@ local function shell_commands(lines)
     if line:match("%s\\$") then
       pending = vim.trim(line:sub(1, -2))
     elseif line ~= "" and line:sub(1, 1) ~= "#" then
-      out[#out + 1] = unmark(line, "shell")
+      add(line)
     end
   end
   if pending and pending ~= "" then
-    out[#out + 1] = unmark(pending, "shell")
+    add(pending)
   end
   return out
 end
 
----Whether one Ex command hands something to the shell: a `!` command or filter (`!ls`, `%!sort`, `r !ls`),
----or `:terminal`.
----@param cmd string  without the leading ":"
+---Whether `name` is `full` or an abbreviation of it that Vim accepts (at least `min` letters).
+---@param name string
+---@param full string
+---@param min integer
 ---@return boolean
-function M.ex_is_risky(cmd)
-  -- drop the range ("1,5", "%", "'<,'>", ".+2") in front of the command name
-  local rest = cmd:gsub("^[%d%.%$%%,;'<>%+%-%s]+", "")
+local function abbrev(name, full, min)
+  return #name >= min and #name <= #full and full:sub(1, #name) == name
+end
+
+---Command modifiers that run the command after them (`:silent !ls`, `:vertical terminal`), as
+---`{ full name, shortest abbreviation }`.
+---@type { [1]: string, [2]: integer }[]
+local MODIFIERS = {
+  { "aboveleft", 3 },
+  { "belowright", 3 },
+  { "botright", 2 },
+  { "browse", 3 },
+  { "confirm", 4 },
+  { "hide", 3 },
+  { "keepalt", 5 },
+  { "keepjumps", 5 },
+  { "keepmarks", 3 },
+  { "keeppatterns", 5 },
+  { "leftabove", 5 },
+  { "lockmarks", 3 },
+  { "noautocmd", 3 },
+  { "noswapfile", 3 },
+  { "rightbelow", 6 },
+  { "silent", 3 },
+  { "tab", 3 },
+  { "topleft", 2 },
+  { "unsilent", 3 },
+  { "verbose", 4 },
+  { "vertical", 4 },
+  { "sandbox", 3 },
+  { "legacy", 3 },
+  { "vim9cmd", 4 },
+}
+
+---Commands that run another command for each buffer / window / tab / entry: the command after them counts.
+---@type { [1]: string, [2]: integer }[]
+local REPEATERS = {
+  { "argdo", 5 },
+  { "bufdo", 5 },
+  { "cdo", 3 },
+  { "cfdo", 4 },
+  { "ldo", 3 },
+  { "lfdo", 4 },
+  { "tabdo", 4 },
+  { "windo", 5 },
+}
+
+---Commands that run an external program on their own, without a `!` in the line.
+---@type { [1]: string, [2]: integer }[]
+local EXTERNALS = {
+  { "make", 3 },
+  { "lmake", 4 },
+  { "grep", 2 },
+  { "lgrep", 3 },
+  { "grepadd", 5 },
+  { "lgrepadd", 5 },
+  { "shell", 2 },
+  { "terminal", 2 },
+}
+
+---Commands that take an expression or a script and can start a program in it.
+---@type { [1]: string, [2]: integer }[]
+local SCRIPTED = {
+  { "execute", 3 },
+  { "call", 3 },
+  { "cexpr", 5 },
+  { "lexpr", 5 },
+  { "python", 2 },
+  { "py3", 3 },
+  { "python3", 3 },
+  { "perl", 3 },
+  { "ruby", 3 },
+  { "lua", 3 },
+  { "luado", 4 },
+  { "pyx", 3 },
+}
+
+---@param name string
+---@param list { [1]: string, [2]: integer }[]
+---@return boolean
+local function in_list(name, list)
+  for _, entry in ipairs(list) do
+    if abbrev(name, entry[1], entry[2]) then
+      return true
+    end
+  end
+  return false
+end
+
+---Split a command line at the bars that join commands (`set wrap | !ls`). A bar after a backslash or a
+---Ctrl-V belongs to the argument.
+---@param cmd string
+---@return string[]
+local function split_bars(cmd)
+  local parts, start = {}, 1
+  for i = 1, #cmd do
+    local c = cmd:sub(i, i)
+    local before = i > 1 and cmd:sub(i - 1, i - 1) or ""
+    if c == "|" and before ~= "\\" and before ~= "\22" then
+      parts[#parts + 1] = cmd:sub(start, i - 1)
+      start = i + 1
+    end
+  end
+  parts[#parts + 1] = cmd:sub(start)
+  return parts
+end
+
+---Remove the range in front of a command name: numbers, `.`, `$`, `%`, marks (`'a`, `'<`), patterns
+---(`/foo/`, `?foo?`), offsets and the separators `,` and `;`.
+---@param text string
+---@return string
+local function strip_range(text)
+  local s = text
+  while true do
+    local before = s
+    s = s:gsub("^%s+", "")
+    s = s:gsub("^[%d%.%$%%,;%+%-]+", "")
+    s = s:gsub("^'[%w<>%[%]'`\"%^%.]", "")
+    s = s:gsub("^/[^/]*/?", "")
+    s = s:gsub("^%?[^?]*%??", "")
+    if s == before then
+      return s
+    end
+  end
+end
+
+---Whether one Ex command (no bars) hands something to the shell.
+---@param part string
+---@param depth integer
+---@return boolean
+local function part_is_risky(part, depth)
+  if depth > 8 then
+    return true -- nested deeper than anything sensible: ask
+  end
+  local rest = strip_range(part)
   if rest:sub(1, 1) == "!" then
     return true
   end
   local name = rest:match("^(%a+)")
-  if name == "r" or name == "re" or name == "rea" or name == "read" then
-    return rest:match("^%a+%s*!") ~= nil
+  if not name then
+    return false
   end
-  -- ":te" is the shortest abbreviation of ":terminal"
-  return name ~= nil and #name >= 2 and ("terminal"):sub(1, #name) == name
+  local after = rest:sub(#name + 1)
+
+  -- modifiers and repeaters: the command behind them is what counts
+  if in_list(name, MODIFIERS) or in_list(name, REPEATERS) then
+    after = after:gsub("^!", "")
+    return part_is_risky(after, depth + 1)
+  end
+  if name == "g" or name == "global" or name == "v" or name == "vglobal" then
+    -- :g/pattern/command, with any delimiter
+    local delim = after:gsub("^!", ""):sub(1, 1)
+    if delim == "" then
+      return false
+    end
+    local cmd = after:gsub("^!", ""):match(
+      "^" .. vim.pesc(delim) .. "[^" .. vim.pesc(delim) .. "]*" .. vim.pesc(delim) .. "(.*)$"
+    )
+    return cmd ~= nil and part_is_risky(cmd, depth + 1)
+  end
+
+  if abbrev(name, "read", 1) then
+    return after:match("^%s*!") ~= nil
+  end
+  if abbrev(name, "write", 1) or abbrev(name, "wall", 2) then
+    -- ":w !cmd" pipes the buffer into a command; ":w! file" is a forced write
+    return after:match("^%s+!") ~= nil
+  end
+  if in_list(name, EXTERNALS) then
+    return true
+  end
+  if in_list(name, SCRIPTED) then
+    -- a program name or a `!` somewhere in the script: ask. A plain `:call Foo()` stays quiet.
+    return rest:find("!", 1, true) ~= nil
+      or rest:find("system", 1, true) ~= nil
+      or M.lua_is_risky(rest)
+  end
+  return false
+end
+
+---Whether an Ex line hands something to the shell: a `!` command or filter (`!ls`, `%!sort`, `'a,'b!sort`,
+---`/foo/!sort`, `r !ls`, `w !sh`), `:terminal`, `:make`, `:grep`, `:shell`, such a command behind a modifier
+---(`silent !ls`, `vertical terminal`) or a repeater (`bufdo !ls`, `g/x/!ls`) or after a bar (`set wrap | !ls`),
+---and a script command whose text names a shell entry point (`execute '!ls'`, `lua os.execute(...)`).
+---
+---A heuristic: Vim has too many commands to list them all. It errs towards asking.
+---@param cmd string  without the leading ":"
+---@return boolean
+function M.ex_is_risky(cmd)
+  for _, part in ipairs(split_bars(cmd)) do
+    if part_is_risky(part, 0) then
+      return true
+    end
+  end
+  return false
 end
 
 ---Lua names that start another program. A heuristic, not a sandbox: a chunk can do anything, this only
@@ -227,7 +424,7 @@ function M.build(lines, as, lang)
       nil
   end
 
-  local commands = kind == "shell" and shell_commands(lines) or ex_commands(lines)
+  local commands = kind == "shell" and shell_commands(lines, lang == nil) or ex_commands(lines)
   if #commands == 0 then
     return nil, "nothing to run: the text is empty (or only comments)"
   end

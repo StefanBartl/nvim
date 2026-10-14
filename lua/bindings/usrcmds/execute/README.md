@@ -52,11 +52,21 @@ rest is Ex. `ex`, `lua` and `shell` pin the kind.
 When it runs (`!` or an explicit `how`), a plan that leaves the editor asks `[R]un / [C]ancel`:
 
 - every shell command
-- an Ex command that hands text to the shell: `:!cmd`, `:r !cmd`, `:%!filter`, `:terminal`
+- an Ex command that hands text to the shell: `:!cmd`, `:r !cmd`, `:w !cmd`, `:%!filter`, `:'a,'b!filter`, `:terminal`,
+  `:make`, `:grep`, `:shell`; also behind a bar (`set wrap | !ls`), a modifier (`silent !ls`, `vertical terminal`) or a
+  repeater (`bufdo !ls`, `g/x/!ls`); and `:execute`/`:call`/`:lua`/`:py3` text that names `!`, `system` or a Lua shell call
 - Lua that names `os.execute`, `io.popen`, `vim.system`, `vim.fn.system`, `vim.fn.jobstart`, ...
 
-`--yes` skips the question. The Lua check is a heuristic, not a sandbox. Plain Ex and Lua are not guarded: they
+`--yes` skips the question. These checks are heuristics, not a sandbox: they err towards asking, and a plain
+`:normal` or `:call Foo()` that starts a program inside Foo is not seen. Plain Ex and Lua are not guarded: they
 are what you could type into the command line yourself. Do not `:Execute!` text from a source you do not trust.
+
+## Known limits
+
+- A hand-typed range (`:3Execute`) after an older charwise Visual selection on the same line cuts by that old
+  selection's columns (Neovim does not say whether a range came from Visual mode). Use `--from=line` there.
+- A leading `!` is a shell marker only on the first command of text that is not a code block; in a bash block
+  `! grep x` is a negation and stays.
 
 ## Files
 
