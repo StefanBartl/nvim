@@ -712,7 +712,19 @@ return {
     -- Soft dependency: markdown.nvim's fenced_scope feature consumes
     -- color_my_ascii's fence API when present (falls back to a built-in scanner
     -- otherwise). Listing it here just guarantees load order in this config.
-    dependencies = { "StefanBartl/color_my_ascii.nvim" },
+    dependencies = {
+      "StefanBartl/color_my_ascii.nvim",
+      -- Host of `:Markdown render` (in-buffer rendering of headings, checkboxes, code blocks, ...)
+      -- until markdown.nvim renders natively (task markdown.nvim/replace-render-markdown-nvim).
+      -- Tables are drawn by markdown.nvim itself (`table.render` below), so its table
+      -- component stays off; otherwise both would conceal the same pipes.
+      {
+        "MeanderingProgrammer/render-markdown.nvim",
+        dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
+        ft = { "markdown", "mdx", "md" },
+        opts = { pipe_table = { enabled = false } },
+      },
+    },
     opts = {
       -- Feature gating; `just_enable` wins over `disable`/`enable`. Gateable
       -- names are listed in docs/configuration.md.
