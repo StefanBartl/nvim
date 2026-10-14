@@ -1,1 +1,0 @@
-E:/repos/tasks-vault/rules.nvim/handovers/rules-authoring-lib-contract-start_HANDOVER.md
