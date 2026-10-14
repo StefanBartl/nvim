@@ -714,16 +714,6 @@ return {
     -- otherwise). Listing it here just guarantees load order in this config.
     dependencies = {
       "StefanBartl/color_my_ascii.nvim",
-      -- Host of `:Markdown render` (in-buffer rendering of headings, checkboxes, code blocks, ...)
-      -- until markdown.nvim renders natively (task markdown.nvim/replace-render-markdown-nvim).
-      -- Tables are drawn by markdown.nvim itself (`table.render` below), so its table
-      -- component stays off; otherwise both would conceal the same pipes.
-      {
-        "MeanderingProgrammer/render-markdown.nvim",
-        dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
-        ft = { "markdown", "mdx", "md" },
-        opts = { pipe_table = { enabled = false } },
-      },
     },
     opts = {
       -- Feature gating; `just_enable` wins over `disable`/`enable`. Gateable
@@ -820,6 +810,9 @@ return {
       -- compact grid that fits the window and re-lays out on resize; it replaces
       -- `truncate` per buffer, so `truncate` stays off here (the CursorHold cell
       -- popup is independent and stays on).
+      -- Native in-buffer rendering (headings, bullets, checkboxes, code blocks, quotes, inline
+      -- markup; `:Markdown render`, `<leader>mrr`) replaces render-markdown.nvim.
+      render = { enabled = true },
       table = {
         render = { enabled = true },
         truncate = { enabled = false, max = 40, marker = "…", popup = true },
