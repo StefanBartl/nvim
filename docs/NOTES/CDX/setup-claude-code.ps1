@@ -46,6 +46,19 @@ if (-not $reposDir) {
     Write-Host "  REPOS_DIR bereits gesetzt: $reposDir"
 }
 
+# RULES_VAULT: Wurzel des Repos rules-vault (Regelwerke, rulesets/lua und rulesets/native).
+$rulesVault = [Environment]::GetEnvironmentVariable('RULES_VAULT', 'User')
+if (-not $rulesVault) {
+    $candidate = Join-Path $reposDir 'rules-vault'
+    if (Test-Path $candidate) {
+        Set-UserEnvVar -name 'RULES_VAULT' -value $candidate
+    } else {
+        Write-Host "  RULES_VAULT nicht gesetzt und $candidate fehlt: Repo rules-vault klonen, dann das Skript erneut ausfuehren." -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  RULES_VAULT bereits gesetzt: $rulesVault"
+}
+
 Write-Host "  Hinweis: neu gesetzte User-Env-Vars gelten erst in neuen Shells/Sessions."
 
 # --- 2. ~/.claude/CLAUDE.md (Symlink, Fallback Kopie) -----------------------
