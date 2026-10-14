@@ -131,6 +131,18 @@ function M.setup()
         enabled = true,
         show = false,
         keys = { apply = "<leader>_%d", add = "<leader>_a", panel = "<leader>_p" },
+        slots = {
+          -- Acronyms of WKDBook-Tricentis as a foldable float (kind `expand`;
+          -- config/ui_statusline/acronyms_slot.lua). 9: `add` fills from 1.
+          [9] = {
+            kind = "expand",
+            title = "Acronyms",
+            ft = "markdown",
+            fn = function()
+              return require("config.ui_statusline.acronyms_slot").lines()
+            end,
+          },
+        },
       },
       -- The right-click menu (ui.menu, lua/ui/menu/README.md in ui.nvim). Sister
       -- plugins show up when installed; switch one off with
