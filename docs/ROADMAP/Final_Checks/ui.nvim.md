@@ -3,6 +3,7 @@
 ## Table of content
 
   - [Sichtprüfung im echten Fenster](#sichtprüfung-im-echten-fenster)
+  - [Sichtprüfung ui.slots](#sichtprüfung-uislots)
 
 ---
 
@@ -42,3 +43,34 @@ Backlog-Eintrag unter „Handwerkszeug“.
 
 ---
 
+
+---
+
+## Sichtprüfung ui.slots
+
+Task `ui.nvim/slots-live-check` (Plan `ui-slots`). Alles gebaut und headless
+geprüft, nichts visuell in der echten Konfiguration. Vorher `ui.nvim` pullen
+(mindestens `1b73a94`, Kind `expand`) und Neovim neu starten. Die lange
+Befehls-/Tasten-Checkliste (Grundfluss, Yank, Leiste, Panel, Editor, Vorschau)
+steht unverändert in `Checks-Blocker_0610.md` unter O3; hier nur, was nur ein
+Blick im Alltag klärt. Wenn alles passt: Punkte streichen, Task
+`slots-live-check` erledigen (`tasks.lua done`) und Plan `ui-slots` auf `done`
+setzen; Auffälliges als eigenen Task anlegen (R9), nicht hier sammeln.
+
+1. Chips in `rounded` und mindestens einem weiteren Preset (`double`, `ascii`,
+   `solid`, `minimal`) ansehen, im hellen und im dunklen Thema.
+2. Je einen Slot im Alltag benutzen: Datei, URL, Yank, Cmd, Lua. (`_` schaltet die
+   Leiste, `<leader>_1`..`_9` führt aus, `<leader>_a` fügt hinzu, `<leader>_p`
+   öffnet das Panel.)
+3. Vorschau für eine Datei und eine URL ansehen (Panel, `K`; URL braucht
+   `preview.fetch = true` und hover.nvim).
+4. **Neu, Kind `expand`:** `<leader>_9` öffnet den Akronym-Float (alle drei
+   Dateien aus `WKDBook-Tricentis`, Überschrift je Quelle). Erneut `<leader>_9`,
+   `q` und `<Esc>` schließen ihn; scrollen und `/` suchen gehen; ein Wechsel in
+   ein anderes Fenster schließt ihn. Liest sich der Text gut (Markdown-Farben)?
+   Auf einem Rechner ohne `WKDBook-Tricentis` meldet der Slot "no file found",
+   statt einen leeren Float zu öffnen.
+5. Verhalten neben Filetree, Zen, mehreren Fenstern und beim Projektwechsel
+   (anderes Projekt = andere Slots): in Ordnung?
+6. Zusammenspiel mit Tabline und Statusline: überdeckt die Leiste etwas, springt
+   etwas beim Öffnen und Schließen?
