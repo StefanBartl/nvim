@@ -1,1 +1,0 @@
-E:/repos/tasks-vault/testing.nvim/HANDOVER.md
