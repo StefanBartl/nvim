@@ -2239,7 +2239,7 @@ Nummerierte **Slots** als konfigurierbare Aktionen (Datei, URL, Clipboard-Text, 
 stehen unten.) Vor dem Testen **ui.nvim auf `main` pullen** (neuester Stand dieses Abschnitts: `f745dd3`).
 
 Quellen: Design `tasks-vault/ui.nvim/Backlog/FEATURES/slots-design.md`, Plan `ui.nvim/ROADMAP/plans/ui-slots.md`, Handover
-`tasks-vault/ui.nvim/Backlog/FEATURES/slots_HANDOVER.md`.
+`tasks-vault/ui.nvim/Backlog/FEATURES/2026-10-15_slots_HANDOVER.md`.
 
 Commits, `ui.nvim` (`main`): `f48e987` (config, store, resolve), `c73abae` (Kinds file, yank, url), `b8f67e3` (API, `:UI slots`, Tasten, Autocmds),
 `eb3b765`, `313d37a` (Review-Fixes), `2218327` (Kinds cmd, lua, mark), `4367842` (cmd fail closed), `dd89502` (Test-Fix macOS),
