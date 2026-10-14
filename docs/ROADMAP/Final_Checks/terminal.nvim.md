@@ -214,6 +214,8 @@ Jeder Fall meldet **einmal** und stört nicht.
   Notiz:
 - [ ] `sandbox.nvim` mit `exec_target = "terminal"`: `:Sandbox container exec <id>` öffnet ein Terminal `sandbox:<id>`, ausblendbar mit `<A-h>`/`:Terminal toggle sandbox:<id>`; mit Default `"split"` unverändert.
   Notiz:
+- [ ] `dap.nvim` mit `terminal = { enable = true }` (`dap.nvim@fce89a4`): eine Debug-Sitzung mit Programmstart im Terminal (z. B. Python/Node-Launch) öffnet ein Terminal `dap:<Konfigurationsname>` als Split, die Programmausgabe steht dort, nach dem Ende bleibt es mit Exit-Code offen; ein neuer Lauf derselben Konfiguration ersetzt es; `:Terminal list` zeigt es; ohne `enable` unverändert nvim-dap-Puffer.
+  Notiz:
 - [ ] `require("terminal").run({ "lazygit" }, { direct = true, ... })` aus einem anderen Plugin (gitsuite-Fallback): TUI läuft, Fenster schließt/bleibt nach `close`-Einstellung.
   Notiz:
 
