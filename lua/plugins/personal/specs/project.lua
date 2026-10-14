@@ -1038,13 +1038,14 @@ return {
   },
 
   -- tasks.nvim: the task engine and its editor front ends (one Markdown file per task in a vault, generated
-  -- overviews, dashboard, headless CLI). Loaded on `:Tasks` or on the first `require("tasks_nvim...")`, i.e.
+  -- overviews, dashboard, headless CLI). Loaded on `:Tasks`, `:TasksVault` or on the first `require("tasks_nvim...")`, i.e.
   -- by the `:MyPlugins tasks|task|open` routes (lua/bindings/usrcmds/plugin_repos/init.lua mounts the
   -- plugin's route tree). No built-in vault path: it is set here.
   {
     "StefanBartl/tasks.nvim",
     main = "tasks_nvim",
-    cmd = { "Tasks" },
+    -- `:TasksVault` is the second command of the plugin (the vault itself: open/copy/search the Backlog, create).
+    cmd = { "Tasks", "TasksVault" },
     dependencies = { "StefanBartl/lib.nvim" },
     opts = {
       -- The vault folder (one folder per area). Without it $TASKS_VAULT is read.
