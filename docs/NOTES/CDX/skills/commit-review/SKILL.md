@@ -27,7 +27,7 @@ Security und Performance und behebt Befunde sofort.
   unquotierte Shell-Argumente, Secrets), Performance (Schleifen in Hot Paths,
   unnötige Autocmds/Redraws, wiederholte IO).
 - Lua-/Neovim-Code zusätzlich gegen
-  `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/PERFORMANCE.md`
+  `$RULES_VAULT/rulesets/lua/regeln/PERFORMANCE.md`
   und `.../LUA_NVIM.md` prüfen. `$REPOS_DIR/lib.nvim` nutzen, wo sinnvoll.
 - Nie mehr als 1 Agent gleichzeitig. Reicht die Größe nicht für einen Agent,
   selbst reviewen. Mehrere Agents nur nacheinander in Runden.

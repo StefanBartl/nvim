@@ -52,8 +52,8 @@
 | Diese Handover-Datei | `nvim/docs/ROADMAP/handovers/ai/ai.nvim_loomai.md` |
 | Transport-Erweiterung | `$REPOS_DIR/lib.nvim\lua\lib\nvim\net\curl` |
 | loomAI (Server, Router, Dashboard) | `$REPOS_DIR/loomAI` |
-| Regelwerk für neue Projekte | `$REPOS_DIR/WKDBooks\Development\wkdbook-Lua\Checklists\gates\NEW_PROJECT.md` (+ `PRINCIPLES.md`, `LUA_NVIM.md`) |
-| Release-Gate | `$REPOS_DIR/WKDBooks\Development\wkdbook-Lua\Checklists\gates\RELEASE.md` |
+| Regelwerk für neue Projekte | `$RULES_VAULT/rulesets/lua\gates\NEW_PROJECT.md` (+ `PRINCIPLES.md`, `LUA_NVIM.md`) |
+| Release-Gate | `$RULES_VAULT/rulesets/lua\gates\RELEASE.md` |
 | Live-Testing-Plan | `docs/ROADMAP/personal/All/FINISH/Final_Checks/ai/live-testing-plan.md` |
 
 ---
