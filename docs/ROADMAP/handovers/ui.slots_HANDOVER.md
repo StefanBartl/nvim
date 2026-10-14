@@ -1,1 +1,1 @@
-E:/repos/WKDBooks/Development/wkdbook-myplugins/ui.nvim/handovers/slots_HANDOVER.md
+E:/repos/tasks-vault/ui.nvim/handovers/slots_HANDOVER.md
