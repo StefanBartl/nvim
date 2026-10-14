@@ -135,7 +135,7 @@ end
 ---Windows a path such as `dir C:\` also ends in one.
 ---
 ---A leading `!` is the marker of `` `!git status` ``, so it is stripped from the first command only, and only
----when `strip_bang` says the text is no code block: in a bash block `! grep -q x file` is a negation.
+---when `strip_bang` says the text is no shell code block: in a bash block `! grep -q x file` is a negation.
 ---@param lines string[]
 ---@param strip_bang boolean
 ---@return string[]
@@ -348,6 +348,8 @@ local function part_is_risky(part, depth)
     -- a program name or a `!` somewhere in the script: ask. A plain `:call Foo()` stays quiet.
     return rest:find("!", 1, true) ~= nil
       or rest:find("system", 1, true) ~= nil
+      or rest:find("subprocess", 1, true) ~= nil
+      or rest:find("popen", 1, true) ~= nil
       or M.lua_is_risky(rest)
   end
   return false
@@ -424,7 +426,9 @@ function M.build(lines, as, lang)
       nil
   end
 
-  local commands = kind == "shell" and shell_commands(lines, lang == nil) or ex_commands(lines)
+  local commands = kind == "shell"
+      and shell_commands(lines, not (lang and LANG_KIND[lang] == "shell"))
+    or ex_commands(lines)
   if #commands == 0 then
     return nil, "nothing to run: the text is empty (or only comments)"
   end
