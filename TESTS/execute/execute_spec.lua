@@ -240,6 +240,7 @@ return function(H)
     "lua os.execute('x')",
     "py3 import os; os.system('x')",
     "py3 import subprocess",
+    "py3 os.popen('x')",
   }) do
     ok(kind.ex_is_risky(cmd), cmd .. " reaches the shell (behind a bar, modifier, mark or script)")
   end
