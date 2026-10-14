@@ -5,14 +5,23 @@
 --- are pasted into Claude Code by hand all day, so this saves the detour
 --- through a file manager:
 ---
----   :Cdx prompt base                    Base.md
----   :Cdx prompt review                  review_w_ultracode.md
----   :Cdx prompt ultra_sha [sha ...]     ultra_sha.md, `{SHA}` filled in
+---   :Cdx prompt <name> [sha ...]
 ---
---- `ultra_sha` takes any number of commit SHAs, as separate arguments, as one
---- comma-separated token (`abc1234,def5678`), or as a quoted string
---- (`"abc1234, def5678"`) -- all of them end up as `abc1234, def5678` in the
---- text. Without a SHA the template is copied unchanged, `{SHA}` included.
+--- `<name>` is every `*.md` file of that folder, without the extension
+--- (`Base`, `full`, `review_w_ultracode`, `ultra_sha`, a new file the moment it
+--- is saved), and completes with `<Tab>`; the folder is read on every
+--- completion and every call, so nothing has to be registered. The matching is
+--- case-insensitive, and two short names stay for the two that were there first:
+---
+---   base    Base.md
+---   review  review_w_ultracode.md
+---
+--- A template that contains `{SHA}` takes any number of commit SHAs, as
+--- separate arguments, as one comma-separated token (`abc1234,def5678`), or as
+--- a quoted string (`"abc1234, def5678"`) -- all of them end up as
+--- `abc1234, def5678` in the text. Without a SHA the template is copied
+--- unchanged, `{SHA}` included; arguments for a template without the
+--- placeholder are ignored with a warning.
 ---
 --- The template directory is read from `stdpath("config")`, not from the
 --- repository the current window happens to be in, so the command works from
@@ -36,6 +45,79 @@ local function prompt_dir()
   return vim.fs.joinpath(vim.fn.stdpath("config"), "docs", "NOTES", "CDX", "templates", "PROMPT")
 end
 
+---Short names that stay for templates whose file name is long.
+---@type table<string, string>
+local ALIASES = { base = "Base.md", review = "review_w_ultracode.md" }
+
+---Every template of the folder: the file stem -> the file name.
+---@return table<string, string> by_stem
+---@return string[] stems  sorted
+local function list_templates()
+  local by_stem, stems = {}, {}
+  local handle = vim.uv.fs_scandir(prompt_dir())
+  while handle do
+    local name, kind = vim.uv.fs_scandir_next(handle)
+    if not name then
+      break
+    end
+    local stem = name:match("^(.+)%.md$")
+    if stem and kind ~= "directory" then
+      by_stem[stem] = name
+      stems[#stems + 1] = stem
+    end
+  end
+  table.sort(stems)
+  return by_stem, stems
+end
+
+---The file name a typed `<name>` means: the exact stem, an alias, else the stem in any case.
+---@param typed string
+---@return string|nil file
+---@return string|nil err
+function M.resolve(typed)
+  local by_stem, stems = list_templates()
+  if by_stem[typed] then
+    return by_stem[typed], nil
+  end
+  local alias = ALIASES[typed:lower()]
+  if alias and vim.tbl_contains(vim.tbl_values(by_stem), alias) then
+    return alias, nil
+  end
+  for _, stem in ipairs(stems) do
+    if stem:lower() == typed:lower() then
+      return by_stem[stem], nil
+    end
+  end
+  return nil,
+    ("no prompt template '%s' in %s (have: %s)"):format(
+      typed,
+      prompt_dir(),
+      table.concat(stems, ", ")
+    )
+end
+
+---The words `<Tab>` offers: every stem, and the aliases whose file exists.
+---@return string[]
+function M.names()
+  local by_stem, stems = list_templates()
+  local files = vim.tbl_values(by_stem)
+  local out = vim.list_extend({}, stems)
+  for alias, file in pairs(ALIASES) do
+    -- `base` for `Base.md` is the stem in another case: offering both says the same word twice
+    local is_stem_in_other_case = false
+    for _, stem in ipairs(stems) do
+      if stem:lower() == alias then
+        is_stem_in_other_case = true
+      end
+    end
+    if vim.tbl_contains(files, file) and not is_stem_in_other_case then
+      out[#out + 1] = alias
+    end
+  end
+  table.sort(out)
+  return out
+end
+
 ---@param name string  file name inside `prompt_dir()`
 ---@return string|nil text  the template without surrounding blank lines, LF line endings
 ---@return string|nil err
@@ -53,7 +135,7 @@ local function read_template(name)
   return text, nil
 end
 
---- Turn whatever the user typed after `ultra_sha` into a list of SHAs: tokens
+--- Turn whatever the user typed after the template name into a list of SHAs: tokens
 --- may themselves contain commas, so `a,b c` and `"a, b" c` are three SHAs.
 --- Quote characters are dropped: a user command's arguments are split on
 --- whitespace only, so `"a, b"` arrives as the two tokens `"a,` and `b"`.
@@ -88,86 +170,92 @@ local function copy(text, label)
   return true
 end
 
---- Copy a template verbatim.
----@param file string
+---Copy a template; `tokens` (SHAs) replace `{SHA}` when it has the placeholder and there are any.
+---@param typed string  the name as typed
+---@param tokens string[]
 ---@return boolean
-local function copy_template(file)
+function M.copy_prompt(typed, tokens)
+  local file, rerr = M.resolve(typed)
+  if not file then
+    notify.error(rerr or "unknown prompt template")
+    return false
+  end
   local text, err = read_template(file)
   if not text then
     notify.error(err or "template not readable")
     return false
   end
-  return copy(text, file)
-end
-
---- Copy `ultra_sha.md`, with `{SHA}` replaced by `tokens` when there are any.
----@param tokens string[]
----@return boolean
-function M.copy_ultra_sha(tokens)
-  local text, err = read_template("ultra_sha.md")
-  if not text then
-    notify.error(err or "template not readable")
-    return false
+  local has_placeholder = text:find(SHA_PLACEHOLDER, 1, true) ~= nil
+  if #tokens == 0 then
+    return copy(text, file)
   end
-
+  if not has_placeholder then
+    notify.warn(
+      ("%s has no %s placeholder; the arguments are ignored"):format(file, SHA_PLACEHOLDER)
+    )
+    return copy(text, file)
+  end
   local shas, perr = M.parse_shas(tokens)
   if not shas then
     notify.error(perr or "invalid SHA")
     return false
-  end
-
-  if #shas == 0 then
-    return copy(text, "ultra_sha.md")
-  end
-  if not text:find(SHA_PLACEHOLDER, 1, true) then
-    notify.warn(
-      ("ultra_sha.md has no %s placeholder; copying it unchanged"):format(SHA_PLACEHOLDER)
-    )
-    return copy(text, "ultra_sha.md")
   end
   -- Function replacement: the SHA list is data, `%` in it must not be read as
   -- a capture reference.
   local filled = text:gsub(vim.pesc(SHA_PLACEHOLDER), function()
     return table.concat(shas, SHA_JOIN)
   end)
-  return copy(filled, ("ultra_sha.md (%d SHA)"):format(#shas))
+  return copy(filled, ("%s (%d SHA)"):format(file, #shas))
 end
 
 ---@return nil
 function M.enable()
+  composer.register_type("CDX_PROMPT", {
+    desc = "Name of a template in docs/NOTES/CDX/templates/PROMPT (file name without .md)",
+    validate = function(raw)
+      local file, err = M.resolve(raw)
+      if not file then
+        return false, nil, err
+      end
+      return true, raw, nil
+    end,
+    complete = function(arg_lead)
+      local out, low = {}, (arg_lead or ""):lower()
+      for _, name in ipairs(M.names()) do
+        if name:lower():sub(1, #low) == low then
+          out[#out + 1] = name
+        end
+      end
+      return out
+    end,
+  })
+
   composer.verb("Cdx", {
     desc = "Claude Code helpers: copy CDX prompt templates to the clipboard",
     routes = {
       {
-        path = { "prompt", "base" },
-        desc = "Copy PROMPT/Base.md to the clipboard",
-        run = function()
-          copy_template("Base.md")
-        end,
-      },
-      {
-        path = { "prompt", "review" },
-        desc = "Copy PROMPT/review_w_ultracode.md to the clipboard",
-        run = function()
-          copy_template("review_w_ultracode.md")
-        end,
-      },
-      {
-        path = { "prompt", "ultra_sha" },
+        path = { "prompt" },
         args = {
+          {
+            name = "name",
+            type = "CDX_PROMPT",
+            desc = "Template of the PROMPT folder, without .md (base and review are short names)",
+          },
           {
             name = "sha",
             type = "STRING",
             optional = true,
-            desc = "Commit SHA of 4 to 64 hex digits; more may follow",
+            desc = "Commit SHA of 4 to 64 hex digits for {SHA}; more may follow",
           },
         },
-        desc = "Copy PROMPT/ultra_sha.md; SHAs (space- or comma-separated) replace {SHA}, none keeps it",
+        desc = "Copy a prompt template (any .md of PROMPT/) to the clipboard; SHAs (space- or comma-separated) replace {SHA}, none keeps it",
         run = function(ctx)
           local tokens = {}
-          vim.list_extend(tokens, ctx.pos)
+          if ctx.args.sha then
+            tokens[#tokens + 1] = ctx.args.sha
+          end
           vim.list_extend(tokens, ctx.rest)
-          M.copy_ultra_sha(tokens)
+          M.copy_prompt(ctx.args.name, tokens)
         end,
       },
     },
