@@ -1,6 +1,6 @@
 # terminal.nvim — Handover
 
-Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). **Single source of truth** für terminal.nvim: Chat-Übergaben werden hier eingearbeitet, nicht daneben geführt. Stand: **2026-10-14 (spät): funktional fertig, CI grün (8 Jobs: ubuntu/windows/macos stable, ubuntu Neovim 0.11.0, Modulkarte mit Schichtregeln, luacheck, stylua, echtes tmux), 564 Specs lokal (Windows, 0.12), LuaLS bei 0.** Nicht erledigt (Stand 2026-10-15: alle `cdx`-Tasks erledigt, siehe Log): das **Tag** (wartet auf deine Zustimmung), die Handprüfung (`live-check`), die Entscheidung `ruleset-nested-nvim-failopen`, Demo-GIF/Logo, die Folge-Tasks `run-events-for-cmdlog`, `dap-run-in-terminal` und zwei Feature-/Bug-Tasks (Liste unten). **Review-Stand:** ein Teil der Code-Commits hat keinen `ultracode`-Review (Abschnitt "Review-Stand").
+Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). **Single source of truth** für terminal.nvim: Chat-Übergaben werden hier eingearbeitet, nicht daneben geführt. Stand: **2026-10-15: funktional fertig, alle `cdx`-Tasks erledigt, CI grün (8 Jobs: ubuntu/windows/macos stable, ubuntu Neovim 0.11.0, Modulkarte mit Schichtregeln, luacheck, stylua, echtes tmux), 587 Specs lokal (Windows, 0.12), LuaLS bei 0.** Offen sind nur Dinge, die dich brauchen (Tabelle unten, alles als Task angelegt): das **Tag** (nach dem Live-Check), die Handprüfung (`live-check`, Plan `docs/ROADMAP/Final_Checks/terminal.nvim.md`), Demo-GIF/Logo, `shell-cheatsheet` (`pair`), der `ultracode`-Review und die Entscheidung zum Trailer in `fe35ca8`.
 
 ## Orte
 
@@ -13,7 +13,8 @@ Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). **Single source of 
 | Tasks | `.../terminal.nvim/ROADMAP/tasks/`, Übersicht `ROADMAP/TASKS.md` (generiert) |
 | Notizen/Messungen | `.../terminal.nvim/NOTES/` (`spike-uservars.md`, `nvim-windows-terminal-findings.md`) |
 | Installations-Spec | `nvim/lua/plugins/personal/specs/project.lua` (Eintrag `StefanBartl/terminal.nvim`, alle Optionen auskommentiert, deutsch kommentiert) |
-| Gegenstücke | `$REPOS_DIR/Configs/terminals/{wezterm,tmux}` (noch nicht angefasst) |
+| Gegenstücke | `$REPOS_DIR/Configs/terminals/{wezterm,tmux}` (`nvim_status.lua`, Right-Status, Tab-Titel, `tmux.conf` mit `@terminal_status_segment`, Prüfskripte; erledigt) |
+| Live-Check-Plan | `$NVIM_CONFIG_DIR/docs/ROADMAP/Final_Checks/terminal.nvim.md` (Abschnitte 0 bis M; Task `live-check`) |
 | Regelwerk | `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/gates/NEW_PROJECT.md` (+ `regeln/PRINCIPLES.md`, `LUA_NVIM.md`, `PERFORMANCE.md`) |
 
 ## Was es kann (gebaut)
@@ -22,7 +23,11 @@ Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). **Single source of 
 - `:Terminal` (Composer), Keymaps als benannte Aktionen (`<A-h>` toggle, `<Esc>/<C-c>`, `<C-hjkl>`, `<A-l>`), Autocmds (Fensteroptionen, Kitty-Padding, Auto-Insert), `:checkhealth terminal`.
 - Backends `native`, `wezterm`, `tmux`; Statusexport (WezTerm-UserVars, tmux-`@`-Optionen), Navigation über Pane-Ränder, Pin/Adopt, `terminal.teardown()`, `:checkhealth terminal`.
 - Sessions: mit sessions.nvim werden Terminal-Definitionen (Name, Layout, cwd, `direct`-Befehl) neben der Session gespeichert und versteckt wieder geöffnet (`lua/terminal/sessions.lua`, `docs/sessions.md`).
-- 564 Specs auf `testing.nvim` (Windows lokal + CI ubuntu/windows/macos grün, Neovim 0.11.0 auf ubuntu), `TESTS/live/*` gegen echtes tmux/WezTerm, `TESTS/live/smoke.lua` für den echten UI-Pfad.
+- 587 Specs auf `testing.nvim` (Windows lokal + CI ubuntu/windows/macos grün, Neovim 0.11.0 auf ubuntu), `TESTS/live/*` gegen echtes tmux/WezTerm, `TESTS/live/smoke.lua` für den echten UI-Pfad.
+- Picker (`:Terminal list`, `terminal.pick()`): Kit von `lib.nvim` mit Vorschau und Aktionen öffnen/schließen (`<C-x>`)/Zeile senden (`<C-s>`), Fallback `vim.ui.select`. `terminal.summary()` (`{ count, visible, current }`) für Statuslines; `ui.nvim` rendert es als Modul `terminal_count`.
+- Events (`User`): `TerminalCommandPost` (ausgeführte Zeile oder `direct`-Job gestartet), `TerminalExitPost` (Exit-Code eines `direct`-Jobs); `docs/BINDINGS.md`.
+- Sessions folgen auch Rename/Delete (`SessionsRenamePost` / `SessionsDeletePost` aus `sessions.nvim`).
+- Familien-Integrationen: `:Testing terminal` (testing.nvim), `exec_target = "terminal"` (sandbox.nvim), Option `terminal` (dap.nvim, `runInTerminal` als Terminal `dap:<Konfiguration>`); Bestandsaufnahme `NOTES/run-hooks-bestandsaufnahme.md`.
 - Nach `lib.nvim` gehoben: `terminal.host`, `terminal.osc`, `cross.shell_quote`.
 
 ## Entscheidungen
@@ -32,6 +37,10 @@ Laufend aktuell halten (Regel aus `NEW_PROJECTS_PROMPT.md`). **Single source of 
 - `<C-l>` bleibt das Clear der Shell: `clear` und `window_right` sind per Default aus (opt-in).
 - Terminal-Backend (wo Terminals leben) und Status-Exporter (was an WezTerm/tmux gemeldet wird) sind getrennt; `backend = auto` heißt native.
 - Bares `:Terminal` schaltet um (kein Menü); `3<A-h>` = Terminal "3".
+- Stale UserVars hinter `wsl.exe`/tmux/ssh nach einem Neovim-Absturz bleiben bewusst nur dokumentiert (`Configs/.../docs/nvim-status.md`); ein Heartbeat widerspräche dem "nur bei Änderung".
+- `cmdlog.nvim` bleibt reiner Recall (kein eigener Speicher); die Terminal-Events stehen anderen Hörern offen.
+- `pickers.nvim` bleibt unberührt (Datei-/Projekt-Picker ohne API für eigene Listen); der Terminal-Picker nutzt das Kit.
+- Verschachteltes Neovim im tmux-Exporter: unbekannte Ancestry exportiert und warnt einmal, nur positiv bekannte Verschachtelung hält den Export zurück (`0ab0268`, Task `ruleset-nested-nvim-failopen` erledigt).
 
 ## Offen / nächster Schritt
 
@@ -39,18 +48,19 @@ Abfrage: `nvim --headless -u NONE -l $REPOS_DIR/tasks.nvim/scripts/tasks.lua nex
 
 | Task (`terminal.nvim/<id>`) | Stand |
 |---|---|
-| `release-docs` | `doing`: alles fertig außer **Tag/Release** (nach außen sichtbar, braucht Zustimmung; Vorschlag `v0.1.0`, README sagt "Beta") |
-| `live-check` | `open`, **bei dir**: Handprüfung in WezTerm (Windows) und tmux (Linux/WSL); Skripte `TESTS/live/*`, Schritte kann ich liefern |
-| `ruleset-nested-nvim-failopen` | `decision`, **bei dir**: tmux-Exporter bei verschachteltem Neovim fail-open oder fail-closed (heute fail-closed) |
+| `release-docs` | `doing`: alles fertig außer **Tag/Release** (nach außen sichtbar, braucht Zustimmung; Vorschlag `v0.1.0`, README sagt "Beta"); setzen **nach** dem Live-Check |
+| `live-check` | `open`, **bei dir**: Handprüfung in WezTerm (Windows) und tmux (Linux/WSL), Plan in `Final_Checks/terminal.nvim.md` |
 | `ruleset-release-media` | Demo-GIF und Logo (S), **bei dir** (Handarbeit) |
 | `shell-cheatsheet` | Cheatsheet im offenen Terminal (L, `pair`; die Inhalte je Shell sind der größere Teil) |
+| `ultracode-review-offene-commits` | `ultracode`-Review über die Commits mit 🟡/⬜ (Liste im Task), auf Zuruf mit dem Stichwort `ultracode` |
+| `fe35ca8-co-author-trailer` | Entscheidung: `sessions.nvim` `fe35ca8` trägt versehentlich einen `Co-Authored-By`-Trailer; entfernen = Umschreiben + Force-Push auf `main`, oder so lassen |
 
 Andere Areas mit Bezug: `images.nvim/bilder-in-tmux-osc-1337-sequenz-in-die-passthrough-huelle-pa` (Zeichenweg ohne tmux-Hülle, braucht Live-Prüfung), `nvim-config/insert-ctrl-hjkl-moves` (`<C-j>/<C-k>` im Insert-Modus, nur in laufender Sitzung klärbar), `gitsuite.nvim/eigene-git-engine-fallback-tui-float-ueber-terminal-nvim-sta`.
 
 ## Review-Stand (Haken-Regel: `ultracode`-Review oder reine Doku)
 
 - Ohne `ultracode`-Review (Code): `terminal.nvim` `ab986b7` (`@types` je Ebene), `e791ab5` (Sessions-Integration); `sessions.nvim` `28038d2` (User-Events), `3f87893` (README, Doku).
-- Gelb (mit hohem Reasoning geprüft, kein `ultracode`): seit 2026-10-15 `sessions.nvim` `fe35ca8`; `terminal.nvim` `b56a7c8`, `81faca7`, `68b4d63`; `ui.nvim` `1bf63db`; `testing.nvim` `1f2ddb0`; `sandbox.nvim` `128ef7f`; `dap.nvim` `fce89a4` (Befunde behoben: `terminal.nvim` `ed4b649`, `ui.nvim` `1cdc5e2`, `dap.nvim` siehe Log); `lib.nvim` `f9bba25`; `terminal.nvim` `bafb80c`, `5ba815e`, `33a1b81`, `623cd88`, `d226a95`, `670a409`. Seit 2026-10-14 (spät): `terminal.nvim` `296bd2c`, `b45f65f`, `96fd516`, `be0f99c`, `23f77e6`, `05564a2` und `lib.nvim` `e411923`.
+- Gelb (mit hohem Reasoning geprüft, kein `ultracode`): seit 2026-10-15 `sessions.nvim` `fe35ca8`; `terminal.nvim` `b56a7c8`, `81faca7`, `68b4d63`; `ui.nvim` `1bf63db`; `testing.nvim` `1f2ddb0`; `sandbox.nvim` `128ef7f`; `dap.nvim` `fce89a4` (Befunde behoben: `terminal.nvim` `ed4b649`, `ui.nvim` `1cdc5e2`, `dap.nvim` `188d273`); `lib.nvim` `f9bba25`; `terminal.nvim` `bafb80c`, `5ba815e`, `33a1b81`, `623cd88`, `d226a95`, `670a409`. Seit 2026-10-14 (spät): `terminal.nvim` `296bd2c`, `b45f65f`, `96fd516`, `be0f99c`, `23f77e6`, `05564a2` und `lib.nvim` `e411923`.
 - Der letzte volle `ultracode`-Durchgang (56 Agenten) lief über `d204e89`, `6918c14`, `68a7f57`, `32db127`, `9f0c114`, `c3a1f7c`, `0e3f081`; Befunde behoben.
 - Befunde der gelben Prüfung (alle drei behoben): `terminal.nvim` `54ce3b4` (Hinweis nur aus der ersten Zeile, gekürzte Einzelzeile ins Debug-Log, synchroner `publish`/`clear` des tmux-Exporters nennt den Timeout) und `lib.nvim` `a7a0417` (Fall "leeres `$TMUX`" wieder in `terminal_host_osc_spec`). Diese beiden Fix-Commits brauchen laut Stefan keinen Review (eigene Prüfung + Specs genügen).
 
