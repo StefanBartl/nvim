@@ -1,8 +1,6 @@
-
-Fix-Commits mit ultracode reviewen:
-
 Checke/review alle commits dieses chats die nicht reine docs waren auf Bugs, Security / Performance Optimierungen und fixe sie gleich.
-Ich stelle das reasoning auf ultracode, damit du es gleich abhaken kannst.
+Ich stelle das reasoning auf hoch oder mehr, damit du es gleich grün abhaken kannst.
+
 
 # Vorgaben/Richtlinien/Guiding
 
@@ -68,12 +66,23 @@ Nur für ein Vorhaben aus mehreren Tasks in Etappen mit eigenem Ziel (nicht für
 
 - Wenn eine Aufgabe fertig ist: sofort committen / pushen / pullen im main-Branch, sodass ich es gleich verwenden kann - explizit keine Pull Requests (PR)!
 - Keine Co-Autorenschaft von Claude in den Commits.
-- Am Ende jeder Ausgabe gibst du eine laufende Liste aller Commits des Chats aus mit kurzer Beschreibung + welches Repository. Jedes bekomtm einen grünen Haken, wenn das Commit durch einen `ultracode`-Agenten reviewd wurden - oder explizit durch mich wenn ich das reasoning auf ultracode gestellt habe. Ausgenommen sind Commits, die reine Dokumentationen upgedatet haben - diese bekommen einen grünen Haken auch ohne ultracode review. Jedes Commit, das aus einer Fix Runde entstand bekommt einen Zähler mit Inititalswert 1, der mit jeder weiteren Review-Ebene erhöht wird.
+- Am Ende jeder Ausgabe gibst du eine laufende Liste aller Commits des Chats aus mit kurzer Beschreibung + welches Repository. Jedes bekommt einen grünen Haken, wenn das Commit durch einen höheren Reasoning-Faktor als `normal` reviewed wurde. `ultracode`-Agenten oder explizit durch mich auf ultracode gestelltes reasoning bekommt einen Stern als Symbol. Ausgenommen sind Commits, die reine Dokumentationen upgedatet haben - diese bekommen einen grünen Haken auch ohne review.
 
 ## Code-Qualität
 
 - Implementierter Code muss luacheck / stylua-grün sein.
 - Neue Features ggf. im plugin-eigenen `/TESTS/`-Ordner testen.
+- Warnungen von Lintern (`luacheck`, `clippy`, `svelte-check` ...) vor dem Commit auf null bringen, nicht nur ansehen. Eine Warnung, die ich sehe und stehen lasse, macht die CI rot.
+- Jeder Fix bekommt einen Test, der **ohne** den Fix rot wird: Fix herausnehmen, Test laufen lassen, Fix zurücksetzen. Nach einem Rebuild prüfen, dass die Sabotage wirklich gebaut wurde (sonst bleibt der Test grün und beweist nichts).
+
+## Immer wieder passiert (Fallen dieser Umgebung)
+
+- **Backslashes gehen verloren**, in der Shell, in Heredocs und in Python-Strings darin (`\n`, `\u`, `\\`; das Ergebnis läuft ohne Fehler durch und ist still falsch). Alles, was `\` enthält, nur mit dem Edit- oder Write-Tool schreiben. Patch-Skripte als Datei ablegen, nie durch die Shell schicken; Zeichen aus `chr(92)` bauen. Siehe `$REPOS_DIR/tasks-vault/HEREDOC.md`.
+- **Skripte im Temp-Ordner mit neuem, eindeutigem Namen anlegen.** `Write` auf eine schon vorhandene Datei scheitert mit „has not been read“, und das alte Skript läuft dann mit altem Inhalt weiter.
+- **Vor jedem `git push`: `git log origin/main..HEAD`.** Im geteilten Checkout liegen oft Commits einer anderen Sitzung; ein `git push` veröffentlicht sie mit. Gepinnte Commits (`engine.lock`, Submodule, Versionen) nie aus `rev-parse HEAD` nehmen, sondern nur einen Commit, der auf `origin` ist.
+- **Nach dem Push die CI abwarten** (Status nennen), „lokal grün“ genügt nicht.
+- **Windows-Pipes:** `cmd | tail -0` beendet den Prozess per SIGPIPE (ein Build wird abgebrochen, die Sabotage bleibt grün); nimm `tail -1`. Aus Python startet `subprocess.run(['bash', ...])` die WSL-Bash; nimm `C:/Program Files/Git/bin/bash.exe`. Siehe `$REPOS_DIR/tasks-vault/TOOLS/windows-spec-and-encoding-traps.md`.
+- **Ein Detektor, der „nichts“ meldet, ist erst nach einem Positivtest etwas wert** (gleiche Datei, eine Stelle, die einen Treffer haben muss).
 
 ## Dokumentation
 

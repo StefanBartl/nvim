@@ -19,24 +19,7 @@
 
 ---
 
-- ein usrcmd, mit dem ich sofort das backlog eines meier plugins/nativen apps augfamchen kann in nvim und eines, das genau gleich ist aber rin *Clipboard suffix als usrcmd hat, also zb `:Backlog {pluginname} [clipboard/paste/find/grep] ` hat, um den pfad des backlogs ins clipboard zu kopieren, paste um es am aktuellebn cursor einzufügen, find und grep um entsprechende poickers.nvim picker aszuführen.
-
-pickers.nvim `:Pickers []` neue optionen für den tasks-vault, den rules-vault, WKDBook-Tricentis, WKDBooks/Development/wkdbok-native als bative-apps und wkdbook-myplugins als myplugins
-
 - Doppelklick auf markdown http link - auch wenn im hover die seite korrekt fetched und angezeigt wurde - kann manchmal nicht geöäffnet werden. also es werden nach Doppleklick/`ma` oder usrcmd zwar auch die korrekt notify ausgegeben, dass der link geöffnet wird, amber im browser öffnet isch kein tab. Das ist nicht immer so, ich würde sagen es passiert so 3-4 mal im monat. es sit aber ärgerlich, iuch muss dann nvimn neu starten, damit es wieder funkltiert. Daher denke ich auch, dass esvl irgendeine race condition ist möglicherwei´e?
-
-
-Nicht behoben, als Tasks erfasst:
-
-insights (ps_quote_spec) und filetree (powershell_quote_spec): Beide Specs hängen auf dem Windows-Runner, auch mit 180 s Limit. Das ist ein Hänger, kein langsamer Lauf.
-Lokal laufen sie in 9 bis 14 s grün.
-Meine Vermutung ist ein offenes Anführungszeichen durch die Zeichenkodierung (Pfade mit ’), sodass PowerShell auf stdin wartet. Geprüft habe ich das nicht.
-Die Timeout-Erhöhung habe ich wieder zurückgenommen (d8ed12a, 47eecec).
-Tasks: insights.nvim/ps-quote-spec-haengt-auf-dem-windows-runner und filetree.nvim/powershell-quote-spec-haengt-auf-dem-windows-runner. Diese beiden Repos bleiben auf Windows rot.
-casedesk und my.nvim: Ihre CI startet wegen der GitHub-Abrechnung nicht. Das kann nur Sie lösen.
-
----
-
 
 - Docmap-desktop soll tasks.nvim vsuklt gut sanzigen könnn, zwar bleibt tasks-excplorer der main dafür, trotzdem soll amn eine möglsicht idente anzeige view zusammenbeingen. tasks erstellen oder so aber nicht, nur biew wenn man einen vault als projekt verwendet
 - Das `:Tasks open` soll suchen können, also wenmn man dan `:Tasks open block-edit-review-reste` statt `:Tasks open mdview.nvim/block-edit-review-reste` eingbt, dann sollte dieser auch gefunden werden
@@ -48,18 +31,19 @@ casedesk und my.nvim: Ihre CI startet wegen der GitHub-Abrechnung nicht. Das kan
 
 | Account  |    Sub Bis    | Week Reset Date |  Next 5h Reset  | Actual/Insgesamt |
 | -------- | ------------- | --------------- | --------------- | ---------------- |
-| **main** |   ~ 28. Sep   |   Fr., 11:00    |     18:40       |    99% / 14%     |
+| **main** |   ~ 28. Sep   |   Fr., 11:00    |     23:20       |    100% / 127%     |
 | **work** |   21. Sept    |   Sa., 06:00    |     10:45       |    10% / 53%     |
-| **free** | 22. Juli 2027 |   So., 09:00    |     20:00       |    92% / 13%     |
+| **free** | 22. Juli 2027 |   So., 09:00    |     21:30       |    81% / 63%     |
+
+- pickers.nvim `:Pickers []` neue optionen für den tasks-vault, den rules-vault, WKDBook-Tricentis, WKDBooks/Development/wkdbok-native als native-apps und wkdbook-myplugins als myplugins
 
 - spotlight.nvim, wie mehrere hl machen, lernen! [note]($NVIM_CONFIG_DIR/docs/NOTES/Notes.md)
 
+- tasks-vault: Andere Rechner: tasks-vault klonen, git pull in nvim-Config und WKDBooks, dann das Setup-Skript laufen lassen.
 
--  rtasks-vault: Andere Rechner: tasks-vault klonen, git pull in nvim-Config und WKDBooks, dann das Setup-Skript laufen lassen.
 - WKDBook-Tricentis - workflow docs neu anordnen
 
-- $NVIM_CONFIG_DIR/docs/ROADMAP/Final_Checks/Checks-Blocker_0610.md
-  All neuen features/bindings die ich live testen kann/soll + alle Blocker von tasks bitte hierhin scheriben, also als aneuen abschnitt dazu:  $NVIM_CONFIG_DIR/docs/ROADMAP/Final_Checks/Checks-Blocker_0610.md​
+- All neuen features/bindings die ich live testen kann/soll + alle Blocker von tasks bitte [hierhin]($NVIM_CONFIG_DIR/docs/ROADMAP/Final_Checks/Checks-Blocker_0610.md) scheriben, also als aneuen abschnitt dazu:  $NVIM_CONFIG_DIR/docs/ROADMAP/Final_Checks/Checks-Blocker_0610.md​
 
 - `:Git dashboard` wenn es staret, macht es eione initale action, ich dachte fetch aller repos, aber wenn dahbaord offen ist, dann muss ihc oftmals manuell fetchen oder gf ausführe, um alles zu fetchen. also warum macht der ddas nicht beim start des dashbpards zuverlässig?
 
