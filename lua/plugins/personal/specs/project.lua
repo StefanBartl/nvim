@@ -1300,6 +1300,8 @@ return {
       -- navigate = {
       --   -- "auto" (tmux in tmux, WezTerm in WezTerm) | "tmux" | "wezterm" | { "wezterm" } | false.
       --   handoff = "auto",
+      --   -- Wie lange der Uebergabe-Befehl laufen darf, bevor er gestoppt wird (ms). Default: 2000.
+      --   timeout_ms = 2000,
       -- },
 
       -- Dem Terminal um Neovim herum mitteilen, was Neovim gerade tut (Modus, Datei, Branch,
@@ -1318,7 +1320,21 @@ return {
       --   debounce_ms = 80,
       --   -- Groesse des Datensatzes: darueber wird gekuerzt, dann abgelehnt. Default: 1024.
       --   max_bytes = 1024,
+      --   -- Wie lange der tmux-Exporter auf tmux wartet, bevor er aufgibt (ms). Default: 2000.
+      --   timeout_ms = 2000,
       -- },
+
+      -- Wie lange ein Aufruf von tmux / `wezterm cli` dauern darf, bevor er als haengend gilt (ms).
+      -- toggle/open/send warten auf die Antwort. Default: 3000.
+      -- multiplexer = { timeout_ms = 3000 },
+
+      -- Die schreibgeschuetzte Ansicht eines Panes (`:Terminal adopt`): Pause zwischen zwei
+      -- Auffrischungen (ms, ab 50). Default: 1000.
+      -- adopt = { refresh_ms = 1000 },
+
+      -- `:Terminal pin`: Layout des neuen Panes ohne `--layout` (float | split | vsplit | tab).
+      -- Default: "vsplit".
+      -- pin = { layout = "vsplit" },
 
       -- Den Befehl `:Terminal` registrieren (toggle open hide close list send run). Default: true.
       -- commands = true,
