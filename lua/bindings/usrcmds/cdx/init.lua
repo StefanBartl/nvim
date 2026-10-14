@@ -11,7 +11,8 @@
 --- (`Base`, `full`, `review_w_ultracode`, `ultra_sha`, a new file the moment it
 --- is saved), and completes with `<Tab>`; the folder is read on every
 --- completion and every call, so nothing has to be registered. The matching is
---- case-insensitive, and two short names stay for the two that were there first:
+--- case-insensitive, and two short names stay for the two that were there first
+--- (a file of that very name wins: `review.md` is used before the short name `review`):
 ---
 ---   base    Base.md
 ---   review  review_w_ultracode.md
@@ -70,7 +71,8 @@ local function list_templates()
   return by_stem, stems
 end
 
----The file name a typed `<name>` means: the exact stem, an alias, else the stem in any case.
+---The file name a typed `<name>` means: the exact stem, the stem in any case, else a short name. A file named like
+---a short name wins over it (`review.md` over `review` -> `review_w_ultracode.md`), in any case typed.
 ---@param typed string
 ---@return string|nil file
 ---@return string|nil err
@@ -79,14 +81,14 @@ function M.resolve(typed)
   if by_stem[typed] then
     return by_stem[typed], nil
   end
-  local alias = ALIASES[typed:lower()]
-  if alias and vim.tbl_contains(vim.tbl_values(by_stem), alias) then
-    return alias, nil
-  end
   for _, stem in ipairs(stems) do
     if stem:lower() == typed:lower() then
       return by_stem[stem], nil
     end
+  end
+  local alias = ALIASES[typed:lower()]
+  if alias and vim.tbl_contains(vim.tbl_values(by_stem), alias) then
+    return alias, nil
   end
   return nil,
     ("no prompt template '%s' in %s (have: %s)"):format(

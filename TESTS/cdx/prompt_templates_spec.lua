@@ -56,6 +56,18 @@ return function(H)
   H.write(prompt .. "/brand_new.md", "new prompt\n")
   ok(vim.tbl_contains(cdx.names(), "brand_new"), "a new template needs no registration")
 
+  -- a file named like a short name wins over it, in any case typed
+  H.write(prompt .. "/review.md", "own review prompt\n")
+  eq(cdx.resolve("review"), "review.md", "the file wins over the short name")
+  eq(cdx.resolve("REVIEW"), "review.md", "also when typed in another case")
+  eq(
+    cdx.resolve("review_w_ultracode"),
+    "review_w_ultracode.md",
+    "the long name still reaches the old file"
+  )
+  vim.uv.fs_unlink(prompt .. "/review.md")
+  eq(cdx.resolve("review"), "review_w_ultracode.md", "without the file the short name is back")
+
   -- copy
   copied = nil
   cdx.copy_prompt("full", {})
