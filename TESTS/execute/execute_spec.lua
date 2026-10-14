@@ -156,7 +156,7 @@ return function(H)
   plan = assert(kind.build({ "set wrap", "", '" a comment', "set list", "  \\ nu" }))
   eq(
     plan.commands,
-    { "set wrap", "set listnu" },
+    { "set wrap", "set list nu" },
     "blank lines and comments go, \\ continues the line before"
   )
 
@@ -170,6 +170,18 @@ return function(H)
 
   plan = assert(kind.build({ "$ git log \\", "  --oneline", "# a comment", "", "$ ls" }, "shell"))
   eq(plan.commands, { "git log --oneline", "ls" }, "a trailing backslash continues, # comments go")
+  plan = assert(kind.build({ "! grep -q x file", "! grep -q y file" }, "shell", "bash"))
+  eq(
+    plan.commands,
+    { "! grep -q x file", "! grep -q y file" },
+    "in a bash block a leading ! is a negation"
+  )
+  plan = assert(kind.build({ "!git status", "!not a marker" }, "shell"))
+  eq(
+    plan.commands,
+    { "git status", "!not a marker" },
+    "outside a block only the first command has the marker"
+  )
   plan = assert(kind.build({ "dir C:\\" }, "shell"))
   eq(plan.commands, { "dir C:\\" }, "a path ending in a backslash is no continuation")
 
@@ -202,6 +214,45 @@ return function(H)
     "ter bash",
   }) do
     ok(kind.ex_is_risky(cmd), cmd .. " reaches the shell")
+  end
+  for _, cmd in ipairs({
+    "set wrap | !ls",
+    "silent !ls",
+    "sil! !ls",
+    "verbose !ls",
+    "keepjumps r !ls",
+    "noautocmd !ls",
+    "bufdo !ls",
+    "g/x/!ls",
+    "vert term",
+    "tab term",
+    "w !sh",
+    "'<,'>w !sh",
+    "'a,'b!sort",
+    "/foo/!sort",
+    "make",
+    "grep x",
+    "sh",
+    "execute '!ls'",
+    "call system('x')",
+    "lua os.execute('x')",
+    "py3 import os; os.system('x')",
+  }) do
+    ok(kind.ex_is_risky(cmd), cmd .. " reaches the shell (behind a bar, modifier, mark or script)")
+  end
+  for _, cmd in ipairs({
+    "set wrap | echo 'x'",
+    "silent set wrap",
+    "w! file.txt",
+    "w file.txt",
+    "bufdo set wrap",
+    "g/x/d",
+    "call Foo()",
+    "execute 'set wrap'",
+    "lua print(1)",
+    'echo "a"',
+  }) do
+    ok(not kind.ex_is_risky(cmd), cmd .. " stays in the editor")
   end
   for _, cmd in ipairs({ "set wrap", "read file.txt", "echo '!'", "tabnew", "t.", "normal ihello" }) do
     ok(not kind.ex_is_risky(cmd), cmd .. " stays in the editor")
