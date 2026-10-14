@@ -60,6 +60,7 @@ local specs = {
   "bindings_explorer/usrcmds_help_spec.lua",
   "cdx/usrcmds_help_spec.lua",
   "cdx/prompt_templates_spec.lua",
+  "execute/execute_spec.lua",
   "clipboard/snippets_spec.lua",
   "clipboard/usrcmds_help_spec.lua",
   "neotree/event_handlers_spec.lua",
