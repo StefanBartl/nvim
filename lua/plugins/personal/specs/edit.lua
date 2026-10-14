@@ -804,8 +804,13 @@ return {
       -- CursorHold in a cut cell. Off by default in the plugin, on here.
       -- `:Markdown table truncate [on|off|toggle|show]`, `<leader>mtu` toggles,
       -- `<leader>mtp` shows the popup for the cell under the cursor.
+      -- `render` (`:Markdown table render`, `<leader>mtr`) shows every table as a
+      -- compact grid that fits the window and re-lays out on resize; it replaces
+      -- `truncate` per buffer, so `truncate` stays off here (the CursorHold cell
+      -- popup is independent and stays on).
       table = {
-        truncate = { enabled = true, max = 40, marker = "…", popup = true },
+        render = { enabled = true },
+        truncate = { enabled = false, max = 40, marker = "…", popup = true },
       },
 
       -- `:Markdown table format` defaults (explicit command args override per call;
