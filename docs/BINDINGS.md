@@ -208,6 +208,18 @@ toggle are gone. A count picks the terminal: `3<A-h>` opens terminal "3".
 | `<M-o>` | n | Open whatever is under the cursor (`bindings.usrcmds.context_open`) | `[Open] Open whatever is under the cursor` | `context_open.lua` |
 | `<M-O>` | n | List every openable target in the buffer instead of acting on one | `[Open] List every openable target in the buffer` | `context_open.lua` |
 
+### Execute (`execute.lua`)
+
+| Key | Mode | Effect | desc | Source |
+| --- | --- | --- | --- | --- |
+| `<leader>x` | n | `:Execute` — type the `` `code` `` span / fenced block / line under the cursor into the command line, do not run it | `[Execute] Put the `code` / line under the cursor on the command line` | `execute.lua` |
+| `<leader>X` | n | `:Execute!` — run the same text at once (a shell command asks first) | `[Execute] Run the `code` / line under the cursor` | `execute.lua` |
+| `<leader>x` | x | `:'<,'>Execute` — the same for the selection | `[Execute] Put the selection on the command line` | `execute.lua` |
+| `<leader>X` | x | `:'<,'>Execute!` — run the selection | `[Execute] Run the selection` | `execute.lua` |
+
+`<leader>x` is also the prefix of the Trouble keys (`<leader>xx`, `<leader>xt`, ...): Neovim waits for `'timeoutlen'` after `<leader>x`
+before it runs `:Execute`; the longer Trouble keys are not affected.
+
 Full implementation notes: [`lua/bindings/usrcmds/context_open/README.md`](../lua/bindings/usrcmds/context_open/README.md).
 
 ### fzf-lua pickers — removed
@@ -285,6 +297,7 @@ bottom and rotate variants are keymap-only.
 | `:PowershellProfile` | — | Resolve `$PROFILE` through `powershell -NoProfile` and `:edit` it. Errors out when `powershell` is not executable |
 | `:ContextOpen` / `:ContextOpen list` | — | Open whatever is under the cursor, through one verb instead of five plugin-specific keys: gopath, markdown, images, pdfport and open.nvim are tried in turn. `list` shows every openable target in the buffer and jumps to the one you pick |
 | `:Cdx prompt <name> [sha ...]` | — | Copy `docs/NOTES/CDX/templates/PROMPT/<name>.md` to the clipboard (cross-platform via `lib.nvim.cross.copy_to_clipboard`; read from `stdpath("config")`, so it works from any project). `<name>` is every `.md` file of that folder, completed with `<Tab>` (case-insensitive; `base` and `review` stay as short names for `Base.md` and `review_w_ultracode.md`, a file of that very name wins (`review.md`); a new file is there at once). SHAs — separate arguments, one comma-separated token, or a quoted string — replace `{SHA}` as `a, b` in a template that has the placeholder (`ultra_sha`); without a SHA the template is copied unchanged, arguments for a template without `{SHA}` are ignored with a warning. Non-hex SHAs are rejected |
+| `:Execute[!] [how] [--from=<where>] [--as=<kind>] [--yes]` | yes | Run the text you point at. The text: the selection (with a range), else the `` `code` `` span under the cursor, else the fenced block, else the line (`--from=auto\|selection\|backtick\|line\|fence\|clipboard`). The kind: a fence language (`bash`, `lua`, `vim`, ...) or the first character (`!cmd` and `$ cmd` are shell, `:cmd` is Ex, the rest Ex) — `--as=auto\|ex\|lua\|shell` pins it. `how` (`<Tab>` completes it): `cmdline` (default: typed into the command line, not run), `run` (default with `!`: run, output as a message), `split`, `vsplit`, `tab`, `float` (run, output in a scratch buffer / window), `clipboard` (copy the command text), `result` (run, copy the output). Shell commands, an Ex shell filter (`:r !`, `:%!`, `:terminal`) and Lua that names `os.execute`/`vim.system`/... ask `[R]un / [C]ancel` first (`--yes` skips it); `cmdline` and `clipboard` run nothing. Several Ex or shell lines run one after the other and stop at the first error. Keys: `<leader>x` / `<leader>X` |
 
 `:BindingsPath` used to sit here and copied `docs/NOTES/BINDINGS`, a
 directory that never existed — the two trees were

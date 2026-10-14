@@ -13,6 +13,7 @@ require("bindings.usrcmds.autocmd_docs").enable()
 require("bindings.usrcmds.bindings_audit").enable()
 require("bindings.usrcmds.learn_plan_viewer").enable()
 require("bindings.usrcmds.cdx").enable()
+require("bindings.usrcmds.execute").enable()
 
 -- Composer help float (opt-in, lib.nvim): in the command line, `:Verb ` + <M-h> lists the
 -- options of that level with a one-line description; <CR> inserts the pick, <Esc> restores
