@@ -58,6 +58,10 @@ return {
         "diagnostics",
         "lsp",
         "search_count",
+        -- terminal.nvim: das aktuelle Terminal mit der Zahl der Terminals des Projekts
+        -- ("build (3)"), sonst "2 terminals"; leer ohne Terminal. Zum Einschalten die Zeile
+        -- aktivieren (ein Baustein des Katalogs, kein eigenes Modul noetig).
+        -- "terminal_count",
         "undo_depth",
         "tasks_counter",
         "sync_issues",
