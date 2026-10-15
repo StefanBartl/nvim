@@ -1,63 +1,25 @@
 #!/usr/bin/env bash
-# Run every plugin's test suite, finding the runner instead of assuming one.
+# Run every personal plugin's test suite and print one table (pass/fail/error/skip/... per repo).
 #
-# Lived in docs/ROADMAP/tools/ until 2026-09-02, together with seven scripts
-# that have since become plugin commands. This one has no plugin to become:
-# it assumes THIS machine's checkout layout (thirty sibling repos under
-# E:/repos), which is exactly what no published plugin should ship. So it
-# stays a script, in the folder for scripts rather than the one for open
-# questions. See $REPOS_DIR/tasks-vault/
-# ALL/Backlog/TASKS/roadmap-tools-analysis.md for the other seven.
+# The loop itself is scripts/run_all_tests.lua: for each repo it calls `scripts/test.sh --json <ir>`
+# and reads the IR back (testing.nvim). Until 2026-10-15 this file searched for a runner by file
+# name and read the verdict from sentinels with grep; that was wrong for every migrated repo.
 #
-# The point is the "no runner found" case: during the keymap migration I called
-# TESTS/run.lua in a repo whose runner is TESTS/pickers_spec.lua, got "cannot
-# open", and read the missing output as success. A stale spec stayed red for
-# hours. So: locate the runner, and say so loudly when there isn't one.
-LIB=$REPOS_DIR/lib.nvim
+#   scripts/run_all_tests.sh                       all repos
+#   scripts/run_all_tests.sh --only=media.nvim,lsp.nvim
+#   scripts/run_all_tests.sh --timeout=1200        seconds per repo (default 900)
+#
+# Exit code: 0 all green, 1 at least one repo red, 3 infrastructure error (a repo without a runner or
+# without testing.nvim, a missing IR, a timeout): the verdict cannot be trusted and is never "green".
+# It assumes THIS machine's checkout layout, so it stays here and does not ship with a plugin.
+set -u
 
-run_one() {
-  local repo="$1"
-  cd "$REPOS_DIR/$repo" || return
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-  local runner="" cand
-  for cand in TESTS/run.lua tests/run.lua TESTS/smoke.lua TESTS/smoke_spec.lua; do
-    if [ -f "$cand" ]; then runner="$cand"; break; fi
-  done
-
-  # A single *.lua under TESTS/ that is itself the runner (pickers, ...).
-  if [ -z "$runner" ]; then
-    local n
-    n=$(ls TESTS/*.lua 2>/dev/null | wc -l)
-    if [ "$n" = "1" ]; then runner=$(ls TESTS/*.lua); fi
-  fi
-
-  if [ -z "$runner" ]; then
-    printf '%-24s %-24s %s\n' "$repo" "-" "KEIN RUNNER GEFUNDEN"
-    return
-  fi
-
-  # `env -u NVIM -u NVIM_LISTEN_ADDRESS`: when this runs from a :terminal, the
-  # child would otherwise inherit the editor's own RPC socket and a spec could
-  # reach back into the live session. `-n`: no swap files (stale ones fail
-  # suites with E326); `--clean` already implies `-i NONE`.
-  local out verdict
-  out=$(LIB_NVIM_PATH=$LIB LIB_NVIM_DIR=$LIB timeout 120 env -u NVIM -u NVIM_LISTEN_ADDRESS \
-        nvim -n --clean --headless -u NONE \
-        -c "set rtp+=." -c "set rtp+=$LIB" -l "$runner" 2>&1 | tail -25)
-
-  verdict=$(echo "$out" | grep -oiE '[0-9]+ (passed|failed)[a-z ]*' | tail -2 | tr '\n' ' ')
-  if [ -z "$verdict" ]; then
-    verdict=$(echo "$out" | grep -oE '[A-Z_]+_TESTS_OK|[0-9]+ spec\(s\) failed' | tail -1)
-  fi
-  if [ -z "$verdict" ]; then
-    verdict="?? $(echo "$out" | tail -1 | cut -c1-44)"
-  fi
-
-  printf '%-24s %-24s %s\n' "$repo" "$runner" "$verdict"
+command -v nvim >/dev/null 2>&1 || {
+  echo "run_all_tests: nvim is not on PATH" >&2
+  exit 3
 }
 
-cd E:/repos || exit 1
-for repo in *.nvim; do
-  [ -d "$repo/lua" ] || continue
-  ( run_one "$repo" )
-done
+# Not from inside a :terminal with the editor's socket: the child must not reach back into the session.
+exec env -u NVIM -u NVIM_LISTEN_ADDRESS nvim -n --clean --headless -u NONE -l "$here/run_all_tests.lua" "$@"
