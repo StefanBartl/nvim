@@ -9,9 +9,10 @@
 -- with a checkout on this machine). This script stays in nvim-config/scripts because it depends on
 -- that checkout layout (TOOL-PLACEMENT.md, case 5); testing.nvim itself knows nothing of it.
 --
--- Exit code: 0 every repo green, 1 at least one repo red, 3 infrastructure error (a repo without a
--- runner or without testing.nvim, an IR that is missing or unreadable, a run that timed out). An
--- infrastructure error is never reported as success and wins over red: the verdict cannot be trusted.
+-- Exit code: 0 every repo green, 1 at least one repo red, 2 usage error, 3 infrastructure error (a
+-- repo without a runner or without testing.nvim, an IR that is missing or unreadable or contradicts
+-- the exit code, a run that timed out, a name in --only that is no repo, any error of this script).
+-- An infrastructure error is never reported as success and wins over red: the verdict cannot be trusted.
 --
 -- Usage:  nvim -l scripts/run_all_tests.lua [--only=a.nvim,b.nvim] [--timeout=SECONDS]
 --
@@ -30,16 +31,40 @@ local OWN_RUNNER = { ["lib.nvim"] = "LIB_TESTS_OK" }
 
 local STATUSES = { "pass", "fail", "error", "skip", "xfail", "xpass", "timeout", "crash" }
 
----@param name string
----@return string|nil
-local function arg_of(name)
+---@param message string
+---@param code integer
+local function die(message, code)
+  io.stderr:write("run_all_tests: " .. message .. "\n")
+  os.exit(code)
+end
+
+--- The options: `--only=a,b` and `--timeout=SECONDS`, nothing else. A value that cannot be read is
+--- refused: a mistyped `--only` that fell back to "every repo" would start a 20 minute run.
+---@return table<string, boolean> only
+---@return integer timeout_ms
+local function parse_args()
+  local only, timeout_ms = {}, 900 * 1000
   for _, a in ipairs(_G.arg or {}) do
-    local v = a:match("^%-%-" .. name .. "=(.*)$")
-    if v then
-      return v
+    local names = a:match("^%-%-only=(.*)$")
+    local seconds = a:match("^%-%-timeout=(.*)$")
+    if names then
+      for name in names:gmatch("[^,]+") do
+        only[name] = true
+      end
+      if next(only) == nil then
+        die("--only needs at least one repo name (--only=a.nvim,b.nvim)", 2)
+      end
+    elseif seconds then
+      local n = tonumber(seconds)
+      if not n or n ~= n or n <= 0 then
+        die("--timeout needs a number of seconds above zero, got '" .. seconds .. "'", 2)
+      end
+      timeout_ms = math.floor(n * 1000)
+    else
+      die("unknown argument '" .. a .. "' (usage: [--only=a.nvim,b.nvim] [--timeout=SECONDS])", 2)
     end
   end
-  return nil
+  return only, timeout_ms
 end
 
 ---@return string
@@ -49,15 +74,19 @@ local function find_bash()
   end
   -- `bash` on PATH is often the WSL one, which sees none of these paths.
   for _, candidate in ipairs({
-    vim.env.BASH,
     "C:/Program Files/Git/bin/bash.exe",
     "C:/Program Files/Git/usr/bin/bash.exe",
+    "C:/Program Files (x86)/Git/bin/bash.exe",
   }) do
-    if candidate and candidate ~= "" and uv.fs_stat(candidate) then
+    if uv.fs_stat(candidate) then
       return candidate
     end
   end
-  return vim.fn.exepath("bash")
+  local found = vim.fn.exepath("bash")
+  if found:lower():find("system32", 1, true) then
+    die("only the WSL bash was found (" .. found .. "); install Git for Windows", 3)
+  end
+  return found
 end
 
 ---@return table[] projects
@@ -74,15 +103,14 @@ local function projects()
   vim.opt.rtp:append(lib)
   local ok, export = pcall(require, "plugins.personal.core.export")
   if not ok then
-    io.stderr:write(
-      "run_all_tests: cannot load plugins.personal.core.export: " .. tostring(export) .. "\n"
-    )
-    os.exit(3)
+    die("cannot load plugins.personal.core.export: " .. tostring(export), 3)
   end
   local list, err = export.projects()
   if err then
-    io.stderr:write("run_all_tests: " .. tostring(err) .. "\n")
-    os.exit(3)
+    die(tostring(err), 3)
+  end
+  if type(list) ~= "table" then
+    die("export.projects() returned no list", 3)
   end
   return list
 end
@@ -100,6 +128,34 @@ end
 ---@field secs number
 ---@field note string
 
+--- Run `argv` and wait at most `timeout_ms`. On a timeout the whole process tree is stopped (the editor that
+--- `test.sh` started is a grandchild and would otherwise run on into the next repo) and nil comes back.
+---@param argv string[]
+---@param opts table
+---@param timeout_ms integer
+---@return table|nil result  # nil: timed out
+local function spawn(argv, opts, timeout_ms)
+  local done, res = false, nil
+  local obj = vim.system(argv, vim.tbl_extend("force", opts, { text = true }), function(r)
+    res, done = r, true
+  end)
+  vim.wait(timeout_ms, function()
+    return done
+  end, 50)
+  if done then
+    return res
+  end
+  if is_windows then
+    -- by the PID of our own child, with its children: never by image name
+    vim.system({ "taskkill", "/PID", tostring(obj.pid), "/T", "/F" }):wait(10000)
+  end
+  pcall(obj.kill, obj, 9)
+  vim.wait(5000, function()
+    return done
+  end, 50)
+  return nil
+end
+
 --- One repo through `scripts/test.sh --json`.
 ---@param p table
 ---@param bash string
@@ -110,29 +166,24 @@ local function run_testing(p, bash, timeout_ms)
   local started = uv.hrtime()
   -- The editor's RPC socket must not leak into the child: a spec could reach back into this session.
   local script = 'unset NVIM NVIM_LISTEN_ADDRESS; exec bash scripts/test.sh --json "$1"'
-  local res = vim
-    .system({ bash, "-c", script, "run_all_tests", ir_file }, {
-      cwd = p.dir,
-      text = true,
-      timeout = timeout_ms,
-    })
-    :wait()
+  local res = spawn({ bash, "-c", script, "run_all_tests", ir_file }, { cwd = p.dir }, timeout_ms)
   local secs = (uv.hrtime() - started) / 1e9
 
   ---@type RunRow
   local row = { repo = p.name, kind = "infra", counts = {}, secs = secs, note = "" }
-  -- `wait()` gives nothing at all for a process killed by the timeout (observed on Windows)
+  local raw
+  local f = io.open(ir_file, "rb")
+  if f then
+    raw = f:read("*a")
+    f:close()
+  end
+  os.remove(ir_file) -- on every path, a timed out run included
   if not res or res.signal ~= 0 or res.code == 124 then
     row.note = ("timed out after %d s"):format(timeout_ms / 1000)
     return row
   end
-  local f = io.open(ir_file, "rb")
-  local raw = f and f:read("*a")
-  if f then
-    f:close()
-  end
-  os.remove(ir_file)
-  local ok, ir = pcall(vim.json.decode, raw or "")
+  -- JSON null stays out of the tables (`luanil`): a null count must not pass for a number
+  local ok, ir = pcall(vim.json.decode, raw or "", { luanil = { object = true, array = true } })
   if not raw or raw == "" or not ok or type(ir) ~= "table" or type(ir.summary) ~= "table" then
     local tail = vim.trim(
       ((res.stderr or "") ~= "" and res.stderr or res.stdout or ""):match("([^\n]*)%s*$") or ""
@@ -141,17 +192,25 @@ local function run_testing(p, bash, timeout_ms)
     return row
   end
   for _, s in ipairs(STATUSES) do
-    row.counts[s] = ir.summary[s] or 0
+    local v = ir.summary[s]
+    if v ~= nil and type(v) ~= "number" then
+      row.counts = {}
+      row.note = "the IR holds a non-number for '" .. s .. "'"
+      return row
+    end
+    row.counts[s] = v or 0
   end
   local bad = row.counts.fail + row.counts.error + row.counts.timeout + row.counts.crash
   if res.code == 0 and bad == 0 then
     row.kind = "ok"
-  elseif res.code == 1 or bad > 0 then
-    -- a red run exits 1 and still wrote its IR
-    row.kind = res.code == 0 and "infra" or "red"
-    row.note = res.code == 0 and "exit 0 but the IR holds failures" or ""
+  elseif res.code == 0 then
+    row.note = "exit 0 but the IR holds failures"
+  elseif res.code == 1 and bad > 0 then
+    row.kind = "red" -- a red run exits 1 and still wrote its IR
+  elseif res.code == 1 then
+    row.note = "exit 1 but the IR holds no failure"
   else
-    row.note = "exit " .. tostring(res.code)
+    row.note = "exit " .. tostring(res.code) .. " (the runner's own error)"
   end
   return row
 end
@@ -168,24 +227,11 @@ local function run_own(p, sentinel, timeout_ms, bash)
   -- the same RPC-socket hygiene as `run_testing`; nvim's own path is handed over as an argument
   local script =
     'unset NVIM NVIM_LISTEN_ADDRESS; exec "$1" -n --clean --headless -u NONE -c "set rtp+=." -l TESTS/run.lua'
-  local res = vim
-    .system({ bash, "-c", script, "run_all_tests", vim.v.progpath }, {
-      cwd = p.dir,
-      text = true,
-      timeout = timeout_ms,
-      env = { LIB_NVIM_PATH = lib, LIB_NVIM_DIR = lib },
-    })
-    :wait()
-  if not res then
-    return {
-      repo = p.name,
-      kind = "infra",
-      counts = {},
-      secs = (uv.hrtime() - started) / 1e9,
-      note = "own runner: timed out",
-    }
-  end
-  local out = (res.stdout or "") .. (res.stderr or "")
+  local res = spawn(
+    { bash, "-c", script, "run_all_tests", vim.v.progpath },
+    { cwd = p.dir, env = { LIB_NVIM_PATH = lib, LIB_NVIM_DIR = lib } },
+    timeout_ms
+  )
   ---@type RunRow
   local row = {
     repo = p.name,
@@ -194,9 +240,12 @@ local function run_own(p, sentinel, timeout_ms, bash)
     secs = (uv.hrtime() - started) / 1e9,
     note = "own runner",
   }
-  if res.signal ~= 0 or res.code == 124 then
+  if not res or res.signal ~= 0 or res.code == 124 then
     row.note = "own runner: timed out"
-  elseif res.code == 0 and out:find(sentinel, 1, true) then
+    return row
+  end
+  local out = (res.stdout or "") .. (res.stderr or "")
+  if res.code == 0 and out:find(sentinel, 1, true) then
     row.kind = "ok"
   elseif out:find("spec(s) failed", 1, true) then
     row.kind = "red"
@@ -210,22 +259,16 @@ local function run_own(p, sentinel, timeout_ms, bash)
 end
 
 local function main()
-  local only = {}
-  local only_arg = arg_of("only")
-  if only_arg then
-    for name in only_arg:gmatch("[^,]+") do
-      only[name] = true
-    end
-  end
-  local timeout_ms = (tonumber(arg_of("timeout")) or 900) * 1000
+  local only, timeout_ms = parse_args()
   local bash = find_bash()
   if bash == "" then
-    io.stderr:write("run_all_tests: no bash found\n")
-    os.exit(3)
+    die("no bash found", 3)
   end
 
+  local known = {}
   local rows = {} ---@type RunRow[]
   for _, p in ipairs(projects()) do
+    known[p.name] = true
     if next(only) == nil or only[p.name] then
       local row
       if NO_SPECS[p.name] then
@@ -249,6 +292,27 @@ local function main()
       io.stdout:write(("  ... %s: %s\n"):format(row.repo, row.kind))
       io.stdout:flush()
     end
+  end
+
+  -- a name that is no repo (a typo) must not turn into "nothing ran, all green"
+  local unknown = {}
+  for name in pairs(only) do
+    if not known[name] then
+      unknown[#unknown + 1] = name
+    end
+  end
+  table.sort(unknown)
+  if #unknown > 0 then
+    rows[#rows + 1] = {
+      repo = table.concat(unknown, ","),
+      kind = "infra",
+      counts = {},
+      secs = 0,
+      note = "--only names no repo of export.projects()",
+    }
+  end
+  if #rows == 0 then
+    die("no repo to run: export.projects() is empty", 3)
   end
 
   local labels = { ok = "green", red = "RED", infra = "INFRA", none = "-" }
@@ -308,4 +372,9 @@ local function main()
   os.exit(0)
 end
 
-main()
+-- Any error of this script is an infrastructure error, never the "red" exit code 1 that nvim uses for it.
+local ok, err = xpcall(main, debug.traceback)
+if not ok then
+  io.stderr:write("run_all_tests: internal error: " .. tostring(err) .. "\n")
+  os.exit(3)
+end
