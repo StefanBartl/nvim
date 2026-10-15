@@ -60,6 +60,10 @@ return {
       -- confirm_destructive = true,
       -- Shell `container exec` uses when none is given.
       -- default_shell = "sh",
+      -- Wo `container exec` seine Sitzung oeffnet: "split" (vertikaler Split mit Terminal-Job) oder
+      -- "terminal" (ein benanntes terminal.nvim-Terminal `sandbox:<Container>`; ausblendbar, in
+      -- `:Terminal list`; ohne terminal.nvim Warnung und Split). Default: "split".
+      -- exec_target = "split",
       -- Milliseconds between automatic refreshes of a visible list view; nil/0 disables.
       -- refresh_interval = nil, -- integer
       -- Window placement of list views: "above" | "below" | "left" | "right".
@@ -1292,6 +1296,11 @@ return {
         nav_down = "<C-j>",
         nav_up = "<C-k>",
         nav_right = "<C-l>",
+
+        -- Cheatsheet der Shell, die das Terminal laeuft (`:Terminal cheat`), im Normal- und im
+        -- Terminal-Modus. Default: false (nur der Befehl). Nochmal gedrueckt schliesst es. Vorschlag,
+        -- falls gewuenscht: "<A-?>".
+        -- cheatsheet = "<A-?>",
       },
 
       -- Fensterwechsel ueber den Neovim-Rand hinaus: ist in der Richtung kein Fenster mehr, fokussiert
@@ -1337,7 +1346,31 @@ return {
       -- Default: "vsplit".
       -- pin = { layout = "vsplit" },
 
-      -- Den Befehl `:Terminal` registrieren (toggle open hide close list send run). Default: true.
+      -- sessions.nvim: die Terminals einer Session werden neben ihr gespeichert (Name, Layout,
+      -- Verzeichnis, Befehl eines `run --direct`) und beim Laden versteckt wieder geoeffnet; folgt
+      -- auch Rename und Delete der Session. Kein Prozess ueberlebt.
+      -- sessions = {
+      --   -- Default: true.
+      --   enable = true,
+      --   -- Gespeicherte Befehle: "ask" (einmal fragen, mit Verzeichnis) | "run" (starten) |
+      --   -- "never" (stattdessen einfache Shells). Default: "ask".
+      --   commands = "ask",
+      -- },
+
+      -- `:Terminal cheat`: Cheatsheet fuer die Shell des Terminals (bash, zsh, fish, powershell, cmd,
+      -- common), ein Abschnitt nach dem anderen; Blaettern mit `]]` / `[[`, `/` sucht in allen
+      -- Abschnitten, `<CR>` tippt den Befehl einer Tabellenzeile ins Terminal (ohne Enter).
+      -- cheatsheet = {
+      --   -- Eine Seite erzwingen ("bash", "powershell", ...); "" erkennt sie. Default: "".
+      --   shell = "",
+      --   -- Ordner mit <shell>.md; geht den eingebauten Seiten vor. Default: "".
+      --   dir = "",
+      --   -- Eine Datei je Shell: { fish = "~/notes/fish.md" }. Default: {}.
+      --   shells = {},
+      -- },
+
+      -- Den Befehl `:Terminal` registrieren (toggle open hide close pin adopt list cheat send run).
+      -- Default: true.
       -- commands = true,
     },
   },

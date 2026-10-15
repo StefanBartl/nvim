@@ -129,6 +129,13 @@ return {
         -- right-click menu from composing the DAP fly-out.
         -- integrations = { ui_menu = true },
 
+        -- Das Programm eines Debug-Laufs ("runInTerminal") als benanntes terminal.nvim-Terminal
+        -- `dap:<Konfiguration>` starten statt im Puffer von nvim-dap: folgt den Fensteroptionen
+        -- von terminal.nvim, steht in `:Terminal list`, bleibt nach dem Ende mit Exit-Code offen,
+        -- ein neuer Lauf ersetzt es. Wirkt auf die Adapter, die setup() registriert. Braucht
+        -- terminal.nvim. Default: aus.
+        -- terminal = { enable = false, layout = "split", name = "dap" },
+
         -- Adapter overrides keyed by nvim-dap adapter name (codelldb, pwa-node,
         -- coreclr, ...), applied after the language modules registered theirs: a
         -- table is deep-merged over the built-in definition, a function replaces
@@ -1463,6 +1470,9 @@ return {
     -- On demand only: `cmd` is the whole trigger, nothing registers at startup.
     -- setup() takes only the two options below. The per-project settings (roots, guards, jobs, ...)
     -- live in `.testing.lua` in the project root (docs/CONFIG.md), not here.
+    -- `:Testing terminal` wiederholt den letzten Lauf (sonst das Projekt) als Job eines
+    -- terminal.nvim-Terminals `testing`, mit der Ausgabe des Reporters (zum Scrollen und Kopieren,
+    -- ohne Quickfix-Liste). Braucht terminal.nvim, keine Option hier.
     "StefanBartl/testing.nvim",
     cmd = "Testing",
     dependencies = { "StefanBartl/lib.nvim" },
