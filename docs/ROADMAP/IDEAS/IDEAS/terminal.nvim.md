@@ -1,1 +1,0 @@
-E:/repos/tasks-vault/terminal.nvim/Backlog/FEATURES/2026-10-07_terminal-nvim-konzept.md
