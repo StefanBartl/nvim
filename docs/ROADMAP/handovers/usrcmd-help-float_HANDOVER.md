@@ -161,3 +161,10 @@ Bekannte, nicht zu verantwortende Ausfaelle der Gesamt-Suite: `telemetry_wrap_sp
   lib: weitere Verben mit `spec.quotes`.
 - Hinweis: lokales nvim-config-`main` hat `bc0b554b` noch als Duplikat von `b7d18bab`; `git pull --rebase` verwirft es von selbst,
   sobald die fremde Arbeit (`docs/ROADMAP/new.md`, github-stats-Daten) committed ist.
+
+## Stand 2026-10-16
+
+- Aufgabe `help-float-replacer-nvim-is-the-first-user-of-spec-quotes-de` entschieden und erledigt: **kein weiteres Verb** setzt `spec.quotes`.
+  `quotes = true` gilt nur fuer Verben, die `opts.args` mit eigenem Quote-Tokenizer lesen (replacer, markdown `table_wrap`). `:Insert`/`:Copy`
+  (buffer-ctx) und `:Case`/`:Cases` (casedesk) arbeiten mit den `fargs`/`ctx.args` des Composers, die `FileGrep`-Verben sind einfache Usercmds.
+- Im Plan `usrcmd-help-float-cheatsheet` bleibt nur die Entscheidung `help-float-ui-usercmd-decision-migrate-or-attach` (`:UI`/`:Theme`, Nutzer).
