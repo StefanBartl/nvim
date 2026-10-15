@@ -1,6 +1,6 @@
 ---@module 'bindings.mappings.buffer_jump'
 --- Numeric buffer jump (`<leader>1`..`<leader>0`). Resolves a buffer order
---- (prefer `vim.t.bufs`, then several fallbacks), then switches via
+--- (`lib.nvim.buf_win_tab.tab_buffers`: `vim.t.bufs`, then several fallbacks), then switches via
 --- `ui.bindings.keymaps.tabufline.state.goto_buf` if present (respects
 --- tabline winfixbuf logic), else `nvim_set_current_buf`.
 
@@ -11,110 +11,11 @@ local M = {}
 local api = vim.api
 local nvim_buf_is_valid = api.nvim_buf_is_valid
 
---- Deduplicate numbers while preserving order.
----@param arr number[] array of buffer-ids
----@return number[] unique ordered array
-local function unique_ordered(arr)
-  local seen = {}
-  local out = {}
-  for _, v in ipairs(arr) do
-    if type(v) == "number" and not seen[v] then
-      seen[v] = true
-      out[#out + 1] = v
-    end
-  end
-  return out
-end
-
---- Try to read buffer list from vim.t.bufs (kept current by
---- ui.bindings.keymaps.tabufline.state's own BufAdd/BufEnter/tabnew/
---- BufDelete autocmds).
----@return number[] buflist
-local function buflist_from_vim_t_bufs()
-  local t = vim.t.bufs
-  if type(t) == "table" and #t > 0 then
-    return unique_ordered(t)
-  end
-  return {}
-end
-
---- Parse various possible return types from tabpagebuflist into a Lua array.
----@return number[] buflist
-local function parse_tabpagebuflist_raw()
-  local ok, raw = pcall(vim.fn.tabpagebuflist, 0)
-  if not ok then
-    return {}
-  end
-  if type(raw) == "table" then
-    return raw
-  end
-  if type(raw) == "string" then
-    local t = {}
-    for num in raw:gmatch("%d+") do
-      t[#t + 1] = tonumber(num)
-    end
-    return t
-  end
-  return {}
-end
-
---- Build buffer list by iterating visible windows in current tabpage (window order).
----@return number[] buflist
-local function build_from_windows()
-  local ok, wins = pcall(api.nvim_tabpage_list_wins, 0)
-  if not ok or type(wins) ~= "table" then
-    return {}
-  end
-  local t = {}
-  for _, w in ipairs(wins) do
-    local buf = api.nvim_win_get_buf(w)
-    if buf and nvim_buf_is_valid(buf) then
-      t[#t + 1] = buf
-    end
-  end
-  return unique_ordered(t)
-end
-
---- Fallback: get all listed buffers.
----@return number[] buflist
-local function fallback_listed_buffers()
-  local ok, infos = pcall(vim.fn.getbufinfo, { buflisted = 1 })
-  if not ok or type(infos) ~= "table" then
-    return {}
-  end
-  local t = {}
-  for _, info in ipairs(infos) do
-    if type(info.bufnr) == "number" then
-      t[#t + 1] = info.bufnr
-    end
-  end
-  return unique_ordered(t)
-end
-
---- Compose a robust tabpage buffer list using multiple strategies.
+--- The buffers of the current tab in the order the user sees them: `vim.t.bufs`, then `tabpagebuflist`, the
+--- tab's windows, `getbufinfo` (see `lib.nvim.buf_win_tab.tab_buffers`).
 ---@return number[] buflist
 local function robust_tabpage_buflist()
-  local t = buflist_from_vim_t_bufs()
-  if #t > 0 then
-    return t
-  end
-
-  local t2 = parse_tabpagebuflist_raw()
-  if #t2 > 0 then
-    return unique_ordered(t2)
-  end
-
-  local winlist = build_from_windows()
-  if #winlist > 0 then
-    return winlist
-  end
-
-  local fallback = fallback_listed_buffers()
-  if #fallback > 0 then
-    return fallback
-  end
-
-  return {}
+  return (require("lib.nvim.buf_win_tab.tab_buffers").list())
 end
 
 --- Attempt to use ui.nvim's own tabufline state goto_buf if available.
