@@ -30,7 +30,7 @@ Stand 2026-10-16. Das ausführliche Handover liegt im Vault (`tasks-vault/lib.nv
 - `hover.nvim` Mausrad-Zoom (actor=pair, du bestätigst die Tasten).
 - `docmap-desktop/rules-api-catalog-and-run` (erst klären, ob es mit der laufenden rules.nvim-Arbeit kollidiert).
 - `documentation.nvim/repo-named-paths-outside-root` (Sicherheitsentscheidung).
-- `lib.nvim` help-float-Entscheidung (`help-float-ui-usercmd-decision-migrate-or-attach`); die `spec.quotes`-Frage ist laut Handover entschieden (keine weiteren Verben).
+- ~~`lib.nvim` help-float-Entscheidung~~ erledigt am 2026-10-16: migriert (ui.nvim `834591a`), `spec.quotes`: keine weiteren Verben. Siehe Abschnitt "Chat usrcmd-help-float" unten.
 - `testing.nvim/cache-affected-remaining-limits` (zwei Entscheidungen: Lese-Ledger, State-Warn bei `soft`).
 - Handchecks: `gx` auf einen Env-Link in einem echten Neovim 0.12 und `live-check-lspsaga-replacements`.
 - Entscheidung zum Stern: Alle Code-Commits wurden mit Reasoning "hoch" reviewt, keiner mit `ultracode`. Soll "hoch" für den Stern reichen?
@@ -66,3 +66,65 @@ Haken = durch Reasoning über "normal" reviewt; keiner hat einen Stern (ultracod
 - Backslashes nie durch Heredocs oder Python-Strings, nur per Write/Edit oder `chr(92)`; im Handover/Notizen nicht ausschreiben.
 - Eine Sabotage ändert genau eine Stelle; erst dann beweist der neue Test etwas.
 - In der nvim-config nur die eigene Datei per Pfad committen (dort liegen fremde uncommittete Änderungen).
+
+---
+
+# Chat usrcmd-help-float und tasks.nvim-Umstellung (2026-10-16)
+
+Handover des Themas: `docs/ROADMAP/handovers/usrcmd-help-float_HANDOVER.md` (Plan `usrcmd-help-float-cheatsheet` ist abgeschlossen, alle seine Tasks sind done).
+
+## Erledigt in diesem Chat
+
+- `spec.quotes`-Rollout entschieden: kein weiteres Verb (nur Verben mit eigenem Quote-Tokenizer, das sind replacer und markdown `table_wrap`). Task done.
+- Task `wkdbook-tasks.nvim/tasks-nvim-auf-lib-contract-umstellen` done: tasks.nvim nutzt `lib.nvim.contract.*`, `json.canonical`, `fs.etag/with_lock/create_exclusive` (Kopien gelöscht). Goldens, `digest`, 69 Specs unverändert grün, CI grün in tasks.nvim und tasks-desktop.
+- Review-Funde 1 bis 4 der Umstellung behoben (`2e25a03`), die drei Aufräum-Tasks (Funde 5 bis 7) erledigt (`a0d05fc`).
+- Entscheidung `:UI`: **migrieren**. `:UI`/`:Theme` sind Composer-Verben (ui.nvim `834591a`, 24 Routen, Spec `TESTS/usrcmd_help_spec.lua`, CI grün). Task done.
+
+## Noch offen (aus diesem Chat)
+
+**1. Funde aus den zwei letzten Reviews, noch nicht behoben, noch keine Tasks**
+
+ui.nvim `834591a` (6 Funde):
+- README `lua/ui/bindings/usrcmds/README.md` nennt `<M-h>` als Standardtaste. Falsch: die Composer-Hilfe hat keinen Default, `<M-h>` ist nur die Einstellung der nvim-config. Korrigieren (nach `help.keymap` verweisen).
+- `ui_help` (statischer Hilfekasten) ist eine zweite, handgepflegte Liste neben den Routen-Texten: aus `ROUTES` erzeugen oder `:UI help` auf den Float reduzieren.
+- Verhaltensänderungen nirgends notiert: `:Theme a b` wird nicht mehr abgelehnt (nimmt nur das erste Wort), ein nacktes `:UI` zeigt den Float statt des Hilfetexts. In README und Changelog nachtragen.
+- Die sechs Composer-Typen (`UI_THEME`, `UI_VARIANT`, `UI_TABLINE_STYLE`, `UI_KIT_PRESET`, `UI_SLOT_WORD`, `UI_STICKY_WORD`) werden beim `require` ins globale Typ-Register geschrieben: in `setup()` verlegen oder Namen mit Präfix versehen.
+- `STICKY_ARGS` und `ON_OFF` sind zwischen mehreren Routen geteilte Tabellen: pro Route frisch bauen.
+- Spec: stellt das Colorscheme nicht zurück, wenn vorher keines gesetzt war; die 24 Routennamen sind fest eingetragen (Fehlermeldung nennt nicht, welcher Name neu ist).
+
+tasks.nvim `a0d05fc` (4 Funde, gering):
+- Der gelöschte `tasks_json_spec` war die einzige tasks.nvim-seitige Absicherung der Encoder-Regeln (leeres Objekt vs. Array, NaN/inf/2^53, Escaping von `<`/U+2028): ein kleiner Spec mit den Garantien von tasks-export/1 sollte bleiben.
+- `fsio.copy` gibt `M.EXISTS` zurück, das jetzt dem Token von `create_exclusive` gehört: eigene Konstante für `copy` oder das Lib-Token ausdrücklich zurückgeben.
+- Über 50 Aufrufstellen `door.failure(ctx.root, ...)` / `door.refuse(...)` und die spät zugewiesene `door`-Variable in `ops.lua` (ein dünner lokaler Helfer wäre kleiner).
+- CHANGELOG ohne Zeile für diese Änderung; README nennt noch "44 spec files" (es sind 69).
+
+Vorschlag: die Funde 1 bis 4 aus ui.nvim und die zwei Test-/Konstanten-Funde aus tasks.nvim beheben, den Rest als Tasks (Area `ui.nvim` bzw. `wkdbook-tasks.nvim`) anlegen. Danach die Fix-Commits ohne neues Review (Fix-Commits).
+
+**2. Nicht geprüft**
+- Der Option-Float von `:UI` wurde in keiner echten Sitzung angesehen (nur Specs: Routen, Texte, Completion, Dispatch). Einmal in der echten nvim-config `:UI` und `:UI sticky ` mit `<M-h>` ausprobieren.
+- tasks-desktop: die lokale Browser-E2E (`pnpm e2e`) lief nicht, weil ein Hub auf Port 17698 läuft (nicht von mir gestartet, nicht beendet). Die E2E lief in der CI (grün). Wer will, stoppt den Hub und fährt sie lokal.
+- Der Pin `tasks.nvim 98a1d02` in tasks-desktop gilt noch; neuere tasks.nvim-Commits (`2e25a03`, `a0d05fc`) ändern den Vertrag nicht, ein Nachziehen von `engine.lock` ist nicht nötig.
+
+**3. Fremdes, das ich gesehen und nicht angefasst habe**
+- tasks.nvim: ungestagte Änderung in `lua/tasks_nvim/links.lua` (andere Sitzung).
+- Vault `check wkdbook-tasks.nvim`: `obsidian-docs` und `obsidian-wikilinks` haben `blocker-freed` (Status `blocked`, alle Blocker erledigt: auf `open` setzen).
+- nvim-config: fremde ungestagte Dateien (`docs/NOTES/CDX/templates/PROMPT/Base.md`, ein Plan-File gelöscht).
+
+## Commits dieses Chats
+
+| Commit | Repo | Beschreibung | Review |
+|---|---|---|---|
+| `5068448` | tasks-vault | spec.quotes-Rollout entschieden, Task done | ✅ (Doku) |
+| `6cf07f9` | tasks.nvim | contract/api/host/errors/json auf lib.nvim.contract.* | ⭐ (hoch, 7 Funde) |
+| `98a1d02` | tasks.nvim | ops auf contract.ops, fsio auf lib.nvim.fs.* | ⭐ (hoch) |
+| `2fe5896` | tasks-desktop | engine.lock auf tasks.nvim `98a1d02` | – (Pin, CI ✅) |
+| `f65d003` | tasks-vault | tasks-nvim-auf-lib-contract-umstellen done | ✅ (Doku) |
+| `beddf504` | nvim-config | Handover usrcmd-help-float aktualisiert | ✅ (Doku) |
+| `2e25a03` | tasks.nvim | Fix der Funde 1 bis 4 | Fix-Commit |
+| `481d91c` | tasks-vault | drei Aufräum-Tasks | ✅ (Doku) |
+| `a0d05fc` | tasks.nvim | fsio EXISTS/is_exists, ops ohne Wrapper, json-Spec entfernt | reviewt (hoch), 4 Funde **offen** |
+| `7bfc62d` (+ Korrektur) | tasks-vault | die drei Tasks done | ✅ (Doku) |
+| `834591a` | ui.nvim | `:UI`/`:Theme` als Composer-Verben | reviewt (hoch), 6 Funde **offen** |
+| (Vault) | tasks-vault | help-float-ui-usercmd-decision done, Plan abgeschlossen | ✅ (Doku) |
+
+Haken = Review über "normal"; Stern = hoch (ultracode wurde nicht benutzt; ob "hoch" für den Stern reicht, siehe oben).
