@@ -1,7 +1,6 @@
 Checke/review alle commits dieses chats die nicht reine docs waren auf Bugs, Security / Performance Optimierungen und fixe sie gleich.
 Ich stelle das reasoning auf hoch oder mehr, damit du es gleich grün abhaken kannst.
 
-
 # Vorgaben/Richtlinien/Guiding
 
 ## Allgemeines Verhalten
@@ -66,7 +65,7 @@ Nur für ein Vorhaben aus mehreren Tasks in Etappen mit eigenem Ziel (nicht für
 
 - Wenn eine Aufgabe fertig ist: sofort committen / pushen / pullen im main-Branch, sodass ich es gleich verwenden kann - explizit keine Pull Requests (PR)!
 - Keine Co-Autorenschaft von Claude in den Commits.
-- Am Ende jeder Ausgabe gibst du eine laufende Liste aller Commits des Chats aus mit kurzer Beschreibung + welches Repository. Jedes bekommt einen grünen Haken, wenn das Commit durch einen höheren Reasoning-Faktor als `normal` reviewed wurde. `ultracode`-Agenten oder explizit durch mich auf ultracode gestelltes reasoning bekommt einen Stern als Symbol. Ausgenommen sind Commits, die reine Dokumentationen upgedatet haben - diese bekommen einen grünen Haken auch ohne review.
+- Am Ende jeder Ausgabe gibst du eine laufende Liste aller Commits des Chats aus mit kurzer Beschreibung + welches Repository. Jedes bekommt einen grünen Haken, wenn das Commit durch einen höheren Reasoning-Faktor als `normal` reviewed wurde. `ultracode`-Agenten oder explizit durch mich auf ultracode gestelltes reasoning bekommt einen Stern als Symbol. Ausgenommen sind Commits, die reine Dokumentationen upgedatet haben - diese bekommen einen grünen Haken auch ohne review. Bereitws reviewed commits - sog. Fix-Committs -  werden normalerweiße nicht nochmals reviewed aßer es ist explizit angegeben.
 
 ## Code-Qualität
 
@@ -102,8 +101,11 @@ Nur für ein Vorhaben aus mehreren Tasks in Etappen mit eigenem Ziel (nicht für
 - Tool bauen vs. Wegwerf-Skript, Ablageort: `$REPOS_DIR/tasks-vault/TOOLS/TOOL-PLACEMENT.md` und `$REPOS_DIR/tasks-vault/TOOLS/lua-plugin-tools.md`
   - Wird im Zuge einer Task ein Tool gebaut, das für künftige User/Devs/Agents interessant sein könnte: an geeigneter Stelle im `TOOLS/`-Ordner sichern.
 - Keine großen/escapehaltigen Literale durch die Shell schleusen: `$REPOS_DIR/tasks-vault/HEREDOC.md`
-- Performance-Optimierungen: `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/PERFORMANCE.md`
-- Lua-Projekte für Neovim: `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/LUA_NVIM.md`
+- Lua-Projekte für Neovim: `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln`
+  - Lua-Projekte für Neovim speziell bei neuen Repos: `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/LUA_NVIM.md`
+  - Performance-Optimierungen: `$REPOS_DIR/WKDBooks/Development/wkdbook-Lua/Checklists/regeln/PERFORMANCE.md`
+- Native-Projekte: `$REPOS_DIR/WKDBooks/Development/wkdbook-native/Checklists`
 - `$REPOS_DIR/lib.nvim` verwenden, wo möglich und simnnvoll. Dies ist wichtig, um maintainance für mich zu ermöglichen.
 
 ---
+
