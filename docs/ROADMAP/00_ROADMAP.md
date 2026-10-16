@@ -30,17 +30,11 @@
 
 - pickers.nvim `:Pickers []` neue optionen für den tasks-vault, den rules-vault, WKDBook-Tricentis (als `:Pickers Tricentis`), WKDBooks/Development/wkdbok-native als native-apps und wkdbook-myplugins als myplugins
 
-- spotlight.nvim, wie mehrere hl machen, lernen! [note]($NVIM_CONFIG_DIR/docs/NOTES/Notes.md)
-
 - tasks-vault: Andere Rechner: tasks-vault klonen, git pull in nvim-Config und WKDBooks, dann das Setup-Skript laufen lassen.
 
 - WKDBook-Tricentis - workflow docs neu anordnen
 
 - All neuen features/bindings die ich live testen kann/soll + alle Blocker von tasks bitte [hierhin]($NVIM_CONFIG_DIR/docs/ROADMAP/Final_Checks/Checks-Blocker_0610.md) scheriben, also als aneuen abschnitt dazu:  $NVIM_CONFIG_DIR/docs/ROADMAP/Final_Checks/Checks-Blocker_0610.md​
-
-- `:Git dashboard` wenn es staret, macht es eione initale action, ich dachte fetch aller repos, aber wenn dahbaord offen ist, dann muss ihc oftmals manuell fetchen oder gf ausführe, um alles zu fetchen. also warum macht der ddas nicht beim start des dashbpards zuverlässig?
-
--  `:Clipboard remove` - den `remove` parameter auf `usrcmds` ändern -> Hier kommt alles hinein, das als usrcmds gedacht ist
 
 - ui.nvim tabline feraatures wie mit maus verschiebbare tabs in den docs prominent nennen.
 
