@@ -1,38 +1,68 @@
-Das Handover liegt im Vault, der Symlink in `docs/ROADMAP/handovers` ist angelegt und committet.
+Stand 2026-10-16. Das ausführliche Handover liegt im Vault (`tasks-vault/lib.nvim/handovers/session-stand-2026-10-15_HANDOVER.md`, zuletzt `4d0b90d`); der Symlink in `docs/ROADMAP/handovers` zeigt darauf. Diese Datei hält nur, was in diesem Chat noch zu tun ist.
 
-- **Original:** `tasks-vault/lib.nvim/handovers/session-stand-2026-10-15_HANDOVER.md` (Vault-Commit `069b8dc`)
-- **Symlink:** `$NVIM_CONFIG_DIR/docs/ROADMAP/handovers/session-stand-2026-10-15_HANDOVER.md` zeigt auf das Original und ist als Link eingecheckt (nvim-config `96a2ec97`). Dort liegen weiter fremde uncommittete Änderungen, die ich nicht angefasst habe.
+## Noch in diesem Chat zu tun
 
-**Was noch offen ist** (Details und Task-IDs stehen im Handover):
+**1. Reviews (Pflicht, bevor etwas als fertig gilt)**
+- `1a5ddb9` (sessions.nvim): `sessions.portable` als Wrapper über `lib.nvim.fs.portable`. Nur CI grün, nicht reviewt.
+- `567e60d` (replacer.nvim): `replacer.hooks` setzt auf `lib.nvim.hooks` auf. Nur CI grün, nicht reviewt.
+- Prüfpunkte: Spec-Anpassung `"aa"`/`"aaa"` in sessions.nvim (neue Regel vor dem Treffer) und ob replacer wirklich überall `vetoable = alle vier Events` braucht.
 
-**Ohne Rückfrage angehbar**
-- **lib.nvim:** `hooks-pattern` (nächste laut `next`), `portable-path`, ein neuer XS-Bug (`fs.write.atomic` und Symlink als Ziel), `table-format-partial-crlf-block`, die Windows-Flakes (`run_argv_spec`, `git_run_spec`), `spawn_command` ruft `on_exit` vor `handle:close()`, `review-reste-der-contract-fs-json-module…`, `keymaps = false` mit gemeinsamer Normalisierung. Dazu viele Bausteine ohne Prio (`list lib.nvim --status=open`).
-- **gitsuite.nvim `plugins-breaking-classifier`:** Die Rohdaten des Korpus müssen neu gezogen werden.
-- **docmap-desktop `wkdbooks-project-fails`:** Braucht die Desktop-App zum Reproduzieren.
-- **language.nvim:** Hauptthread-Yielding, `segment/mask` blockiert die Hauptschleife, `translate-shell-text-via-stdin` (braucht ein echtes `trans`), `path-scope`, `rate-limit`.
-- **lsp.nvim `conformance-findings`**, **testing.nvim** `security-model-d8-controls`, `m1-fleet-parity`, `m1-runner`, **ALL** `interactive-confirm-sweep` (L).
-- **Kleinere Tasks:** ai.nvim (zwei Completion-Bugs, `openai-base-url`), pdfport `rasterize-timeout`, filetree `sibling-navigation`, github_stats `fetch-spawn-throttle`, markdown.nvim `hover-config-passthrough`, mdview `linkhover-…` (neu).
+**2. Migration, noch offen**
+- `documentation.nvim/lang-registry-auf-lib-nvim-registry-umstellen` (M): `lang_registry.lua` auf `lib.nvim.registry`. Dasselbe Vorgehen wie bei replacer: Charakterisierungs-Tests gegen alt und neu.
 
-**Braucht dich**
+**3. Tasks, die bereit sind (lib.nvim)**
+- `lib.nvim/net-curl-download-cached-obergrenze-fuer-den-cache-alter-gro` (S): Alters- und Größengrenze für den Download-Cache (Vorlage: media.nvim).
+- `lib.nvim/window-matches-split-kopierte-matches-im-ledger-behandeln` (S): Vim kopiert Matches bei `:split` ins neue Fenster, das Ledger kennt sie nicht.
+- `lib.nvim/scoring-name-delta-pruefung-nur-an-einer-stelle` (XS): Name/Delta-Prüfung an einer Stelle bündeln (vorher prüfen, ob `36bed5d` es schon deckt).
+- `lib.nvim/ci-verified-publish-race-bei-zwei-schnell-aufeinanderfolgend` (S, Bug): `publish ci-verified` scheitert am Push, wenn zwei Pushes dicht aufeinander folgen (Tests grün, Branch enthält den Commit trotzdem).
+- `lib.nvim/project-scan-missing-parsers-and-tools` (M): laut `next` die nächste, braucht vorher eine kurze Planung (baut auf `lib.nvim.deps` und `treesitter.parser_policy`).
+
+**4. Verbraucher der neuen Bausteine (anderes Repo)**
+- `debugging.nvim/health-recent-popup-requirements` (S, entsperrt): nutzt `messages.status()` in `health.lua`.
+- testing.nvim Explorer: erster Verbraucher von `keymap.cheatsheet` (Task dafür noch nicht angelegt).
+- Rein kosmetisch: `github_stats.nvim/api.lua` könnte `raw_args = { "--max-filesize", … }` durch `max_bytes` ersetzen. Eine Migration auf `download_cached` entfällt (es holt JSON, keine Dateien).
+
+**5. Aufräumen**
+- Nach jedem `done` im Vault prüfen, ob ein "value estimates"-Lauf fertige Tasks in `ROADMAP/tasks/` wiederhergestellt hat (`check` meldet dann `duplicate-id`).
+
+## Braucht dich
+
 - `hover.nvim` Mausrad-Zoom (actor=pair, du bestätigst die Tasten).
 - `docmap-desktop/rules-api-catalog-and-run` (erst klären, ob es mit der laufenden rules.nvim-Arbeit kollidiert).
 - `documentation.nvim/repo-named-paths-outside-root` (Sicherheitsentscheidung).
-- `lib.nvim` help-float-Entscheidung.
+- `lib.nvim` help-float-Entscheidung (`help-float-ui-usercmd-decision-migrate-or-attach`); die `spec.quotes`-Frage ist laut Handover entschieden (keine weiteren Verben).
 - `testing.nvim/cache-affected-remaining-limits` (zwei Entscheidungen: Lese-Ledger, State-Warn bei `soft`).
-- **Handchecks:** `gx` auf einen Env-Link in einem echten Neovim 0.12 und `live-check-lspsaga-replacements`.
+- Handchecks: `gx` auf einen Env-Link in einem echten Neovim 0.12 und `live-check-lspsaga-replacements`.
+- Entscheidung zum Stern: Alle Code-Commits wurden mit Reasoning "hoch" reviewt, keiner mit `ultracode`. Soll "hoch" für den Stern reichen?
 
-**Bewusst nicht gemacht** (im Handover mit Begründung)
-- filetree: Symlink und Ziel bleiben zwei Kandidaten.
-- pdfport: Ghostscript fragt nur den PATH.
-- language.nvim: Adressen mit Nicht-ASCII-Zeichen werden nur bis zum ersten solchen Zeichen verglichen.
-- Fremde `check`-Befunde im Vault (u. a. `event-stream-and-cooldown` liegt als `done` noch in `ROADMAP/tasks/`).
+## Dieser Chat bisher (Kurzfassung)
 
-**Bekannte Umgebungsprobleme:** Im lib.nvim-Worktree scheitern `telemetry_wrap_spec` und `git_spec` an Pfad bzw. Branchname, im Haupt-Checkout ist die Suite grün. `run_all_tests.sh` über alle Repos dauert über 20 Minuten.
+Gebaut und gereviewt in lib.nvim: `fs.write.atomic` (Symlink-Ziel), `spawn_command`/`spawn_shell_command` (Handle zuerst schließen), `markdown.table` (CR je Zeile), `run_argv` (PID-Wiederverwendung unter Windows, Ursache der Flakes), `hooks`, `fs.portable`, `composer.help` (Completion-Werte eigener Typen), `strings.utf8.scrub`, `cache` (`:Lib cache stats`), `git` (skip-worktree, Peel-Pfade auf jedem git), `lua.scoring`, `window.matches`, `messages.status()`, `keymap.cheatsheet`, `lib.nvim.registry`, `window.best_target_window`, `buf_win_tab.tab_buffers`, `treesitter.regions`, `terminal.capabilities`, `net.curl.download_cached`. Migriert: nvim-config (`buffer_jump`), sessions.nvim, replacer.nvim.
 
-Die Arbeitsregeln für den nächsten Chat stehen ebenfalls im Handover (u. a. nie Prozesse per Namen beenden, Backslashes nie durch Heredocs, nur eigene Dateien im ai.nvim-Checkout committen).
+## Commits dieses Chats
 
-**Commits dieses Chats seit dem letzten Stand**
-- `069b8dc` (tasks-vault): Handover-Datei. ✅ (reine Doku)
-- `96a2ec97` (nvim-config): Symlink auf das Handover. ✅ (reine Doku)
+| Commit | Repo | Beschreibung | Review |
+|---|---|---|---|
+| `7f5d584` | lib.nvim | fs.write.atomic Symlink, spawn on_exit, table partial CR | ✅ |
+| `2142700` | lib.nvim | run_argv: taskkill-Callback signalisiert keinen geschlossenen Job | ✅ |
+| `a80002e`, `b825356` | lib.nvim | `lib.nvim.hooks`, `lib.nvim.fs.portable` | ✅ |
+| `5db98db`, `cbee792` | lib.nvim | Review-Fixes zu den vorigen | Fix-Commits |
+| `5186175`, `d8c4349`, `7431033`, `b8fb8eb`, `3f9a600` | lib.nvim | help-float-Completion, utf8.scrub, cache stats, git-Peel-Test, skip-worktree | ✅ |
+| `a9986c1`, `3c9b7de`, `68378c1`, `4569147`, `b7e1498` | lib.nvim | scoring, window.matches, messages.status, keymap.cheatsheet, registry | ✅ |
+| `4bf4aa7`, `c3e4d61` (+ `97ce134`, `3dbfd62`, `36bed5d` der anderen Sitzung) | lib.nvim | Review-Fixes und Test-Wartezeit | Fix-Commits |
+| `364cc68`, `f9c16a9`, `061f542`, `b15f611`, `247e610` | lib.nvim | best_target_window, tab_buffers, regions, capabilities, download_cached | ✅ |
+| `aae5ad9` | lib.nvim | Review-Fixes zu den fünf oberen | Fix-Commit (CI ✅) |
+| `efed67f1` | nvim-config | buffer_jump nutzt `tab_buffers` | ✅ |
+| `1a5ddb9` | sessions.nvim | `sessions.portable` als Wrapper über `fs.portable` | **offen** (CI ✅) |
+| `567e60d` | replacer.nvim | `replacer.hooks` setzt auf `lib.nvim.hooks` auf | **offen** (CI ✅) |
+| `06a3976`, `3bec562`, `162a9ba`, `ca57fd3`, `9dca3a9`, `e1c6145`, `a0309a5`, `217c624`, `177bbc0`, `4dfdd91`, `415a492`, `2e5130d`, `8a0df82`, `4d0b90d` | tasks-vault | Tasks auf done, Cache-Task, Handover | ✅ (reine Doku) |
 
-Alle früheren Code-Commits des Chats haben ihren Haken durch das Review mit hohem Reasoning, keiner einen Stern.
+Haken = durch Reasoning über "normal" reviewt; keiner hat einen Stern (ultracode).
+
+## Umgebung und Regeln
+
+- Im lib.nvim-Worktree scheitern `telemetry_wrap_spec` (braucht `RUNTIME_ANALYSIS_DIR=E:/repos/runtime-analysis.nvim`) und `git_spec` (Branchname statt `main`); das ist erwartet.
+- Vor jedem Push: `stylua --check .` und die Vollsuite abwarten, das Push-Kommando daran binden.
+- Backslashes nie durch Heredocs oder Python-Strings, nur per Write/Edit oder `chr(92)`; im Handover/Notizen nicht ausschreiben.
+- Eine Sabotage ändert genau eine Stelle; erst dann beweist der neue Test etwas.
+- In der nvim-config nur die eigene Datei per Pfad committen (dort liegen fremde uncommittete Änderungen).
