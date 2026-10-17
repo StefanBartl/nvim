@@ -10,6 +10,7 @@ Jeder Punkt ist ein Task im Vault (actor `me` bzw. `pair`):
 
 - `lib.nvim/entscheidungen-review-reste-von-contract-fs-und-json` (status=decision, neu): zehn Fragen mit Optionen, Empfehlung und einer Zeile "Entscheidung:". Blockiert `lib.nvim/review-reste-der-contract-fs-json-module-entscheidungen-und` (Kleinkram dort ist erledigt, `2278a98`).
 - `replacer.nvim/hooks-on-rejects-a-non-function-at-registration-document-and` (decision): `hooks.on` wirft bei Nicht-Funktionen schon bei der Registrierung. Empfehlung: so lassen, dokumentieren, per Test festhalten.
+- `wkdbook-tasks.nvim/board-a-move-key-during-a-write-is-dropped-silently-while-th`: Entscheidung, ob eine Board-Taste während eines Schreibvorgangs mit Meldung abgelehnt oder gepuffert wird (Task ist `open`, S).
 - `hover.nvim/hover-zoom-mit-dem-mausrad-navigieren-im-zoom-mit-gehaltenem` (actor=pair): Mausrad-Zoom, Tasten bestätigen.
 - `docmap-desktop/rules-api-catalog-and-run`: erst klären, ob es mit der laufenden rules.nvim-Arbeit kollidiert.
 - `documentation.nvim/repo-named-paths-outside-root`: Sicherheitsentscheidung.
@@ -22,7 +23,13 @@ Jeder Punkt ist ein Task im Vault (actor `me` bzw. `pair`):
 
 - `testing.nvim/explorer-g-cheatsheet-and-footer-via-lib-nvim-keymap-cheatsh` (weich nach `testing.nvim/ui-explorer-actions`, das noch offen ist).
 - `lib.nvim/test-suite-einmaliger-unreproduzierbarer-spec-fehler-flake-i` (braucht ein neues Auftreten mit gesicherter FAIL-Zeile).
-- Neu aus diesem Stand: `lib.nvim/contract-doc-engine-git-asynchron-vorwaermen`, `wkdbook-tasks.nvim/board-a-move-key-during-a-write-is-dropped-silently-while-th`, `wkdbook-tasks.nvim/new-warn-when-a-new-slug-makes-existing-slug-wikilinks-ambig`, `wkdbook-tasks.nvim/plan-files-wikilinks-in-target`, `language.nvim/task-translate-markdown-deepl-names-plan-all-display-lang-wh`.
+- `wkdbook-tasks.nvim/board-a-move-key-during-a-write-is-dropped-silently-while-th` (open, S): vorher entscheiden, ob die Taste mit einer Meldung abgelehnt oder gepuffert wird (steht auch oben bei den Entscheidungen).
+- Laut Vault schon erledigt (von anderen Sitzungen): `contract-doc-engine-git-asynchron-vorwaermen`, `new-warn-…-wikilinks-ambig`, `plan-files-wikilinks-in-target`, `language.nvim/task-translate-markdown-deepl-…`, `duplicate-id-stubs-…`, `ops-lua-a-thin-local-helper-…`, `kit-picker-augroup-…` (`40eeabc`).
+- Als Nächstes laut `done`/`next`: `lib.nvim/deprecation-watcher`, dann `detached-spawn-watcher`, `paginated-api-partial-results`; cdx: `terminal.nvim/release-docs`, `wkdbook-tasks.nvim/tasks-desktop-erledigt-ladezeichen-beim-zeitraumwechsel`, `tasks-desktop-menueleiste-ein-tab-stopp`.
+
+## Offen: Reviews
+
+- lib.nvim `40eeabc` und ui.nvim `662f420` (kit.picker-Augroup beim Schließen löschen) sind noch nicht reviewt (Fix-Commits ohne eigenes Review; CI ✅). Auf Wunsch mit hohem Reasoning prüfen lassen.
 
 ## Erledigt seit dem letzten Stand (Auszug)
 
