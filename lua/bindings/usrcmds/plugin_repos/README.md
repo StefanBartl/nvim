@@ -502,8 +502,12 @@ uncommitted work permanently. Sticking to the named list is what makes
   `lib.nvim.git.run_async` (timeout that kills the process tree, no-prompt environment,
   `--no-optional-locks`) that adds the `write` contract (commands marked `write` get no timeout
   and are never killed), plus `ops.run_pool` (at most N in flight), an adapter over
-  `lib.nvim.async.map_limit`. Both need lib.nvim with the git/runner primitives of 2026-10-08
-  (block L1).
+  `lib.nvim.async.map_limit`. Both need lib.nvim at commit `2142700` (2026-10-15) or newer.
+  The APIs themselves exist since `884fe61`, so an older checkout loads without error, but only
+  `050efd3` (POSIX process-group kill) and `2142700` (Windows: the late `taskkill` callback no
+  longer hits a reused pid) make the timeout kill the whole process tree; before that a hung
+  transport child (ssh, git-remote-https) can keep sync running forever or outlive cancel.
+  This is not checked at runtime (lib.nvim has no version marker) -- pull lib.nvim to be safe.
 - Two custom composer argument types, registered in `M.enable()`:
   - `MYPLUGINS_DIR` — same validation as the built-in `DIR` type (must expand
     to an existing directory), plus `$REPOS_DIR` offered as a completion
