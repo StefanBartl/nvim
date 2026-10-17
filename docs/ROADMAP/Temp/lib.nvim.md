@@ -2,7 +2,7 @@ Stand 2026-10-17. Das ausführliche Handover liegt im Vault (`tasks-vault/lib.nv
 
 ## Läuft gerade
 
-- Fix der vier Review-Funde zu tasks-desktop `8276444`/`fd52473` (Browser-Tests: 15-s-Budget an allen Schreibstellen des Board-Tests, `settled()` greift im Inbox-Test, feste 7 s Wartezeit, falscher Kommentar zur Suche). Der erste Fix-Agent brach am Nutzungslimit ab und wurde neu gestartet; Ergebnis steht aus. Prüfen: `git -C E:/repos/tasks-desktop log --oneline -3`.
+- Nichts. Der Fix der vier Review-Funde zu tasks-desktop `8276444`/`fd52473` ist `a9814a0` (CI grün): `write()` mit 15-s-Budget an allen Schreibstellen, `settled()` greift im Inbox-Test, `test.slow()` statt fester 7 s, Kommentar zur Teilstring-Suche.
 
 ## Offen, braucht den Nutzer
 
@@ -42,7 +42,7 @@ Jeder Punkt ist ein Task im Vault (actor `me` bzw. `pair`):
 
 ## Commits dieses Chats
 
-CI ist in allen Repos auf dem jeweils letzten Commit grün (tasks-desktop: Fix läuft). ✅ = Review über "normal" (hoch/max, kein `ultracode`-Agent, siehe Sternentscheidung) bzw. reine Doku; "Fix-Commit" = Fix zu einem Review, ohne eigenes neues Review; "—" = nicht festgestellt.
+CI ist in allen Repos auf dem jeweils letzten Commit grün (tasks-desktop `a9814a0`). ✅ = Review über "normal" (hoch/max, kein `ultracode`-Agent, siehe Sternentscheidung) bzw. reine Doku; "Fix-Commit" = Fix zu einem Review, ohne eigenes neues Review; "—" = nicht festgestellt.
 
 | Commit | Repo | Beschreibung | Review |
 |---|---|---|---|
@@ -86,8 +86,9 @@ CI ist in allen Repos auf dem jeweils letzten Commit grün (tasks-desktop: Fix l
 | `2e25a03`, `6a3f7ad` | tasks.nvim | Review-Fixes | Fix-Commits |
 | `9c4701d` | tasks.nvim | Obsidian-Wikilinks | ✅ |
 | `63db840` | tasks.nvim | Review-Fixes Wikilinks | Fix-Commit |
+| `a9814a0` | tasks-desktop | Review-Fixes Browser-Tests (`write()`, `settled()`, `test.slow`) | Fix-Commit |
 | `2fe5896` | tasks-desktop | engine.lock auf tasks.nvim `98a1d02` | – (Pin, CI ✅) |
-| `8276444`, `fd52473` | tasks-desktop | Board- und Inbox-Browser-Test warten auf den Schreibvorgang | ✅ (Fix läuft) |
+| `8276444`, `fd52473` | tasks-desktop | Board- und Inbox-Browser-Test warten auf den Schreibvorgang | ✅ |
 | `834591a` | ui.nvim | `:UI`/`:Theme` als Composer-Verben | ✅ |
 | `fd16dda` | ui.nvim | Review-Funde 1 bis 6 | Fix-Commit |
 | `e23b4cd` | ui.nvim | kit: Spiegelung von `4157e37`/`126eb04` | ✅ |
