@@ -14,8 +14,8 @@ local loop, fn, env = vim.uv or vim.loop, vim.fn, vim.env
 ---@type fun(cmd: string[], opts?: table, on_exit?: fun(out: vim.SystemCompleted)): vim.SystemObj
 local system = vim.system
 local fnamemodify = fn.fnamemodify
-local is_windows = fn.has("win32") == 1 or fn.has("win64") == 1
 local git = require("lib.nvim.git")
+local map_limit = require("lib.nvim.async").map_limit
 
 ---@param override string|nil
 ---@return string|nil
@@ -178,9 +178,10 @@ end
 
 -- ── Sync primitives (`:MyPlugins sync`) ───────────────────────────────────────
 --
--- Own `vim.system` calls instead of `lib.nvim.git.*_async`: sync needs what those do not
--- offer (a per-call timeout, no credential prompt) and must keep working with an older
--- lib.nvim on the other machine. Every call is async; nothing here blocks the editor.
+-- Built on `lib.nvim.git.run_async` (per-call timeout that kills the whole process tree, extra
+-- environment, `--no-optional-locks`) and `lib.nvim.async.map_limit`; what stays here is the
+-- `write` contract and the callback shapes sync was written against. Needs lib.nvim with block
+-- L1 (2026-10-08). Every call is async; nothing here blocks the editor.
 
 ---Environment that makes git fail fast instead of asking: a background job has no terminal to
 ---answer a credential prompt on (a private repo would hang unseen), and Git Credential Manager
@@ -194,61 +195,13 @@ M.NO_PROMPT_ENV = { GIT_TERMINAL_PROMPT = "0", GCM_INTERACTIVE = "never" }
 ---@field stderr string
 ---@field timed_out boolean
 
----Kill a job and the processes it started. `job:kill()` reaches only the process it spawned: git
----runs its transport (`git-remote-https`, `ssh`) as a child, and on Windows terminating the
----parent leaves that child alive, still holding the pipes -- so a hung fetch would outlive its
----own timeout. `taskkill /T` takes the whole tree, but only while the root is still alive (it
----walks the parent links), so it runs FIRST and `job:kill()` is only the fallback when it
----failed. Elsewhere the job is spawned as a process-group leader (`detach`) and the group is
----killed.
----
----Only for commands that are safe to interrupt (`fetch`, `status`, `log`, `diff`): see the
----`write` option of `git_async`.
----@param job vim.SystemObj
----@param on_dead? fun()  Runs on the main loop once the kill was issued and has returned.
-local function kill_tree(job, on_dead)
-  local pid = job.pid
-  local function fallback()
-    pcall(function()
-      job:kill("sigkill")
-    end)
-  end
-  local function dead()
-    if on_dead then
-      on_dead()
-    end
-  end
-  if is_windows and pid then
-    local started = pcall(
-      system,
-      { "taskkill", "/T", "/F", "/PID", tostring(pid) },
-      { text = true },
-      function(res)
-        vim.schedule(function()
-          if res.code ~= 0 then
-            fallback()
-          end
-          dead()
-        end)
-      end
-    )
-    if started then
-      return
-    end
-  elseif pid then
-    pcall(loop.kill, -pid, "sigkill")
-  end
-  fallback()
-  dead()
-end
-
----Run `git -C <path> <args>` asynchronously.
+---Run `git -C <path> <args>` asynchronously through `lib.nvim.git.run_async`.
 ---`on_done` always runs on the main loop, exactly once. A spawn failure (git missing) arrives
 ---as `code = -1`.
 ---
----The timeout is our own timer, not `vim.system`'s: that one reports only once the child has
----exited AND closed its pipes, which a hung transport child prevents. On timeout the process
----tree is killed and `on_done` runs once the kill returned, with `timed_out = true`.
+---On timeout lib.nvim kills the process tree (POSIX: the process group; Windows: `taskkill /T`,
+---so a hung transport child such as `git-remote-https` dies too) and `on_done` gets
+---`timed_out = true`, code 124.
 ---
 ---`write = true` marks a command that changes the repository (`merge`, `stash`, `rebase`, ...):
 ---it gets NO timeout and `stop()` does not kill it (killing git mid-checkout leaves a stale
@@ -262,114 +215,50 @@ end
 ---@return { stop: fun(), on_exit: fun(cb: fun()) } handle  `stop()` kills the process tree (a `write` command is left to finish); `on_done` does not run afterwards. `on_exit(cb)` runs `cb` on the main loop once the git process has really exited (at once when it already has): a stopped `write` command keeps holding its repo until then.
 function M.git_async(path, args, opts, on_done)
   opts = opts or {}
-  local cmd = { "git" }
-  if opts.read_only then
-    -- A status must not take index.lock: it would make a concurrent `git commit` of the user fail.
-    cmd[#cmd + 1] = "--no-optional-locks"
+  local timeout_ms = opts.timeout_ms
+  if opts.write or not (timeout_ms and timeout_ms > 0) then
+    timeout_ms = nil
   end
-  vim.list_extend(cmd, { "-C", path })
-  vim.list_extend(cmd, args)
 
-  local finished = false
-  local timed_out = false
+  local dropped = false -- `stop()` was called: the result goes nowhere
   local exited = false
   ---@type fun()[]
   local exit_waiters = {}
-  ---@type uv.uv_timer_t|nil
-  local timer = nil
 
-  local function stop_timer()
-    if timer then
-      pcall(timer.stop, timer)
-      pcall(timer.close, timer)
-      timer = nil
+  -- `run_async` calls back once the process is gone (or, after a timeout kill, at the deadline
+  -- plus a short grace), always on the main loop.
+  local job = git.run_async(args, {
+    dir = path,
+    read_only = opts.read_only == true,
+    timeout_ms = timeout_ms,
+    env = M.NO_PROMPT_ENV,
+  }, function(res)
+    exited = true
+    local waiters = exit_waiters
+    exit_waiters = {}
+    for _, cb in ipairs(waiters) do
+      cb()
     end
-  end
-
-  ---@param run MyPlugins.GitRun
-  local function finish(run)
-    if finished then
+    if dropped then
       return
     end
-    finished = true
-    stop_timer()
-    vim.schedule(function()
-      on_done(run)
-    end)
-  end
-
-  -- On a non-Windows system the job leads its own process group, so `kill_tree` can take the
-  -- group (on Windows `detach` would open a console, and `taskkill /T` does the job).
-  local ok, spawned = pcall(
-    system,
-    cmd,
-    { text = true, env = M.NO_PROMPT_ENV, detach = (not is_windows) and not opts.write },
-    function(res)
-      vim.schedule(function()
-        exited = true
-        local waiters = exit_waiters
-        exit_waiters = {}
-        for _, cb in ipairs(waiters) do
-          cb()
-        end
-      end)
-      -- after a timeout only `kill_tree`'s completion finishes the call: finishing here would
-      -- start the next phase while taskkill is still taking the transport children down
-      if timed_out then
-        return
-      end
-      finish({
-        code = res.code,
-        stdout = res.stdout or "",
-        stderr = res.stderr or "",
-        timed_out = false,
-      })
-    end
-  )
-  if not ok then
-    finish({ code = -1, stdout = "", stderr = tostring(spawned), timed_out = false })
-    return {
-      stop = function() end,
-      on_exit = function(cb)
-        cb()
-      end,
-    }
-  end
-  ---@type vim.SystemObj
-  local job = spawned
-
-  if opts.timeout_ms and opts.timeout_ms > 0 and not opts.write then
-    timer = loop.new_timer()
-    if timer then
-      timer:start(opts.timeout_ms, 0, function()
-        if finished then
-          return
-        end
-        -- fast event context: hop to the main loop before spawning taskkill
-        vim.schedule(function()
-          if finished or timed_out then
-            return
-          end
-          timed_out = true
-          -- `on_done` waits for the kill: the next phase must not start on a repo whose git
-          -- (and transport child) is still dying
-          kill_tree(job, function()
-            finish({ code = 124, stdout = "", stderr = "", timed_out = true })
-          end)
-        end)
-      end)
-    end
-  end
+    dropped = true
+    on_done({
+      code = res.code,
+      stdout = res.stdout or "",
+      stderr = res.stderr or "",
+      timed_out = res.timed_out == true,
+    })
+  end)
 
   return {
     stop = function()
-      if finished then
+      if dropped then
         return
       end
-      finished = true
-      stop_timer()
+      dropped = true
       if not opts.write then
-        kill_tree(job)
+        job.stop()
       end
     end,
     on_exit = function(cb)
@@ -529,6 +418,10 @@ end
 ---(or nil); `done(result)` must be called once. Results come back in item order.
 ---The returned controller's `stop()` kills what is running and starts nothing new; neither
 ---callback fires after it.
+---
+---An adapter over `lib.nvim.async.map_limit` that keeps sync's callback shapes. Like there,
+---`on_each` and `on_finish` are `vim.schedule`d (main loop, in event order), and a worker that
+---throws counts as finished with a nil result instead of stalling the pool.
 ---@generic T, R
 ---@param items T[]
 ---@param jobs integer
@@ -538,60 +431,24 @@ end
 ---@return { stop: fun() } controller
 function M.run_pool(items, jobs, worker, on_each, on_finish)
   local total = #items
-  local results, handles = {}, {}
-  local next_index, running, finished, stopped = 1, 0, 0, false
-  jobs = math.max(1, math.floor(jobs or 1))
-
-  local launch
-  launch = function()
-    while not stopped and running < jobs and next_index <= total do
-      local i = next_index
-      next_index = next_index + 1
-      running = running + 1
-      local called = false
-      local handle = worker(items[i], function(result)
-        if called or stopped then
-          return
-        end
-        called = true
-        handles[i] = nil
-        results[i] = result
-        running = running - 1
-        finished = finished + 1
-        if on_each then
-          on_each(i, items[i], result, finished, total)
-        end
-        if finished == total then
-          on_finish(results)
-        else
-          launch()
-        end
-      end)
-      if not called then
-        handles[i] = handle
-      end
+  local stopped = false
+  local pool = map_limit(items, math.max(1, math.floor(jobs or 1)), function(item, _, done)
+    return worker(item, done)
+  end, function(results)
+    if not stopped then
+      on_finish(results)
     end
-  end
-
-  if total == 0 then
-    vim.schedule(function()
+  end, {
+    on_progress = on_each and function(finished, _, index, result)
       if not stopped then
-        on_finish(results)
+        on_each(index, items[index], result, finished, total)
       end
-    end)
-  else
-    launch()
-  end
-
+    end or nil,
+  })
   return {
     stop = function()
       stopped = true
-      for _, h in pairs(handles) do
-        if type(h) == "table" and h.stop then
-          h.stop()
-        end
-      end
-      handles = {}
+      pool.stop()
     end,
   }
 end
