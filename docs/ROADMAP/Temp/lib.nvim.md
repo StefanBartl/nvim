@@ -22,7 +22,7 @@ Jeder Punkt ist ein Task im Vault (actor `me` bzw. `pair`):
 
 - `testing.nvim/explorer-g-cheatsheet-and-footer-via-lib-nvim-keymap-cheatsh` (weich nach `testing.nvim/ui-explorer-actions`, das noch offen ist).
 - `lib.nvim/test-suite-einmaliger-unreproduzierbarer-spec-fehler-flake-i` (braucht ein neues Auftreten mit gesicherter FAIL-Zeile).
-- Neu aus diesem Stand: `lib.nvim/contract-doc-engine-git-asynchron-vorwaermen`, `lib.nvim/kit-picker-augroup-lib-kit-picker-winid-bleibt-nach-dem-schl`, `wkdbook-tasks.nvim/board-a-move-key-during-a-write-is-dropped-silently-while-th`, `wkdbook-tasks.nvim/new-warn-when-a-new-slug-makes-existing-slug-wikilinks-ambig`, `wkdbook-tasks.nvim/plan-files-wikilinks-in-target`, `language.nvim/task-translate-markdown-deepl-names-plan-all-display-lang-wh`.
+- Neu aus diesem Stand: `lib.nvim/contract-doc-engine-git-asynchron-vorwaermen`, `wkdbook-tasks.nvim/board-a-move-key-during-a-write-is-dropped-silently-while-th`, `wkdbook-tasks.nvim/new-warn-when-a-new-slug-makes-existing-slug-wikilinks-ambig`, `wkdbook-tasks.nvim/plan-files-wikilinks-in-target`, `language.nvim/task-translate-markdown-deepl-names-plan-all-display-lang-wh`.
 
 ## Erledigt seit dem letzten Stand (Auszug)
 
@@ -86,6 +86,8 @@ CI ist in allen Repos auf dem jeweils letzten Commit grün (tasks-desktop `a9814
 | `2e25a03`, `6a3f7ad` | tasks.nvim | Review-Fixes | Fix-Commits |
 | `9c4701d` | tasks.nvim | Obsidian-Wikilinks | ✅ |
 | `63db840` | tasks.nvim | Review-Fixes Wikilinks | Fix-Commit |
+| `40eeabc` | lib.nvim | kit.picker: Augroup pro Instanz wird beim Schließen gelöscht | — (CI ✅) |
+| `662f420` | ui.nvim | Spiegel von `40eeabc`, CHANGELOG | — (CI ✅) |
 | `a9814a0` | tasks-desktop | Review-Fixes Browser-Tests (`write()`, `settled()`, `test.slow`) | Fix-Commit |
 | `2fe5896` | tasks-desktop | engine.lock auf tasks.nvim `98a1d02` | – (Pin, CI ✅) |
 | `8276444`, `fd52473` | tasks-desktop | Board- und Inbox-Browser-Test warten auf den Schreibvorgang | ✅ |
