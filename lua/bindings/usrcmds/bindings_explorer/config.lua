@@ -121,12 +121,15 @@ function M.roots_for(folder)
   return out
 end
 
---- Where `:Bindings report` writes when no `out=` is given: the same folder
---- as the hand-written 2026-09-02 drift report — the report belongs to the
---- task state, not the feature docs.
+--- Where `:Bindings report` writes when no `out=` is given, and where
+--- `:BindingsRuntimeChecklist` keeps its checklist: `docs/ROADMAP/Final_Checks`,
+--- next to the other hand-worked check lists — the reports belong to the task
+--- state, not the feature docs. (Until 2026-10 this was
+--- `docs/ROADMAP/personal/All`, which the 2026-09-25 reshuffle removed;
+--- `TESTS/bindings_explorer/report_dir_spec.lua` guards against that drift.)
 ---@return string
 function M.report_dir()
-  return vim.fs.joinpath(vim.fn.stdpath("config"), "docs", "ROADMAP", "personal", "All")
+  return vim.fs.joinpath(vim.fn.stdpath("config"), "docs", "ROADMAP", "Final_Checks")
 end
 
 --- This config's own Lua tree. `drift.lua`'s repo axis uses it as a second

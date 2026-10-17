@@ -538,7 +538,7 @@ local function out_kv()
   return {
     key = "out",
     type = "PATH",
-    desc = "Report file or directory; default: docs/ROADMAP/personal/All",
+    desc = "Report file or directory; default: docs/ROADMAP/Final_Checks",
   }
 end
 
@@ -685,7 +685,7 @@ function M.enable()
           axis_arg(),
         },
         kv = { root_kv(), out_kv() },
-        desc = "Drift-Bericht als Markdown-Datei; ohne `out=` nach docs/ROADMAP/personal/All/BINDINGS-DRIFT-<datum>.md",
+        desc = "Drift-Bericht als Markdown-Datei; ohne `out=` nach docs/ROADMAP/Final_Checks/BINDINGS-DRIFT-<datum>.md",
         run = function(ctx)
           M.report(ctx.args.plugin, {
             repo = ctx.args.axis == "repo",
