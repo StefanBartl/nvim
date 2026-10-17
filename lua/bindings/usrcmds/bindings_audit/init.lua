@@ -62,7 +62,7 @@ function M.enable()
     notify.info(("%d lines -> %s"):format(#lines, path))
   end, {
     bang = true,
-    desc = "Write the runtime checklist (lib.nvim.bindings.audit.checklist_lines) to docs/ROADMAP/personal/All/BINDINGS-RUNTIME-CHECKLIST.md; ! to overwrite",
+    desc = "Write the runtime checklist (lib.nvim.bindings.audit.checklist_lines) to docs/ROADMAP/Final_Checks/BINDINGS-RUNTIME-CHECKLIST.md; ! to overwrite",
   })
 end
 

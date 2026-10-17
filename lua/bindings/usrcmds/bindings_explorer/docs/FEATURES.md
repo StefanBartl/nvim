@@ -512,7 +512,9 @@ eine Tabelle der Befunde nach Art, und `drift.describe`s unveränderte Ausgabe
 als ```text-Anhang.
 
 **Warum es das gibt.** Der Driftreport vom 2026-09-02
-(`docs/ROADMAP/personal/All/BINDINGS-DRIFT-2026-09-02.md`) wurde von Hand aus
+(damals `docs/ROADMAP/personal/All/BINDINGS-DRIFT-2026-09-02.md`, die
+Nacharbeiten daraus stehen heute im tasks-vault unter
+`nvim-config/Backlog/TASKS/Bindings/bindings-drift-followups-2026-09-02.md`) wurde von Hand aus
 einem headless-Lauf zusammengesetzt: `nvim --headless -c "lua ... drift.check"`,
 Ausgabe umgeleitet, Kopf und Zahlen davorgetippt. Genau diese Handarbeit macht
 `report.lua`.
@@ -531,8 +533,12 @@ ist die einzige Struktur, die der rohe Bericht hat. In Tabellen umgesetzt wäre
 er länger und schlechter lesbar.
 
 **Zielpfad.** Ohne `out=` schreibt der Bericht nach
-`config.report_dir()`/`BINDINGS-DRIFT-<datum>.md`, also in den
-Roadmap-Ordner, in dem der Bericht vom 2026-09-02 schon liegt. `out=` nimmt
+`config.report_dir()`/`BINDINGS-DRIFT-<datum>.md`, also nach
+`docs/ROADMAP/Final_Checks/`, wo auch `:BindingsRuntimeChecklist` seine
+Laufzeit-Checkliste ablegt. Dass der Ordner existiert, prüft
+`TESTS/bindings_explorer/report_dir_spec.lua` (der alte Ordner
+`docs/ROADMAP/personal/All` verschwand bei der Umsortierung vom 2026-09-25,
+ohne dass es auffiel). `out=` nimmt
 ein Verzeichnis (dann derselbe Datumsname darin) oder einen Dateinamen (dann
 der, mit `.md` ergänzt, falls die Endung fehlt). Typisiert als `PATH`, nicht
 `FILE`: `FILE` verlangt eine *lesbare* Datei, und eine Ausgabedatei gibt es

@@ -241,7 +241,7 @@ Full feature list with examples: `docs/FEATURES.md` next to this file.
     for. This produces the measured half.
 
     Without `out=`, the report is written to
-    `docs/ROADMAP/personal/All/BINDINGS-DRIFT-<date>.md`
+    `docs/ROADMAP/Final_Checks/BINDINGS-DRIFT-<date>.md`
     (`config.report_dir()`). `out=` takes a directory (same dated name
     inside it) or a file name (`.md` appended when the extension is
     missing). Typed `PATH`, not `FILE`: `FILE` demands a READABLE file, and
