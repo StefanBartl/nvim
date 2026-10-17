@@ -20,6 +20,14 @@ when one fails, 2 when lib.nvim cannot be found. lib.nvim is looked up in
 `$LIB_NVIM_DIR`, `$LIB_NVIM_PATH`, `$REPOS_DIR/lib.nvim`, then lazy.nvim's data
 folder (the same order `scripts/tasks.lua` uses).
 
+Runtime: the whole suite takes about 2.5 minutes on Windows, almost all of it in
+the `sync/` specs, which work on real git repositories and kill real process
+trees (measured 2026-10-17: `sync_integration` ~58 s, `sync_assist` ~50 s,
+`sync_dash` ~19 s, `sync_busy` a few seconds). A spec prints its line only when
+it is finished, so a silent minute is not a hang. Give a full run a timeout of
+at least 5 minutes (a wrapper with the usual 2-minute limit kills it in the
+middle of the sync specs), or filter, e.g. `run.lua sync_status`.
+
 The specs are not part of the CI workflow yet (it would need a lib.nvim
 checkout); CI lints and format-checks this folder.
 
