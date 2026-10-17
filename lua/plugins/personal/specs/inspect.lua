@@ -1470,9 +1470,9 @@ return {
     -- On demand only: `cmd` is the whole trigger, nothing registers at startup.
     -- setup() takes only the two options below. The per-project settings (roots, guards, jobs, ...)
     -- live in `.testing.lua` in the project root (docs/CONFIG.md), not here.
-    -- `:Testing terminal` wiederholt den letzten Lauf (sonst das Projekt) als Job eines
-    -- terminal.nvim-Terminals `testing`, mit der Ausgabe des Reporters (zum Scrollen und Kopieren,
-    -- ohne Quickfix-Liste). Braucht terminal.nvim, keine Option hier.
+    -- `:Testing terminal` repeats the last run (otherwise the project) as a job in the
+    -- terminal.nvim terminal `testing`, showing the reporter output (to scroll and copy,
+    -- no quickfix list). Needs terminal.nvim, no option here.
     "StefanBartl/testing.nvim",
     cmd = "Testing",
     dependencies = { "StefanBartl/lib.nvim" },
