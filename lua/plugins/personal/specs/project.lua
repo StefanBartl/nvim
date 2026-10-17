@@ -611,10 +611,12 @@ return {
     -- Conflict markers live in a buffer's text, so there is nothing to detect
     -- before one is read: gitsuite.nvim's conflict scan/highlight/keymap setup
     -- must not wait for the user to type :Git first.
-    -- "User LazySync": gitsuite must be loaded when `:Lazy sync` ends, or its
-    -- optional sync hook (`plugins.after_sync` below) misses the event;
-    -- lazy.nvim re-fires the event into the augroup the plugin just created.
-    event = { "BufReadPost", "BufNewFile", "User LazySync" },
+    -- With `plugins.after_sync` (below) on, add "User LazySync" here as well:
+    -- lazy.nvim then loads gitsuite when a sync ends, and gitsuite's setup()
+    -- reports that sync itself (lazy.nvim re-fires `User` into the new augroup
+    -- WITHOUT a pattern, so the `LazySync` listener alone would miss it). While
+    -- the hook is off the event would only load gitsuite on every sync.
+    event = { "BufReadPost", "BufNewFile" },
     -- open.nvim deliberately NOT listed here: gitsuite.nvim's own browse
     -- feature already treats it as a genuinely optional, pcall-guarded
     -- adapter (features/browse/init.lua) -- a hard `dependencies` entry
