@@ -611,7 +611,10 @@ return {
     -- Conflict markers live in a buffer's text, so there is nothing to detect
     -- before one is read: gitsuite.nvim's conflict scan/highlight/keymap setup
     -- must not wait for the user to type :Git first.
-    event = { "BufReadPost", "BufNewFile" },
+    -- "User LazySync": gitsuite must be loaded when `:Lazy sync` ends, or its
+    -- optional sync hook (`plugins.after_sync` below) misses the event;
+    -- lazy.nvim re-fires the event into the augroup the plugin just created.
+    event = { "BufReadPost", "BufNewFile", "User LazySync" },
     -- open.nvim deliberately NOT listed here: gitsuite.nvim's own browse
     -- feature already treats it as a genuinely optional, pcall-guarded
     -- adapter (features/browse/init.lua) -- a hard `dependencies` entry
@@ -722,6 +725,10 @@ return {
       --   -- and for how many days. The newest report is never dropped.
       --   keep_reports = 20,
       --   max_age_days = 365,
+      --   -- After `:Lazy sync`: "off" = nothing (no listener), "toast" = build and
+      --   -- store the `updated` report and show a toast that never takes focus,
+      --   -- "open" = also open the report.
+      --   after_sync = "off",
       -- },
 
       -- Indicator for `:Git dashboard`/`:Git dashboard update` (both report into
