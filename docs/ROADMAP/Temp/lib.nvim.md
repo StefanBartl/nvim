@@ -1,39 +1,66 @@
-Stand 2026-10-17, Abschluss dieses Chats. Das ausführliche Handover liegt im Vault (`tasks-vault/lib.nvim/handovers/session-stand-2026-10-15_HANDOVER.md`, wird von einem anderen Chat weitergeführt); der Symlink in `docs/ROADMAP/handovers` zeigt darauf. Diese Datei hält nur, was den Nutzer braucht, und die Commit-Liste des ganzen Chats.
+Stand 2026-10-17, spät. Das ausführliche Handover liegt im Vault (`tasks-vault/lib.nvim/handovers/session-stand-2026-10-15_HANDOVER.md`, wird von einem anderen Chat weitergeführt); der Symlink in `docs/ROADMAP/handovers` zeigt darauf. Diese Datei hält nur, was den Nutzer braucht, und die Commit-Liste des ganzen Chats.
 
-**Warum noch nicht im Backlog:** Die unten genannten Tasks sind im Vault noch offen (geprüft am 2026-10-17 per `list --status=open,doing,blocked,decision`: 17 der hier genannten IDs; im Vault-Handover 15). Erst wenn keine davon mehr offen ist, wandern beide Handover nach `tasks-vault/lib.nvim/handovers/ERLEDIGT/` und der Symlink `docs/ROADMAP/handovers/session-stand-2026-10-15_HANDOVER.md` wird aus der nvim-config entfernt. Prüfen: die IDs dieser Datei gegen `list --status=open,doing,blocked,decision --format=ids` abgleichen.
+**Warum noch nicht im Backlog:** Die unten genannten Tasks sind im Vault noch offen, und sie brauchen alle den Nutzer, ein Konto oder einen Anlass (keine davon kann ein Agent allein abschließen). Erst wenn keine davon mehr offen ist, wandern beide Handover nach `tasks-vault/lib.nvim/handovers/ERLEDIGT/` und der Symlink `docs/ROADMAP/handovers/session-stand-2026-10-15_HANDOVER.md` wird aus der nvim-config entfernt. Prüfen: die IDs dieser Datei gegen `list --status=open,doing,blocked,decision --format=ids` abgleichen.
 
 ## Läuft gerade
 
-- Nichts. Alle Code-Commits dieses Chats sind reviewt (hoch/max) oder Fix-Commits eines Reviews; die CI ist überall grün. Kein Agent läuft.
+- Nichts. Kein Agent läuft.
 
 ## Offen, braucht den Nutzer
 
-Jeder Punkt ist ein Task im Vault (actor `me` bzw. `pair`):
+Entscheidungen (status=decision bzw. actor=me/pair):
 
-- `lib.nvim/entscheidungen-review-reste-von-contract-fs-und-json` (status=decision, neu): zehn Fragen mit Optionen, Empfehlung und einer Zeile "Entscheidung:". Blockiert `lib.nvim/review-reste-der-contract-fs-json-module-entscheidungen-und` (Kleinkram dort ist erledigt, `2278a98`).
-- `replacer.nvim/hooks-on-rejects-a-non-function-at-registration-document-and` (decision): `hooks.on` wirft bei Nicht-Funktionen schon bei der Registrierung. Empfehlung: so lassen, dokumentieren, per Test festhalten.
-- `wkdbook-tasks.nvim/board-a-move-key-during-a-write-is-dropped-silently-while-th`: Entscheidung, ob eine Board-Taste während eines Schreibvorgangs mit Meldung abgelehnt oder gepuffert wird (Task ist `open`, S).
-- `hover.nvim/hover-zoom-mit-dem-mausrad-navigieren-im-zoom-mit-gehaltenem` (actor=pair): Mausrad-Zoom, Tasten bestätigen.
-- `docmap-desktop/rules-api-catalog-and-run`: erst klären, ob es mit der laufenden rules.nvim-Arbeit kollidiert.
+- `lib.nvim/entscheidungen-review-reste-von-contract-fs-und-json`: zehn Fragen mit Optionen, Empfehlung und einer Zeile "Entscheidung:". Blockiert `lib.nvim/review-reste-der-contract-fs-json-module-entscheidungen-und`.
+- `replacer.nvim/hooks-on-rejects-a-non-function-at-registration-document-and`: `hooks.on` wirft bei Nicht-Funktionen schon bei der Registrierung. Empfehlung: so lassen, dokumentieren, festhalten.
+- `lsp.nvim/k10-load-budget-decision` (neu): Ladezeit 41,5 ms bei Budget 40 ms. Empfehlung: eigenes Budget 60 ms in `.testing.lua`.
+- `testing.nvim/d8-process-net-default-decision` (neu): `process_net` standardmäßig auf `warn`? Empfehlung: ja.
+- `testing.nvim/d8-workspace-trust-decision` (neu): Herkunft der Trust-Liste und Verhalten in CI. Empfehlung: Trust-Speicher plus `trust.roots`, `CI=true` gilt als Trust. Danach baut `testing.nvim/d8-workspace-trust-build` `--trust`.
+- `runtime-analysis.nvim/persistent-data-panel`: zweiten echten Fall benennen oder verwerfen.
+- `docmap-desktop/rules-api-catalog-and-run`: klären, ob es mit der rules.nvim-Arbeit kollidiert.
 - `documentation.nvim/repo-named-paths-outside-root`: Sicherheitsentscheidung.
 - `testing.nvim/cache-affected-remaining-limits`: zwei Entscheidungen (Lese-Ledger, State-Warn bei `soft`).
-- Handchecks: `lsp.nvim/gx-on-an-env-link-in-a-real-neovim-0-12-session-hand-check`, `lsp.nvim/live-check-lspsaga-replacements`, `ui.nvim/try-the-ui-option-float-in-a-real-session`.
-- Sternentscheidung: `ALL/decide-whether-a-review-at-reasoning-level-high-earns-the-st`. Alle Code-Commits wurden mit Reasoning "hoch" reviewt (zuletzt teils "max"), keiner mit `ultracode`-Agent.
+- `hover.nvim/hover-zoom-mit-dem-mausrad-navigieren-im-zoom-mit-gehaltenem` (actor=pair): Tasten bestätigen.
+- Sternentscheidung: `ALL/decide-whether-a-review-at-reasoning-level-high-earns-the-st`.
+
+Handchecks und Konten:
+
+- `lsp.nvim/gx-on-an-env-link-in-a-real-neovim-0-12-session-hand-check`, `lsp.nvim/live-check-lspsaga-replacements`, `ui.nvim/try-the-ui-option-float-in-a-real-session`, `gitsuite.nvim/live-test-checklist`.
+- `rules.nvim/rules-vault-erster-gruener-ci-lauf-github-startet-die-jobs-n`: GitHub-Billing.
+- `ai.nvim/completion-thinking-tokens-gegen-max-tokens-512-live-messen` und `language.nvim/translate-markdown-deepl-mit-echtem-schluessel-messen-platzh`: brauchen echte API-Schlüssel.
+
+Sonst:
+
 - Fremde, nicht committete Änderung in `tasks.nvim/lua/tasks_nvim/links.lua` (seit 16.10., 22:07): doppelter Kommentarblock, `"\0"`-Trenner ersetzt, Bedingung `#names > 1` entfernt. Sieht nach liegengebliebener Sabotage einer anderen Sitzung aus; nicht angefasst.
+- `wkdbook-tasks.nvim/import-from-rules-and-bootstrap` steht auf `blocked`, obwohl der Blocker erledigt ist (fremder Befund, sollte auf `open`).
+- Board-Taste während eines Schreibvorgangs: entschieden und gebaut als "ablehnen mit Meldung" (tasks-desktop `f309087`), bewusst nicht gepuffert. Umstellbar in `App.refusedWhileSaving()`.
 
-## Offen für cdx (Vault)
+## Offen, aber nicht von diesem Chat abschließbar
 
-- `testing.nvim/explorer-g-cheatsheet-and-footer-via-lib-nvim-keymap-cheatsh` (weich nach `testing.nvim/ui-explorer-actions`, das noch offen ist).
-- `lib.nvim/test-suite-einmaliger-unreproduzierbarer-spec-fehler-flake-i` (braucht ein neues Auftreten mit gesicherter FAIL-Zeile).
-- `wkdbook-tasks.nvim/board-a-move-key-during-a-write-is-dropped-silently-while-th` (open, S): vorher entscheiden, ob die Taste mit einer Meldung abgelehnt oder gepuffert wird (steht auch oben bei den Entscheidungen).
-- Laut Vault schon erledigt (von anderen Sitzungen): `contract-doc-engine-git-asynchron-vorwaermen`, `new-warn-…-wikilinks-ambig`, `plan-files-wikilinks-in-target`, `language.nvim/task-translate-markdown-deepl-…`, `duplicate-id-stubs-…`, `ops-lua-a-thin-local-helper-…`, `kit-picker-augroup-…` (`40eeabc`).
-- Als Nächstes laut `done`/`next`: `lib.nvim/deprecation-watcher`, dann `detached-spawn-watcher`, `paginated-api-partial-results`; cdx: `terminal.nvim/release-docs`, `wkdbook-tasks.nvim/tasks-desktop-erledigt-ladezeichen-beim-zeitraumwechsel`, `tasks-desktop-menueleiste-ein-tab-stopp`.
+- `lib.nvim/test-suite-einmaliger-unreproduzierbarer-spec-fehler-flake-i`: wartet auf ein neues Auftreten (FAIL-Zeile sichern).
+- `testing.nvim/ui-explorer-actions` und `testing.nvim/explorer-g-cheatsheet-and-footer-via-lib-nvim-keymap-cheatsh`: blockiert.
+- `terminal.nvim/release-docs` und `testing.nvim/m1-fleet-parity`: `doing` in anderen Sitzungen.
+
+## Offen für cdx (neue Folge-Tasks)
+
+- `lib.nvim/migrate-lib-nvim-s-own-deprecated-calls-found-by-dev-depreca` (XS): drei eigene veraltete Aufrufe, die der neue Scanner fand (Kit-Datei mit Spiegel in ui.nvim).
+- `markdown.nvim/core-slug-count-headings-inside-block-quotes-and-list-items` (bug, S).
+- `testing.nvim/d8-artifacts-names-and-placeholders` (nach m6).
+- 16 UI-05-Tasks aus dem Confirm-Sweep (Tag `interactive-confirm-sweep`), z.B. `ALL/tasksvault-create-ask-instead-of-force`, `ALL/tasks-open-offer-near-matches`, `rules.nvim/ui05-vault-create-and-catalog-ask`, `replacer.nvim/confirm-per-file-resume-after-only-some`, `gopath.nvim/probe-cancel-is-not-no-match`; Liste: `list --tags=interactive-confirm-sweep`.
 
 ## Offen: Reviews
 
-- Keine. lib.nvim `40eeabc` und ui.nvim `662f420` sind reviewt (hoch): kein Fehler, nur zwei kosmetische Nitpicks (Test deckt nur zwei Schließwege ab, obwohl alle funktionieren; ui.nvim-CHANGELOG führt `Fixed` vor `Changed`), bewusst nicht behoben.
+- Nicht reviewt (alle CI ✅): lib.nvim `f12b67d`, mdview.nvim `7497500`, testing.nvim `8bcb150` + `2c9c8a4`, tasks-desktop `f309087`, tasks.nvim `5b4c363`, fileops.nvim `cd9c137`, github_stats.nvim `a4f37dc`.
 
-## Erledigt seit dem letzten Stand (Auszug)
+## Erledigt in der letzten Runde (sechs Handover-Tasks)
+
+- `lib.nvim/deprecation-watcher`: `lib.nvim.dev.deprecations` (`f12b67d`), meldet veraltete Neovim-Aufrufe beim Speichern (opt-in) und in `:checkhealth lib`.
+- `lsp.nvim/conformance-findings`: K3/K11/K14 waren schon behoben (`d93eb22`), K10 als Entscheidungs-Task.
+- `mdview.nvim/linkhover-…`: `-N`-Anker und verschachtelte Überschriften (`7497500`).
+- `testing.nvim/security-model-d8-controls`: `--isolate-home` (`8bcb150`, `2c9c8a4`), Reste als Tasks.
+- `wkdbook-tasks.nvim/board-a-move-key-…`: Taste wird mit Meldung abgelehnt (`f309087`).
+- `ALL/interactive-confirm-sweep`: 43 Plugins durchsucht; Fixes in tasks.nvim `5b4c363`, fileops.nvim `cd9c137`, github_stats.nvim `a4f37dc`; 16 Folge-Tasks.
+
+## Erledigt davor (Auszug)
 
 - Reviews (hoch bzw. max) aller bis dahin offenen Code-Commits, alle Funde behoben:
   - documentation.nvim `9547e5b`/`4306a4d` -> `1d645fe` (LuaJIT-Ladesentinel, Retry greift), `48af295` (Shim-Header, `has()` auf simulierten Hosts).
@@ -107,6 +134,14 @@ CI ist in allen Repos auf dem jeweils letzten Commit grün (tasks-desktop `a9814
 | `06a3976` … `edef0ec` (19 Commits, siehe Vorstand) | tasks-vault | Tasks done, Cache-Task, Handover, spec.quotes, help-float-Entscheidung | ✅ (Doku) |
 | `c8b265e` … `cc17792` (15 Commits, siehe Vorstand) | tasks-vault | Tasks done bzw. neu, Folgetasks | ✅ (Doku) |
 | `5b00ace`, `276a85a`, `6dbafa2`, `467821d`, `5f43394`, `fbd2722`, `b5497c9`, `429ff65`, `8e618d15`, `b1f5a200`, `574a133f`, `16ec4e74`, `a4a3e2ea`, `b2a1576a`, `059ff026` | tasks-vault | Nutzer-Punkte, Plan, Status `doing`, done, Folgetasks | ✅ (Doku) |
+| `f12b67d` | lib.nvim | `dev.deprecations`: veraltete Neovim-Aufrufe melden | offen (CI ✅) |
+| `7497500` | mdview.nvim | Link-Hover: `-N`-Anker, verschachtelte Überschriften | offen (CI ✅) |
+| `8bcb150`, `2c9c8a4` | testing.nvim | `--isolate-home`, macOS-Nachfix | offen (CI ✅) |
+| `f309087` | tasks-desktop | Board-Taste während Schreibvorgang mit Meldung ablehnen | offen (CI ✅) |
+| `5b4c363` | tasks.nvim | Nachfrage vor Überschreiben eines `--to=file:`-Ziels | offen (CI ✅) |
+| `cd9c137` | fileops.nvim | Bulk-Rename: Überspringen/Überschreiben vorhandener Ziele | offen (CI ✅) |
+| `a4f37dc` | github_stats.nvim | Fetch im Intervall: Nachfrage statt `force`-Hinweis | offen (CI ✅) |
+| `faea04da`, `2fc02a9a`, `30f5ab24`, `a46dec57`, `0ea48021`, `1f2471b5`, `0e84c560`, `262f824a`, `1f9f5eb4` | tasks-vault | sechs Handover-Tasks: doing, done, Folge-Tasks | ✅ (Doku) |
 
 ## Umgebung und Regeln
 
