@@ -1,8 +1,10 @@
-Stand 2026-10-17. Das ausführliche Handover liegt im Vault (`tasks-vault/lib.nvim/handovers/session-stand-2026-10-15_HANDOVER.md`); der Symlink in `docs/ROADMAP/handovers` zeigt darauf. Diese Datei hält nur, was den Nutzer braucht, was noch läuft, und die Commit-Liste des ganzen Chats. Alles andere ist erledigt oder als Task im Vault (`list --actor=me`).
+Stand 2026-10-17, Abschluss dieses Chats. Das ausführliche Handover liegt im Vault (`tasks-vault/lib.nvim/handovers/session-stand-2026-10-15_HANDOVER.md`, wird von einem anderen Chat weitergeführt); der Symlink in `docs/ROADMAP/handovers` zeigt darauf. Diese Datei hält nur, was den Nutzer braucht, und die Commit-Liste des ganzen Chats.
+
+**Warum noch nicht im Backlog:** Die unten genannten Tasks sind im Vault noch offen (geprüft am 2026-10-17 per `list --status=open,doing,blocked,decision`: 17 der hier genannten IDs; im Vault-Handover 15). Erst wenn keine davon mehr offen ist, wandern beide Handover nach `tasks-vault/lib.nvim/handovers/ERLEDIGT/` und der Symlink `docs/ROADMAP/handovers/session-stand-2026-10-15_HANDOVER.md` wird aus der nvim-config entfernt. Prüfen: die IDs dieser Datei gegen `list --status=open,doing,blocked,decision --format=ids` abgleichen.
 
 ## Läuft gerade
 
-- Nichts. Der Fix der vier Review-Funde zu tasks-desktop `8276444`/`fd52473` ist `a9814a0` (CI grün): `write()` mit 15-s-Budget an allen Schreibstellen, `settled()` greift im Inbox-Test, `test.slow()` statt fester 7 s, Kommentar zur Teilstring-Suche.
+- Nichts. Alle Code-Commits dieses Chats sind reviewt (hoch/max) oder Fix-Commits eines Reviews; die CI ist überall grün. Kein Agent läuft.
 
 ## Offen, braucht den Nutzer
 
