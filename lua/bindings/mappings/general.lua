@@ -96,7 +96,11 @@ function M.setup()
     })
   end, { desc = "[General] WhichKey query" })
 
-  -- Insert-mode cursor moves
+  -- Insert-mode cursor moves. They stay cursor moves with blink's menu open
+  -- too (the `<Down>`/`<Up>` here are non-recursive, so blink's own
+  -- select_next/select_prev on those keys never sees them; Tab/S-Tab select).
+  -- blink's <C-k> signature map would shadow this one; plugins/completion.lua
+  -- removes it (`["<C-k>"] = false`). Spec: TESTS/bindings/insert_moves_spec.lua.
   map("i", "<C-h>", "<Left>", { desc = "[Text] Left" })
   map("i", "<C-l>", "<Right>", { desc = "[Text] Right" })
   map("i", "<C-j>", "<Down>", { desc = "[Text] Down" })
