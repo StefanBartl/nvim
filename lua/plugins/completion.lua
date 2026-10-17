@@ -137,6 +137,16 @@ return {
         ["<CR>"] = { "accept", "fallback" },
         ["<C-y>"] = { "select_and_accept", "fallback" },
         ["<C-x>"] = { "cancel", "fallback" },
+        -- <C-h/j/k/l> are this config's insert-mode cursor moves
+        -- (`bindings.mappings.general`). blink's insert presets put
+        -- `show_signature`/`hide_signature` on <C-k> as a *buffer-local*
+        -- map, which shadows the global <C-k> -> <Up>: with
+        -- `signature.enabled` (lsp.nvim's pack sets it) `show_signature`
+        -- always succeeds, so its `fallback` never runs and <C-k> never
+        -- moves up. `false` removes the key from blink's keymap entirely;
+        -- signature help still opens on its own trigger characters.
+        -- <C-h>/<C-j>/<C-l> are not claimed by any blink preset.
+        ["<C-k>"] = false,
       })
 
       -- Cmdline (`:`) is a separate keymap namespace from insert mode --
