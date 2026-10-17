@@ -1,30 +1,48 @@
-Stand 2026-10-16, Abend. Das ausführliche Handover liegt im Vault (`tasks-vault/lib.nvim/handovers/session-stand-2026-10-15_HANDOVER.md`); der Symlink in `docs/ROADMAP/handovers` zeigt darauf. Diese Datei hält nur noch, was den Nutzer braucht, und die Commit-Liste des ganzen Chats. Alles andere ist erledigt oder als Task im Vault (`tasks-vault`, Befehl `list --actor=me`).
+Stand 2026-10-17. Das ausführliche Handover liegt im Vault (`tasks-vault/lib.nvim/handovers/session-stand-2026-10-15_HANDOVER.md`); der Symlink in `docs/ROADMAP/handovers` zeigt darauf. Diese Datei hält nur, was den Nutzer braucht, was noch läuft, und die Commit-Liste des ganzen Chats. Alles andere ist erledigt oder als Task im Vault (`list --actor=me`).
+
+## Läuft gerade
+
+- Fix der vier Review-Funde zu tasks-desktop `8276444`/`fd52473` (Browser-Tests: 15-s-Budget an allen Schreibstellen des Board-Tests, `settled()` greift im Inbox-Test, feste 7 s Wartezeit, falscher Kommentar zur Suche). Der erste Fix-Agent brach am Nutzungslimit ab und wurde neu gestartet; Ergebnis steht aus. Prüfen: `git -C E:/repos/tasks-desktop log --oneline -3`.
 
 ## Offen, braucht den Nutzer
 
 Jeder Punkt ist ein Task im Vault (actor `me` bzw. `pair`):
 
-- `hover.nvim/hover-zoom-mit-dem-mausrad-navigieren-im-zoom-mit-gehaltenem` (actor=pair): Mausrad-Zoom, du bestätigst die Tasten.
+- `lib.nvim/entscheidungen-review-reste-von-contract-fs-und-json` (status=decision, neu): zehn Fragen mit Optionen, Empfehlung und einer Zeile "Entscheidung:". Blockiert `lib.nvim/review-reste-der-contract-fs-json-module-entscheidungen-und` (Kleinkram dort ist erledigt, `2278a98`).
+- `replacer.nvim/hooks-on-rejects-a-non-function-at-registration-document-and` (decision): `hooks.on` wirft bei Nicht-Funktionen schon bei der Registrierung. Empfehlung: so lassen, dokumentieren, per Test festhalten.
+- `hover.nvim/hover-zoom-mit-dem-mausrad-navigieren-im-zoom-mit-gehaltenem` (actor=pair): Mausrad-Zoom, Tasten bestätigen.
 - `docmap-desktop/rules-api-catalog-and-run`: erst klären, ob es mit der laufenden rules.nvim-Arbeit kollidiert.
-- `documentation.nvim/repo-named-paths-outside-root`: Sicherheitsentscheidung, wer einen Pfad außerhalb der Projektwurzel nennen darf.
-- `testing.nvim/cache-affected-remaining-limits`: zwei Entscheidungen (Lese-Ledger im fs-Guard, State-Warn bei `soft`-Isolation).
-- Handchecks: `lsp.nvim/gx-on-an-env-link-in-a-real-neovim-0-12-session-hand-check` (neu), `lsp.nvim/live-check-lspsaga-replacements`, `ui.nvim/try-the-ui-option-float-in-a-real-session`.
-- Sternentscheidung: `ALL/decide-whether-a-review-at-reasoning-level-high-earns-the-st` (neu). Alle Code-Commits wurden mit Reasoning "hoch" reviewt, keiner mit `ultracode`; soll "hoch" für den Stern reichen?
+- `documentation.nvim/repo-named-paths-outside-root`: Sicherheitsentscheidung.
+- `testing.nvim/cache-affected-remaining-limits`: zwei Entscheidungen (Lese-Ledger, State-Warn bei `soft`).
+- Handchecks: `lsp.nvim/gx-on-an-env-link-in-a-real-neovim-0-12-session-hand-check`, `lsp.nvim/live-check-lspsaga-replacements`, `ui.nvim/try-the-ui-option-float-in-a-real-session`.
+- Sternentscheidung: `ALL/decide-whether-a-review-at-reasoning-level-high-earns-the-st`. Alle Code-Commits wurden mit Reasoning "hoch" reviewt (zuletzt teils "max"), keiner mit `ultracode`-Agent.
+- Fremde, nicht committete Änderung in `tasks.nvim/lua/tasks_nvim/links.lua` (seit 16.10., 22:07): doppelter Kommentarblock, `"\0"`-Trenner ersetzt, Bedingung `#names > 1` entfernt. Sieht nach liegengebliebener Sabotage einer anderen Sitzung aus; nicht angefasst.
 
-Dazu für den Vault-Betrieb: `check` meldet 6 Fehler, die nicht aus diesem Chat stammen (zwei Stub-Dateien ohne Frontmatter in `filetree.nvim` und `insights.nvim`, ein erledigter Task in `testing.nvim/ROADMAP/tasks`). Task: `testing.nvim/duplicate-id-stubs-and-a-finished-task-left-in-roadmap-tasks` (actor=cdx).
+## Offen für cdx (Vault)
+
+- `testing.nvim/explorer-g-cheatsheet-and-footer-via-lib-nvim-keymap-cheatsh` (weich nach `testing.nvim/ui-explorer-actions`, das noch offen ist).
+- `lib.nvim/test-suite-einmaliger-unreproduzierbarer-spec-fehler-flake-i` (braucht ein neues Auftreten mit gesicherter FAIL-Zeile).
+- Neu aus diesem Stand: `lib.nvim/contract-doc-engine-git-asynchron-vorwaermen`, `lib.nvim/kit-picker-augroup-lib-kit-picker-winid-bleibt-nach-dem-schl`, `wkdbook-tasks.nvim/board-a-move-key-during-a-write-is-dropped-silently-while-th`, `wkdbook-tasks.nvim/new-warn-when-a-new-slug-makes-existing-slug-wikilinks-ambig`, `wkdbook-tasks.nvim/plan-files-wikilinks-in-target`, `language.nvim/task-translate-markdown-deepl-names-plan-all-display-lang-wh`.
 
 ## Erledigt seit dem letzten Stand (Auszug)
 
-- Reviews von `1a5ddb9` (sessions.nvim) und `567e60d` (replacer.nvim): Folgefixes `3563f28` (leeres cwd wird gemeldet, Health-Check, Doku) und `b29c57e` (Hooks hinter einem nil-Loch, nur `before_apply` vetoed), `00b9c41` (Health meldet die `lib.nvim.hooks`-Abhängigkeit). Rest: Entscheidungstask `replacer.nvim/hooks-on-rejects-a-non-function-at-registration-document-and`.
-- Migration `documentation.nvim/lang-registry-auf-lib-nvim-registry-umstellen`: `9547e5b` (Folge `4306a4d`, CI-Fix des `vim.fn.has`-Shims).
-- Frühere "bereite" lib.nvim-Tasks, jetzt fertig: Download-Cache-Obergrenze `ec849bc` (+ `b3b9b8a`, `7e71971`), `window.matches` und `:split` `25e9771`, Name/Delta-Prüfung `105d876`, `ci-verified`-Publish-Race `25eeaa0`, `project-scan` (`lib.nvim.deps.project`) `7b2aa46`, Konvention `status()` `a6c3bcb`.
-- Verbraucher: `debugging.nvim` Health-Popup `cc606e5`, `replacer.nvim` Health `00b9c41`, `github_stats.nvim` `max_bytes` statt `raw_args` `124de98`. Der Explorer-Verbraucher von `keymap.cheatsheet` ist Task `testing.nvim/explorer-g-cheatsheet-and-footer-via-lib-nvim-keymap-cheatsh`.
-- Chat usrcmd-help-float: die Funde der Reviews sind behoben, ui.nvim `fd16dda` (alle sechs Funde) und tasks.nvim `6a3f7ad` (Spec für die Encoder-Regeln, eigenes `COPY_EXISTS`-Token, CHANGELOG, Spec-Anzahl). Rest als Tasks: `wkdbook-tasks.nvim/ops-lua-a-thin-local-helper-for-door-failure-door-refuse`, die Obsidian-Tasks sind entsperrt (`open`).
-- Aufräumen nach `done`: `check` wurde über den ganzen Vault gefahren, keine wiederhergestellten Duplikate aus einem "value estimates"-Lauf gefunden.
+- Reviews (hoch bzw. max) aller bis dahin offenen Code-Commits, alle Funde behoben:
+  - documentation.nvim `9547e5b`/`4306a4d` -> `1d645fe` (LuaJIT-Ladesentinel, Retry greift), `48af295` (Shim-Header, `has()` auf simulierten Hosts).
+  - lib.nvim `7b2aa46` -> `8082573`, `c9e7dcc` (Mason-Registry auf frischer Maschine, hängender Scan, Grenzen des Auto-Triggers, macOS-Link `/var`).
+  - debugging.nvim `cc606e5` -> `fd8cb71` (Health-Abschnitt verschluckte Externals).
+  - replacer.nvim `00b9c41` -> `3ec25ce` (fehlendes vs. werfendes Modul).
+  - github_stats.nvim `124de98` -> `6af514b`, `bd4f475` (Mindestversion lib.nvim, harter Assert).
+- `lsp.nvim/ensure-install-listen-bei-lib-nvim-deps-project-anmelden`: `46d5854`, Review-Fixes `2ea0c57` (luaformatter unter Windows ausgelassen, tote Filetypes in `UNSCANNED`, ehrlicher Health-Check, gecachte PATH-Lookups).
+- Fünf Tasks in einer Runde:
+  - `lib.nvim/kit-viewer-aus-insert-mode-key-…` done: `4157e37`, `126eb04`, ui.nvim `e23b4cd`; Review-Fix `be73728`, ui.nvim `d14506a` (Insert-Mode auch nach beschreibbarem Umweg).
+  - `lib.nvim/review-reste-…`: Kleinkram `2278a98`, Review-Fix `0e45c06`; Rest wartet auf die Entscheidungstask (siehe oben).
+  - `wkdbook-tasks.nvim/obsidian-wikilinks` done: tasks.nvim `9c4701d`, Review-Fix `63db840`.
+  - `wkdbook-tasks.nvim/flackernder-browser-test-the-board-…` done: tasks-desktop `8276444`.
+  - `wkdbook-tasks.nvim/flackernder-browser-test-the-inbox-…` done: tasks-desktop `fd52473`.
 
 ## Commits dieses Chats
 
-CI ist in allen Repos auf dem jeweils letzten Commit grün. Haken = Review über "normal"/"hoch" (kein `ultracode`, siehe Sternentscheidung oben); "Fix-Commit" = Fix zu einem Review, ohne eigenes neues Review; "—" = nicht festgestellt.
+CI ist in allen Repos auf dem jeweils letzten Commit grün (tasks-desktop: Fix läuft). ✅ = Review über "normal" (hoch/max, kein `ultracode`-Agent, siehe Sternentscheidung) bzw. reine Doku; "Fix-Commit" = Fix zu einem Review, ohne eigenes neues Review; "—" = nicht festgestellt.
 
 | Commit | Repo | Beschreibung | Review |
 |---|---|---|---|
@@ -37,36 +55,55 @@ CI ist in allen Repos auf dem jeweils letzten Commit grün. Haken = Review über
 | `4bf4aa7`, `c3e4d61`, `97ce134`, `3dbfd62`, `36bed5d` | lib.nvim | Review-Fixes und Test-Wartezeit | Fix-Commits |
 | `364cc68`, `f9c16a9`, `061f542`, `b15f611`, `247e610` | lib.nvim | best_target_window, tab_buffers, regions, capabilities, download_cached | ✅ |
 | `aae5ad9` | lib.nvim | Review-Fixes zu den fünf oberen | Fix-Commit |
-| `105d876`, `25e9771`, `25eeaa0` | lib.nvim | scoring Name/Delta an einer Stelle, `:split` kopiert Matches nicht (Doku + Spec), ci-verified Publish-Race | — (CI ✅) |
-| `bf40419` | lib.nvim | fs.json schreibt durch einen Symlink statt ihn zu ersetzen | — (CI ✅) |
-| `b33f18f` | lib.nvim | fs.portable: Wurzel direkt hinter `scheme://` beginnt an einer Grenze | Fix-Commit |
-| `ec849bc`, `b3b9b8a`, `7e71971` | lib.nvim | net.curl: Download-Cache mit `max_age_s` und `max_total_bytes`, Review-Fixes, Test | — (CI ✅) |
-| `7b2aa46` | lib.nvim | `deps.project`: fehlende Treesitter-Parser und Werkzeuge einer Wurzel | — (CI ✅) |
-| `a6c3bcb` | lib.nvim | Doku: `status()` ist Statuszeilen-String oder Zustands-Snapshot | Doku |
+| `105d876`, `25e9771`, `25eeaa0` | lib.nvim | scoring Name/Delta, `:split` kopiert Matches nicht, ci-verified Publish-Race | — (CI ✅) |
+| `bf40419` | lib.nvim | fs.json schreibt durch einen Symlink | — (CI ✅) |
+| `ec849bc`, `b3b9b8a`, `7e71971` | lib.nvim | net.curl: Download-Cache mit Alters- und Größengrenze | — (CI ✅) |
+| `b33f18f` | lib.nvim | fs.portable: Wurzel hinter `scheme://` | Fix-Commit |
+| `7b2aa46` | lib.nvim | `deps.project` | ✅ |
+| `8082573`, `c9e7dcc` | lib.nvim | Review-Fixes `deps.project`, macOS-Nachfix | Fix-Commits |
+| `a6c3bcb` | lib.nvim | Doku: `status()`-Konvention | ✅ (Doku) |
+| `4157e37`, `126eb04` | lib.nvim | kit: Viewer aus Insert-Mode, Compare-Regression | ✅ |
+| `be73728` | lib.nvim | kit.picker: Insert-Mode nach beschreibbarem Umweg | Fix-Commit |
+| `2278a98` | lib.nvim | json.canonical-Perf, create_exclusive, Doku, Specs | ✅ |
+| `0e45c06` | lib.nvim | create_exclusive-Test, read_bounded-Hilfe | Fix-Commit |
 | `efed67f1` | nvim-config | buffer_jump nutzt `tab_buffers` | ✅ |
-| `1a5ddb9`, `3563f28` | sessions.nvim | `sessions.portable` als Wrapper über `fs.portable`, Folgefix | Fix-Commit (CI ✅) |
-| `567e60d`, `b29c57e`, `00b9c41` | replacer.nvim | `replacer.hooks` auf `lib.nvim.hooks`, Folgefix, Health-Meldung | Fix-Commits (CI ✅) |
-| `9547e5b`, `4306a4d` | documentation.nvim | `lang_registry` auf `lib.nvim.registry`, `vim.fn.has`-Shim für win32/mac/unix | — (CI ✅) |
-| `cc606e5` | debugging.nvim | Health: Anforderungen des Recent-Popups | — (CI ✅) |
-| `124de98` | github_stats.nvim | `max_bytes` an `lib.nvim` net.curl | — (CI ✅) |
-| `6cf07f9` | tasks.nvim | contract/api/host/errors/json auf lib.nvim.contract.* | ⭐ (hoch, 7 Funde) |
-| `98a1d02` | tasks.nvim | ops auf contract.ops, fsio auf lib.nvim.fs.* | ⭐ (hoch) |
-| `2e25a03` | tasks.nvim | Fix der Funde 1 bis 4 | Fix-Commit |
-| `a0d05fc` | tasks.nvim | fsio EXISTS/is_exists, ops ohne Wrapper, json-Spec entfernt | ⭐ (hoch) |
-| `6a3f7ad` | tasks.nvim | Fix zum Review von `a0d05fc` | Fix-Commit |
+| `beddf504`, `325e32db` | nvim-config | Handover usrcmd-help-float, `lib.nvim.md` | ✅ (Doku) |
+| `1a5ddb9` | sessions.nvim | `sessions.portable` als Wrapper über `fs.portable` | ✅ |
+| `3563f28` | sessions.nvim | leeres cwd, Health-Check, Doku | Fix-Commit |
+| `567e60d` | replacer.nvim | `replacer.hooks` auf `lib.nvim.hooks` | ✅ |
+| `b29c57e` | replacer.nvim | nil-Loch, nur `before_apply` vetoed | Fix-Commit |
+| `00b9c41` | replacer.nvim | Health `lib.nvim.hooks` | ✅ |
+| `3ec25ce` | replacer.nvim | Review-Fixes Health | Fix-Commit |
+| `9547e5b`, `4306a4d` | documentation.nvim | `lang_registry` auf `lib.nvim.registry`, Shim `has` | ✅ |
+| `1d645fe`, `48af295` | documentation.nvim | Review-Fixes | Fix-Commits |
+| `cc606e5` | debugging.nvim | Health Recent-Popup | ✅ |
+| `fd8cb71` | debugging.nvim | Review-Fixes | Fix-Commit |
+| `124de98` | github_stats.nvim | `max_bytes` an net.curl | ✅ |
+| `6af514b`, `bd4f475` | github_stats.nvim | Review-Fixes | Fix-Commits |
+| `46d5854` | lsp.nvim | ensure_install bei `deps.project` anmelden | ✅ |
+| `2ea0c57` | lsp.nvim | Review-Fixes | Fix-Commit |
+| `6cf07f9`, `98a1d02`, `a0d05fc` | tasks.nvim | Umstellung auf lib.nvim.contract.* und fs.* | ✅ |
+| `2e25a03`, `6a3f7ad` | tasks.nvim | Review-Fixes | Fix-Commits |
+| `9c4701d` | tasks.nvim | Obsidian-Wikilinks | ✅ |
+| `63db840` | tasks.nvim | Review-Fixes Wikilinks | Fix-Commit |
 | `2fe5896` | tasks-desktop | engine.lock auf tasks.nvim `98a1d02` | – (Pin, CI ✅) |
-| `834591a` | ui.nvim | `:UI`/`:Theme` als Composer-Verben | ⭐ (hoch, 6 Funde) |
-| `fd16dda` | ui.nvim | Fix aller sechs Funde zu `834591a` | Fix-Commit |
-| `beddf504` | nvim-config | Handover usrcmd-help-float aktualisiert | Doku |
-| `06a3976`, `3bec562`, `162a9ba`, `ca57fd3`, `9dca3a9`, `e1c6145`, `a0309a5`, `217c624`, `177bbc0`, `4dfdd91`, `415a492`, `2e5130d`, `8a0df82`, `4d0b90d`, `5068448`, `f65d003`, `481d91c`, `7bfc62d`, `edef0ec` | tasks-vault | Tasks auf done, Cache-Task, Handover, spec.quotes, help-float-Entscheidung | Doku |
-| `c8b265e`, `ff39062`, `f71d53b`, `846fdd0`, `276a85a`, `c15400f`, `6dbafa2`, `fbd2722`, `467821d`, `5f43394`, `ff0fb63`, `b5497c9`, `429ff65`, `0ae1f40`, `cc17792` | tasks-vault | Tasks done bzw. neu (window-matches, ci-verified, scoring, download-cache, lang-registry, keymaps-false, project-scan, statusline, debugging-Health, replacer-Health, fallback-chain), Folgetasks | Doku |
-| `5b00ace` | tasks-vault | nur-Nutzer-Punkte mit actor=me (gx-Handcheck, Sternentscheidung, lspsaga, rules-api, Repo-Pfade, Cache-Grenzen), Task für die check-Fehler | Doku |
+| `8276444`, `fd52473` | tasks-desktop | Board- und Inbox-Browser-Test warten auf den Schreibvorgang | ✅ (Fix läuft) |
+| `834591a` | ui.nvim | `:UI`/`:Theme` als Composer-Verben | ✅ |
+| `fd16dda` | ui.nvim | Review-Funde 1 bis 6 | Fix-Commit |
+| `e23b4cd` | ui.nvim | kit: Spiegelung von `4157e37`/`126eb04` | ✅ |
+| `d14506a` | ui.nvim | Spiegel von `be73728`, CHANGELOG | Fix-Commit |
+| `06a3976` … `edef0ec` (19 Commits, siehe Vorstand) | tasks-vault | Tasks done, Cache-Task, Handover, spec.quotes, help-float-Entscheidung | ✅ (Doku) |
+| `c8b265e` … `cc17792` (15 Commits, siehe Vorstand) | tasks-vault | Tasks done bzw. neu, Folgetasks | ✅ (Doku) |
+| `5b00ace`, `276a85a`, `6dbafa2`, `467821d`, `5f43394`, `fbd2722`, `b5497c9`, `429ff65`, `8e618d15`, `b1f5a200`, `574a133f`, `16ec4e74`, `a4a3e2ea`, `b2a1576a`, `059ff026` | tasks-vault | Nutzer-Punkte, Plan, Status `doing`, done, Folgetasks | ✅ (Doku) |
 
 ## Umgebung und Regeln
 
-- Im lib.nvim-Worktree scheitern `telemetry_wrap_spec` (braucht `RUNTIME_ANALYSIS_DIR=E:/repos/runtime-analysis.nvim`) und `git_spec` (Branchname statt `main`); das ist erwartet.
-- Vor jedem Push: `stylua --check .` und die Vollsuite abwarten, das Push-Kommando daran binden.
-- Backslashes nie durch Heredocs oder Python-Strings, nur per Write/Edit oder `chr(92)`; im Handover/Notizen nicht ausschreiben.
+- Im lib.nvim-Worktree scheitern `telemetry_wrap_spec` (braucht `RUNTIME_ANALYSIS_DIR=E:/repos/runtime-analysis.nvim`) und `git_spec` (Branchname statt `main`); das ist erwartet. Unter PowerShell scheitern zusätzlich `spawn_env_spec` und `system_job_spec` (Umgebung `=EXITCODE`, kein `sh`); unter Git Bash und in der CI grün.
+- Die lib.nvim-Vollsuite braucht lokal etwa 4,5 Minuten (`run_argv_spec` allein etwa 24 s); ein 120-s-Timeout bricht sie mitten ab und sieht wie ein Hänger aus.
+- ui.nvim-CI: `kit_drift_spec` vergleicht mit lib.nvim `ci-verified`; nach einem Kit-Fix in lib.nvim erst dessen CI abwarten, sonst ist der ui.nvim-Lauf rot.
+- tasks-desktop-Browser-Tests: nur mit einem Worker, ein fremder Hub auf Port 17698 kann warten lassen.
+- Vor jedem Push: `stylua --check .` und die Vollsuite abwarten; `git log origin/main..HEAD` prüfen (im Vault gingen zweimal fremde Commits mit: `ff0fb63`, `e7a2dffa`).
+- Backslashes nie durch Heredocs oder Python-Strings, nur per Write/Edit oder `chr(92)`.
 - Eine Sabotage ändert genau eine Stelle; erst dann beweist der neue Test etwas.
 - In der nvim-config nur die eigene Datei per Pfad committen (dort liegen fremde uncommittete Änderungen).
-- Nach jedem `done` im Vault `check` fahren: ein "value estimates"-Lauf stellt fertige Tasks in `ROADMAP/tasks/` wieder her (`duplicate-id`).
+- Nach jedem `done` im Vault `check` fahren.
