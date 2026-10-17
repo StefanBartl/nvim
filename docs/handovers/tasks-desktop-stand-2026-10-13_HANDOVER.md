@@ -1,1 +1,0 @@
-E:/repos/tasks-vault/wkdbook-tasks.nvim/handovers/tasks-desktop-stand-2026-10-13_HANDOVER.md
