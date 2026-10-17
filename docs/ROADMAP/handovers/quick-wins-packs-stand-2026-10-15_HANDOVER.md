@@ -1,0 +1,1 @@
+E:/repos/tasks-vault/ALL/handovers/quick-wins-packs-stand-2026-10-15_HANDOVER.md
