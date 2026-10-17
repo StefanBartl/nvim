@@ -180,8 +180,12 @@ end
 --
 -- Built on `lib.nvim.git.run_async` (per-call timeout that kills the whole process tree, extra
 -- environment, `--no-optional-locks`) and `lib.nvim.async.map_limit`; what stays here is the
--- `write` contract and the callback shapes sync was written against. Needs lib.nvim with block
--- L1 (2026-10-08). Every call is async; nothing here blocks the editor.
+-- `write` contract and the callback shapes sync was written against. Needs lib.nvim at 2142700
+-- (2026-10-15) or newer: the APIs exist since 884fe61, but the process-tree kill this relies on
+-- came later (POSIX process-group kill 050efd3, Windows taskkill pid-reuse guard 2142700). An
+-- older checkout loads without error yet can leave a hung transport child alive (sync never
+-- finishes, or an orphaned ssh outlives cancel). lib.nvim exposes no version marker, so this is
+-- not checked at runtime. Every call is async; nothing here blocks the editor.
 
 ---Environment that makes git fail fast instead of asking: a background job has no terminal to
 ---answer a credential prompt on (a private repo would hang unseen), and Git Credential Manager
