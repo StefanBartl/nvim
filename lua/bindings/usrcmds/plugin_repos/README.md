@@ -272,8 +272,8 @@ wants a login fails fast with a hint instead of waiting unseen for an answer.
 `fetch` (60 s), `status` (30 s), `diff`, `log` -- have a timeout, and only those are force-killed
 by it, by a cancel or by quitting Neovim (`:MyPlugins sync` again while one runs asks whether to
 cancel and restart). A hung repo becomes `fetch_failed` / `status_failed`. The kill takes the whole
-process tree: on Windows `taskkill /T /F` runs first and is waited for (so the transport child,
-`git-remote-https` / `ssh`, goes too, and the next phase starts on a repo whose git is really
+process tree (done by `lib.nvim.git.run_async`): on Windows `taskkill /T` (so the transport
+child, `git-remote-https` / `ssh`, goes too, and the next phase starts on a repo whose git is
 gone); elsewhere the git job leads its own process group and the group is killed. The commands
 that *write* -- the fast-forward and every assist step (rebase, merge, stash) -- run without a
 timeout and are never killed: a cancel only drops their result and git finishes by itself, and
@@ -498,12 +498,12 @@ uncommitted work permanently. Sticking to the named list is what makes
   cancel, re-check, assist, the closing line), `sync_classify.lua` (the **pure** core: status
   parser, the state table, order, summary, the assist table -- specced without git),
   `sync_state.lua` (the saved result), `sync_dash.lua` (the triage list), `help_float.lua` (the key-help float shared by the triage list and the task dashboard; spec in `TESTS/plugin_repos/`), `sync_status.lua` (the
-  statusline hint). Its git calls are `ops.git_async` and friends (own `vim.system` calls with a
-  timer-based timeout that kills the process tree -- `taskkill /T` first, waited for -- because
-  `vim.system`'s timeout reports only after the pipes close, which a hung transport child
-  prevents; commands marked `write` are never killed) plus `ops.run_pool` (at most N in
-  flight); they do not use `lib.nvim.git`, which offers neither a timeout nor an environment, and
-  so `sync` keeps working with an older lib.nvim on the other machine.
+  statusline hint). Its git calls are `ops.git_async` and friends, a thin layer over
+  `lib.nvim.git.run_async` (timeout that kills the process tree, no-prompt environment,
+  `--no-optional-locks`) that adds the `write` contract (commands marked `write` get no timeout
+  and are never killed), plus `ops.run_pool` (at most N in flight), an adapter over
+  `lib.nvim.async.map_limit`. Both need lib.nvim with the git/runner primitives of 2026-10-08
+  (block L1).
 - Two custom composer argument types, registered in `M.enable()`:
   - `MYPLUGINS_DIR` — same validation as the built-in `DIR` type (must expand
     to an existing directory), plus `$REPOS_DIR` offered as a completion
