@@ -29,7 +29,7 @@ Jeder Punkt ist ein Task im Vault (actor `me` bzw. `pair`):
 
 ## Offen: Reviews
 
-- lib.nvim `40eeabc` und ui.nvim `662f420` (kit.picker-Augroup beim Schließen löschen) sind noch nicht reviewt (Fix-Commits ohne eigenes Review; CI ✅). Auf Wunsch mit hohem Reasoning prüfen lassen.
+- Keine. lib.nvim `40eeabc` und ui.nvim `662f420` sind reviewt (hoch): kein Fehler, nur zwei kosmetische Nitpicks (Test deckt nur zwei Schließwege ab, obwohl alle funktionieren; ui.nvim-CHANGELOG führt `Fixed` vor `Changed`), bewusst nicht behoben.
 
 ## Erledigt seit dem letzten Stand (Auszug)
 
@@ -93,8 +93,8 @@ CI ist in allen Repos auf dem jeweils letzten Commit grün (tasks-desktop `a9814
 | `2e25a03`, `6a3f7ad` | tasks.nvim | Review-Fixes | Fix-Commits |
 | `9c4701d` | tasks.nvim | Obsidian-Wikilinks | ✅ |
 | `63db840` | tasks.nvim | Review-Fixes Wikilinks | Fix-Commit |
-| `40eeabc` | lib.nvim | kit.picker: Augroup pro Instanz wird beim Schließen gelöscht | — (CI ✅) |
-| `662f420` | ui.nvim | Spiegel von `40eeabc`, CHANGELOG | — (CI ✅) |
+| `40eeabc` | lib.nvim | kit.picker: Augroup pro Instanz wird beim Schließen gelöscht | ✅ (hoch) |
+| `662f420` | ui.nvim | Spiegel von `40eeabc`, CHANGELOG | ✅ (hoch) |
 | `a9814a0` | tasks-desktop | Review-Fixes Browser-Tests (`write()`, `settled()`, `test.slow`) | Fix-Commit |
 | `2fe5896` | tasks-desktop | engine.lock auf tasks.nvim `98a1d02` | – (Pin, CI ✅) |
 | `8276444`, `fd52473` | tasks-desktop | Board- und Inbox-Browser-Test warten auf den Schreibvorgang | ✅ |
