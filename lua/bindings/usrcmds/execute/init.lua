@@ -54,12 +54,57 @@ local M = {}
 ---@field yes? boolean         skip the question before a risky plan
 ---@field range? Execute.Range `ctx.range` of the command
 
+---A question with a few answers: `ui.kit.confirm`, `vim.fn.confirm` when the kit is not there. The first choice is the
+---harmless one (Cancel) and what a dismissed dialog means. `cb` gets the index of the answer, once. A seam: specs replace it.
+---@param question string
+---@param choices string[]
+---@param cb fun(index: integer)
+function M.ask(question, choices, cb)
+  local ok_kit, kit = pcall(require, "ui.kit")
+  if ok_kit and type(kit) == "table" and type(kit.confirm) == "function" then
+    local shown = pcall(kit.confirm, {
+      question = question,
+      choices = choices,
+      on_answer = function(choice)
+        for index, label in ipairs(choices) do
+          if label == choice then
+            return cb(index)
+          end
+        end
+        cb(1)
+      end,
+    })
+    if shown then
+      return
+    end
+  end
+  local labels = {}
+  for index, label in ipairs(choices) do
+    labels[index] = "&" .. label
+  end
+  local picked = vim.fn.confirm(question, table.concat(labels, "\n"), 1)
+  cb(picked > 0 and picked or 1)
+end
+
 ---Ask before a plan that reaches outside the editor runs. A seam: specs replace it.
 ---@param plan Execute.Plan
----@return boolean run
-function M.confirm(plan)
-  local msg = "This leaves the editor. Run it?\n\n" .. plan.display
-  return vim.fn.confirm(msg, "&Run\n&Cancel", 2) == 1
+---@param cb fun(run: boolean)
+function M.confirm(plan, cb)
+  M.ask("This leaves the editor. Run it?\n\n" .. plan.display, { "Cancel", "Run" }, function(index)
+    cb(index == 2)
+  end)
+end
+
+---A plan that does not fit the command line (several lines, several commands): without a bang the person sees it and
+---chooses, instead of being told to type `:Execute!`. A seam: specs replace it.
+---@param plan Execute.Plan
+---@param why string  what does not fit
+---@param cb fun(choice: "run"|"copy"|"cancel")
+function M.offer(plan, why, cb)
+  local question = "It does not fit the command line (" .. why .. "). What now?\n\n" .. plan.display
+  M.ask(question, { "Cancel", "Run", "Copy" }, function(index)
+    cb(({ "cancel", "run", "copy" })[index] or "cancel")
+  end)
 end
 
 ---What `how` is when the user did not name one.
@@ -86,10 +131,39 @@ function M.execute(opts)
   end
   local how = opts.how or M.default_how(opts.bang)
 
+  ---Run the plan and show the result in the way `how` says (after the question, when the plan leaves the editor).
+  ---@param run_how Execute.How
+  local function run(run_how)
+    if plan.risky and not opts.yes then
+      M.confirm(plan, function(accepted)
+        if not accepted then
+          notify.info("Cancelled")
+          return
+        end
+        sink.run(plan, function(res)
+          sink.deliver(run_how, res, plan)
+        end)
+      end)
+      return
+    end
+    sink.run(plan, function(res)
+      sink.deliver(run_how, res, plan)
+    end)
+  end
+
   if how == "cmdline" then
     local text, terr = kind.cmdline_text(plan)
     if not text then
-      notify.warn(terr or "cannot put it into the command line")
+      -- the plan is known and shown: run it, copy it, or leave it (Cancel is the default)
+      M.offer(plan, terr or "cannot put it into the command line", function(choice)
+        if choice == "copy" then
+          sink.copy_command(plan)
+        elseif choice == "run" then
+          run("run")
+        else
+          notify.info("Cancelled: nothing was run or copied")
+        end
+      end)
       return
     end
     sink.to_cmdline(text)
@@ -100,13 +174,7 @@ function M.execute(opts)
     return
   end
 
-  if plan.risky and not opts.yes and not M.confirm(plan) then
-    notify.info("Cancelled")
-    return
-  end
-  sink.run(plan, function(res)
-    sink.deliver(how, res, plan)
-  end)
+  run(how)
 end
 
 ---Register `:Execute` and `:Execute!`. Safe to call twice.

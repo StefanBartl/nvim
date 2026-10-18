@@ -352,9 +352,15 @@ return function(H)
     shown[#shown + 1] = { how = how, lines = r.lines, display = p.display }
   end
   local answer = true
-  execute.confirm = function(p)
+  execute.confirm = function(p, cb)
     asked[#asked + 1] = p.display
-    return answer
+    cb(answer)
+  end
+  local offers, offer_choice = {}, "cancel"
+  local offer = execute.offer
+  execute.offer = function(p, why, cb)
+    offers[#offers + 1] = { display = p.display, why = why }
+    cb(offer_choice)
   end
   local function reset()
     typed, copied, asked, shown = {}, {}, {}, {}
@@ -448,8 +454,37 @@ return function(H)
   vim.cmd("1,1Execute --from=selection")
   eq(typed, { "see `:set wrap` here" }, "a range selects the text")
 
+  -- ── a plan that does not fit the command line: offered, not just refused ────
+  scratch({ "```vim", "set wrap", "set list", "```" })
+  reset()
+  offers, offer_choice = {}, "cancel"
+  execute.execute({ from = "fence" })
+  eq(#offers, 1, "several commands without a bang: the person is asked what now")
+  has(offers[1].why, "2 commands", "and told what does not fit")
+  has(offers[1].display, "set wrap", "the question shows the plan")
+  eq({ typed, copied, shown }, { {}, {}, {} }, "Cancel types, copies and runs nothing")
+
+  reset()
+  offers, offer_choice = {}, "copy"
+  execute.execute({ from = "fence" })
+  eq(#copied, 1, "Copy copies the plan")
+  eq(shown, {}, "and runs nothing")
+
+  reset()
+  offers, offer_choice = {}, "run"
+  execute.execute({ from = "fence" })
+  eq(#shown, 1, "Run runs it")
+  eq(shown[1].how, "run", "as a bang would")
+
+  reset()
+  offers = {}
+  execute.execute({ from = "fence", bang = true })
+  eq(offers, {}, "with a bang nothing is offered: it runs")
+  eq(#shown, 1)
+
   sink.to_cmdline, sink.copy_command, sink.deliver = to_cmdline, copy_command, deliver
   execute.confirm = confirm
+  execute.offer = offer
   has(execute.default_how(false), "cmdline")
   vim.o.shell, vim.o.shellcmdflag, vim.o.shellquote, vim.o.shellxquote = unpack(saved_shell)
   vim.cmd("enew!")
