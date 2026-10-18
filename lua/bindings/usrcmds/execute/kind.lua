@@ -460,14 +460,12 @@ function M.cmdline_text(plan)
   if plan.kind == "lua" then
     local chunk = plan.commands[1]
     if chunk:find("\n", 1, true) then
-      return nil,
-        "a Lua chunk with several lines does not fit the command line: use :Execute! to run it"
+      return nil, "a Lua chunk with several lines does not fit the command line"
     end
     return "lua " .. chunk, nil
   end
   if #plan.commands > 1 then
-    return nil,
-      ("%d commands do not fit the command line: use :Execute! to run them"):format(#plan.commands)
+    return nil, ("%d commands do not fit the command line"):format(#plan.commands)
   end
   return (plan.kind == "shell" and "!" or "") .. plan.commands[1], nil
 end
