@@ -461,6 +461,10 @@ return function(H)
   execute.execute({ from = "fence" })
   eq(#offers, 1, "several commands without a bang: the person is asked what now")
   has(offers[1].why, "2 commands", "and told what does not fit")
+  ok(
+    not offers[1].why:find("use :Execute!", 1, true),
+    "without advice the question itself already offers"
+  )
   has(offers[1].display, "set wrap", "the question shows the plan")
   eq({ typed, copied, shown }, { {}, {}, {} }, "Cancel types, copies and runs nothing")
 
