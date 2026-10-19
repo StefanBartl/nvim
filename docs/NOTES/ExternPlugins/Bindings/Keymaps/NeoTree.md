@@ -115,7 +115,7 @@ natives Neo-tree-Mapping war totes Gewicht, das mit demselben Key racete).
 
 | Taste | Aktion | Status |
 |---|---|---|
-| `<CR>` | Custom-Wrapper: sicheres Expand/Collapse von Directories, sonst `open_with_window_picker` (Fallback `open`, falls `window-picker` fehlt). Von filetree.nvim's `preview`-Feature als `original_cr_cb` eingebunden. | [custom] |
+| `<CR>` | Custom-Wrapper: sicheres Expand/Collapse von Directories, sonst `open_with_window_picker` (Fallback `open`, falls `window-picker` fehlt). Von filetree.nvim's `preview`-Feature als `original_cr_cb` eingebunden. Auf einem Bild öffnet filetree stattdessen den images.nvim-Float (2/3, `<S-Up>`/`<S-Down>` wechseln 2/3 / 90 % / Vollbild, `q` schließt). | [custom] |
 | `<2-LeftMouse>` | `open` | [custom] (= Default-Wert, explizit gesetzt) |
 | `H` | `toggle_hidden` | [default] |
 | `/` | `fuzzy_finder` | [default] |
