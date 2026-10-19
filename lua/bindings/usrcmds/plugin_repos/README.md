@@ -23,6 +23,7 @@ those names no longer exist.
 :MyPlugins update [dir] [--only=<name>]
 :MyPlugins sync [dir] [--only=<name>] [--dry-run] [--no-fetch] [--jobs=<n>]
 :MyPlugins sync issues
+:MyPlugins machine [--pull] [--only=a,b]
 :MyPlugins reclone [dir] [--only=<name>]
 :MyPlugins dashboard [dir] [--fetch] [--fetch-this]
 :MyPlugins mode [auto|dir|remote|disabled]
