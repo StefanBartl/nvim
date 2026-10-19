@@ -127,6 +127,31 @@ function M.rank(item)
   return 4
 end
 
+---The command `b` puts on the clipboard: go to the repo first, then build.
+---
+---The hint of the script carries a trailing remark after three or more spaces
+---(`.\tools\dev-hub.ps1 -Release   (builds UI, then hub)`); pasted into PowerShell that remark
+---would be read as an argument, so it is dropped. The folder change comes first because the build
+---commands are relative (`.\tools\...`, `cargo build`, `sh scripts/...`) and a terminal that sits
+---anywhere else (the config, another repo) would build nothing or the wrong thing.
+---@param item MyPlugins.MachineItem
+---@return string|nil cmd nil when the line has no build hint
+function M.build_command(item)
+  if not item or item.Hint == nil or item.Hint == "" then
+    return nil
+  end
+  local hint = item.Hint:gsub("%s%s+%b()%s*$", ""):gsub("%s+$", "")
+  if hint == "" then
+    return nil
+  end
+  if item.Path == nil or item.Path == "" then
+    return hint
+  end
+  -- PowerShell single quotes: the only character to double is the quote itself.
+  local path = item.Path:gsub("'", "''")
+  return ("Set-Location -LiteralPath '%s'; %s"):format(path, hint)
+end
+
 ---Why a line is not pulled (nil: it can be).
 ---@param item MyPlugins.MachineItem
 ---@return string|nil
@@ -228,7 +253,7 @@ end
 ---@return table<integer, string> hls  line number -> highlight group
 function M.render(items, all)
   local lines = {
-    "MyPlugins machine   <CR> pull   P pull all   b build cmd   a show current   R recheck   ? help",
+    "MyPlugins machine   <CR> pull   P pull all   b build cmd (cd + build)   a show current   R recheck   ? help",
     "",
   }
   local by_line, hls = {}, {}
@@ -385,8 +410,13 @@ local function set_keymaps(bufnr)
       notify.info("No build hint for this line.")
       return
     end
-    vim.fn.setreg("+", it.Hint)
-    notify.info("Copied: " .. it.Hint)
+    local cmd = M.build_command(it)
+    if not cmd then
+      notify.info("No build hint for this line.")
+      return
+    end
+    vim.fn.setreg("+", cmd)
+    notify.info("Copied: " .. cmd)
   end, "Copy the build command of the repo under the cursor")
   map("a", function()
     current.all = not current.all
