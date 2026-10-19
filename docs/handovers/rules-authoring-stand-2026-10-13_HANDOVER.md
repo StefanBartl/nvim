@@ -1,1 +1,0 @@
-E:/repos/tasks-vault/rules.nvim/handovers/rules-authoring-stand-2026-10-13_HANDOVER.md
