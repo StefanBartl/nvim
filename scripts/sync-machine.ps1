@@ -10,7 +10,9 @@
 
   -Pull   fast-forwards clean repos that sit on their default branch
           (git pull --ff-only). Never touches dirty or diverged repos.
-  -Push   only reports unpushed work as a hard warning (never pushes).
+  -Json   print one JSON array (repo, path, state, behind, ahead, dirty,
+          pullable, build, hint, note) instead of the table; used by
+          :MyPlugins machine. Exit code is unchanged.
 
   Exit code: 0 = everything current, 1 = something needs attention.
 
@@ -21,6 +23,7 @@
 #>
 param(
     [switch]$Pull,
+    [switch]$Json,
     [string[]]$Only,
     [string]$ReposDir = $env:REPOS_DIR
 )
@@ -86,7 +89,7 @@ foreach ($name in $names) {
     $dir = Join-Path $ReposDir $name
     if (-not (Test-Path (Join-Path $dir '.git'))) {
         if ($extra -contains $name) {
-            $rows.Add([pscustomobject]@{ Repo = $name; State = 'MISSING (clone it)'; Note = '' })
+            $rows.Add([pscustomobject]@{ Repo = $name; Path = $dir; State = 'MISSING (clone it)'; Note = ''; Behind = 0; Ahead = 0; Dirty = 0; Pullable = $false; Build = ''; Hint = '' })
             $attention.Add("$name : not cloned on this machine")
         }
         continue
@@ -130,12 +133,13 @@ foreach ($name in $names) {
     }
     if ($branch -ne 'main' -and $branch -ne 'master') { $notes.Add("on branch $branch") }
 
+    $buildState = ''; $buildHint = ''
     # Native build freshness: artifact older than the newest source commit.
     if ($natives.ContainsKey($name)) {
         $nat = $natives[$name]
         $art = Join-Path $dir $nat.Artifact
         if (-not (Test-Path $art)) {
-            $notes.Add('build MISSING')
+            $notes.Add('build MISSING'); $buildState = 'missing'; $buildHint = $nat.Hint
             $attention.Add("$name : no build at $($nat.Artifact) - $($nat.Hint)")
         } else {
             $srcArgs = @('log', '-1', '--format=%ct', '--') + $nat.Sources
@@ -144,17 +148,30 @@ foreach ($name in $names) {
                 $srcTime = [DateTimeOffset]::FromUnixTimeSeconds([int64]$ct).UtcDateTime
                 $artTime = (Get-Item $art).LastWriteTimeUtc
                 if ($artTime -lt $srcTime) {
-                    $notes.Add('build STALE')
+                    $notes.Add('build STALE'); $buildState = 'stale'; $buildHint = $nat.Hint
                     $attention.Add("$name : build older than its sources - $($nat.Hint)")
-                } else { $notes.Add('build current') }
+                } else { $notes.Add('build current'); $buildState = 'current' }
             }
         }
     }
 
-    $rows.Add([pscustomobject]@{ Repo = $name; State = $state; Note = ($notes -join ', ') })
+    $isMain = ($branch -eq 'main' -or $branch -eq 'master')
+    $dirtyCount = 0
+    if ($dirty) { $dirtyCount = ($dirty -split "`n").Count }
+    $rows.Add([pscustomobject]@{
+        Repo = $name; Path = $dir; State = $state; Note = ($notes -join ', ')
+        Behind = $behind; Ahead = $ahead; Dirty = $dirtyCount
+        Pullable = [bool]($behind -gt 0 -and $ahead -eq 0 -and $dirtyCount -eq 0 -and $isMain)
+        Build = $buildState; Hint = $buildHint
+    })
 }
 
-$rows | Format-Table -AutoSize | Out-String | Write-Host
+if ($Json) {
+    ConvertTo-Json -InputObject @($rows.ToArray()) -Compress -Depth 3
+    if ($attention.Count -eq 0) { exit 0 } else { exit 1 }
+}
+
+$rows | Select-Object Repo, State, Note | Format-Table -AutoSize | Out-String | Write-Host
 
 if ($attention.Count -eq 0) {
     Write-Host 'Everything current - safe to work on this machine.' -ForegroundColor Green
