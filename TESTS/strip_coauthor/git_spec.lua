@@ -191,4 +191,47 @@ return function(H)
     "the annotated tag on origin is at the new commit"
   )
   eq(gitx.pending_tags(work), {}, "nothing is pending after the push")
+
+  -- More than three moved tags go out in ONE push (GitHub creates no push events for that, so tag-
+  -- triggered release workflows stay quiet); all of them still arrive with their new value.
+  local bare4 = H.tmpdir()
+  git(bare4, { "init", "-q", "--bare", "-b", "main" })
+  -- A hook that counts the pushes the remote receives: one line per push.
+  local counter = bare4 .. "/pushes.log"
+  H.write(
+    bare4 .. "/hooks/pre-receive",
+    "#!/bin/sh\necho x >> '" .. counter .. "'\ncat > /dev/null\n"
+  )
+  vim.uv.fs_chmod(bare4 .. "/hooks/pre-receive", 493)
+  local function pushes()
+    local lines = vim.fn.filereadable(counter) == 1 and vim.fn.readfile(counter) or {}
+    return #lines
+  end
+  local work4 = H.tmpdir()
+  git(work4, { "init", "-q", "-b", "main" })
+  git(work4, { "remote", "add", "origin", bare4 })
+  commit(work4, "a", "root", "Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>")
+  commit(work4, "b", "second")
+  for i = 1, 4 do
+    git(work4, { "tag", "rel-" .. i, i % 2 == 0 and "main" or "main~1" })
+  end
+  git(work4, { "push", "-q", "origin", "main", "--tags" })
+  ok(gitx.rewrite(work4, gitx.plan(work4)) ~= nil, "the rewrite of the four-tag repository works")
+  local pending4 = gitx.pending_tags(work4)
+  eq(#pending4, 4, "all four moved tags are pending")
+  local before = pushes()
+  local results4 = gitx.push_tags(work4, pending4)
+  eq(pushes() - before, 1, "four tags are ONE push (GitHub creates no push events for that)")
+  eq(#results4, 4, "one result per tag")
+  for _, r in ipairs(results4) do
+    eq(r.status, "pushed", "tag pushed in the batch: " .. tostring(r.detail))
+  end
+  for i = 1, 4 do
+    eq(
+      git(bare4, { "rev-parse", "rel-" .. i }),
+      git(work4, { "rev-parse", "rel-" .. i }),
+      "tag rel-" .. i .. " has the new value on origin"
+    )
+  end
+  eq(gitx.pending_tags(work4), {}, "nothing is pending after the batch push")
 end

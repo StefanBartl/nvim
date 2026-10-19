@@ -601,11 +601,43 @@ function M.pending_tags(dir)
 end
 
 ---Force-push moved tags, each with a lease on the value this ran against.
+---
+---One push per tag, except for MORE THAN THREE tags: those go out in a single
+---push, because GitHub creates no push events when more than three tags arrive
+---at once. A repository with tag-triggered release workflows (docmap-desktop:
+---`on: push: tags: v*`, which would build and re-publish every release) stays
+---quiet that way; sent one by one, each tag would start its own release run.
 ---@param dir string
 ---@param pending StripCoauthor.PendingTag[]
 ---@return StripCoauthor.PushResult[]
 function M.push_tags(dir, pending)
   local out = {}
+
+  if #pending > 3 then
+    local args = { "push" }
+    local specs = {}
+    for _, item in ipairs(pending) do
+      local ref = "refs/tags/" .. item.tag
+      args[#args + 1] = ("--force-with-lease=%s:%s"):format(ref, item.remote)
+      specs[#specs + 1] = ref .. ":" .. ref
+    end
+    args[#args + 1] = "origin"
+    vim.list_extend(args, specs)
+    local code, _, err = git(dir, args)
+    for _, item in ipairs(pending) do
+      if code == 0 then
+        out[#out + 1] = { branch = item.tag, status = "pushed" }
+      else
+        out[#out + 1] = {
+          branch = item.tag,
+          status = "failed",
+          detail = vim.split(err, "\n", { trimempty = true })[1],
+        }
+      end
+    end
+    return out
+  end
+
   for _, item in ipairs(pending) do
     local ref = "refs/tags/" .. item.tag
     local lease = ("--force-with-lease=%s:%s"):format(ref, item.remote)
