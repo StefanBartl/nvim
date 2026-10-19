@@ -45,6 +45,30 @@ return function(H)
   commit(dir, "b", "second")
   commit(dir, "c", "third", "Co-authored-by: Claude Opus <noreply@anthropic.com>")
   commit(dir, "d", "fourth")
+  -- A lightweight tag on "second" and an annotated one on "third" (both change with the rewrite),
+  -- one on "fourth" is above them and changes too.
+  git(dir, { "tag", "light-v1", "main~2" })
+  git(
+    dir,
+    {
+      "-c",
+      "user.name=T",
+      "-c",
+      "user.email=t@example.com",
+      "tag",
+      "-a",
+      "-m",
+      "release two",
+      "annotated-v2",
+      "main~1",
+    }
+  )
+
+  -- The way back: a verified bundle of every ref.
+  local bundle = H.tmpdir() .. "/before.bundle"
+  local backed, backup_err = gitx.backup(dir, bundle)
+  ok(backed, "the backup bundle is written and verifies: " .. tostring(backup_err))
+  ok(H.exists(bundle), "the bundle file exists")
 
   local old_tip = git(dir, { "rev-parse", "main" })
   local old_tree = git(dir, { "rev-parse", "main^{tree}" })
@@ -60,6 +84,35 @@ return function(H)
   eq(rewrite_err, nil, "the rewrite succeeds")
   ok(result ~= nil, "the rewrite returns a result")
   eq(result.rebuilt, 4, "four commits rebuilt")
+
+  -- The old -> new map is returned (it re-pins references afterwards) and the tags moved along.
+  eq(result.map[old_tip], git(dir, { "rev-parse", "main" }), "the map names the new tip of main")
+  eq(#result.tags, 2, "both tags moved")
+  eq(
+    git(dir, { "cat-file", "-t", "annotated-v2" }),
+    "tag",
+    "the annotated tag is still a tag object"
+  )
+  eq(
+    git(dir, { "tag", "-l", "--format=%(contents:subject)", "annotated-v2" }),
+    "release two",
+    "its message is kept"
+  )
+  eq(
+    git(dir, { "log", "-1", "--format=%s", "light-v1" }),
+    "second",
+    "the lightweight tag sits on the same subject"
+  )
+  eq(
+    git(dir, { "log", "-1", "--format=%s", "annotated-v2^{commit}" }),
+    "third",
+    "the annotated tag too"
+  )
+  eq(
+    git(dir, { "rev-list", "-i", "--count", "--grep=co-authored-by: claude", "--all" }),
+    "0",
+    "no ref reaches a trailer"
+  )
 
   local new_tip = git(dir, { "rev-parse", "main" })
   ok(new_tip ~= old_tip, "main moved")

@@ -388,6 +388,42 @@ function M.rewrite(dir, plan)
     moves[#moves + 1] = { branch = branch, old = old, new = new }
   end
 
+  -- Tags that sit on a rewritten commit move with it: a release tag left on
+  -- the old history would keep the trailer reachable and point at a commit
+  -- that is on no branch any more. A lightweight tag is just re-pointed; an
+  -- annotated one gets a new tag object (same name, tagger, date and message,
+  -- new `object` line) because the old object names the old commit.
+  local tag_moves = {}
+  local tag_fmt = "%(refname:short) %(objecttype) %(objectname) %(*objectname) %(*objecttype)"
+  for _, line in ipairs(git_lines(dir, { "for-each-ref", "--format=" .. tag_fmt, "refs/tags" })) do
+    local name, kind, obj, rest = line:match("^(%S+) (%S+) (%x+) ?(.*)$")
+    local peeled, peeled_kind = (rest or ""):match("^(%x+) (%S+)$")
+    local commit = (kind == "commit" and obj)
+      or (kind == "tag" and peeled_kind == "commit" and peeled)
+      or nil
+    local new_commit = commit and map[commit]
+    if name and new_commit then
+      local new_ref = new_commit
+      if kind == "tag" then
+        local code, body = git(dir, { "cat-file", "tag", obj })
+        if code ~= 0 then
+          return nil, ("cannot read the tag %s"):format(name)
+        end
+        local text, replaced = body:gsub("^object %x+", "object " .. new_commit, 1)
+        if replaced ~= 1 then
+          return nil, ("the tag %s has an unexpected format"):format(name)
+        end
+        local mk_code, mk_sha, mk_err = git(dir, { "mktag" }, { stdin = text .. "\n" })
+        if mk_code ~= 0 or mk_sha == "" then
+          return nil, ("cannot recreate the tag %s: %s"):format(name, mk_err)
+        end
+        new_ref = mk_sha
+      end
+      tag_moves[#tag_moves + 1] =
+        { tag = name, kind = kind, old = obj, new = new_ref, commit = new_commit }
+    end
+  end
+
   -- `update-ref` is given the value it expects to replace, so a repository
   -- another session moved in the meantime aborts here rather than losing that
   -- session's commits.
@@ -399,10 +435,35 @@ function M.rewrite(dir, plan)
         ("%s moved while this ran, nothing further was changed: %s"):format(move.branch, err)
     end
   end
+  for _, move in ipairs(tag_moves) do
+    local code, _, err = git(dir, { "update-ref", "refs/tags/" .. move.tag, move.new, move.old })
+    if code ~= 0 then
+      return nil, ("the tag %s moved while this ran: %s"):format(move.tag, err)
+    end
+  end
 
-  return { rebuilt = #plan.commits, moves = moves }, nil
+  return { rebuilt = #plan.commits, moves = moves, tags = tag_moves, map = map }, nil
 end
 
+---Write a bundle of every ref of `dir` (branches, tags, remote-tracking refs)
+---to `file` and verify it. The bundle is the way back: `git clone <file> x`
+---restores the repository as it was before the rewrite.
+---@param dir string
+---@param file string
+---@return boolean ok
+---@return string|nil err
+function M.backup(dir, file)
+  vim.fn.mkdir(vim.fs.dirname(file), "p")
+  local code, _, err = git(dir, { "bundle", "create", file, "--all" })
+  if code ~= 0 then
+    return false, err
+  end
+  local vcode, _, verr = git(dir, { "bundle", "verify", file })
+  if vcode ~= 0 then
+    return false, verr
+  end
+  return true, nil
+end
 -- =============================================================================
 -- Push
 -- =============================================================================

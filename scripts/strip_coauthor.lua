@@ -22,6 +22,14 @@
 --- repositories (docmap-desktop, tasks-vault, tasks-desktop, WKDBooks).
 --- `--only=<name>` narrows to a single repository.
 ---
+--- **Backup, tags, map.** Before a repository is rewritten, a verified
+--- `git bundle` of every ref goes to `$STRIP_BACKUP_DIR` (default
+--- `<parent of the repos dir>/repos-backup/strip-coauthor-<date>`); no bundle,
+--- no rewrite. Tags on a rewritten commit move with it (an annotated tag gets
+--- a new tag object with the same message). The old -> new SHA map of each
+--- repository is written next to its bundle (`<repo>.map.json`): it is what
+--- re-pins `repo@sha` references and `engine.lock` afterwards.
+---
 --- **Branches, not just HEAD.** Every local branch is examined, not the
 --- checked-out one — a config worktree branch carries the same commits as
 --- `main` and would otherwise walk the trailer back in at the next merge.
@@ -191,6 +199,19 @@ end
 -- rewrite
 -- =============================================================================
 
+---Where the bundles and the SHA maps of a rewrite go: `$STRIP_BACKUP_DIR`, else
+---`<parent of the repos dir>/repos-backup/strip-coauthor-<date>` (E:/repos-backup/...).
+---@param dir string|nil
+---@return string
+local function backup_dir_for(dir)
+  local env = vim.env.STRIP_BACKUP_DIR
+  if env and env ~= "" then
+    return (env:gsub("[/\\]$", ""))
+  end
+  local base = (gitx.resolve_base_dir(dir) or vim.fn.stdpath("config")):gsub("[/\\]$", "")
+  return vim.fs.dirname(base) .. "/repos-backup/strip-coauthor-" .. os.date("%Y-%m-%d")
+end
+
 ---@param dir string|nil
 ---@param only string|nil
 local function rewrite(dir, only)
@@ -208,14 +229,33 @@ local function rewrite(dir, only)
       failed = failed + 1
       lines[#lines + 1] = ("  %-24s FEHLER: %s"):format(repo.name, plan_err)
     elseif plan then
-      local result, rewrite_err = gitx.rewrite(repo.path, plan)
+      -- The way back first: a verified bundle of every ref. No bundle, no rewrite.
+      local backup_dir = backup_dir_for(dir)
+      local backed_up, backup_err =
+        gitx.backup(repo.path, backup_dir .. "/" .. repo.name .. ".bundle")
+      local result, rewrite_err
+      if backed_up then
+        result, rewrite_err = gitx.rewrite(repo.path, plan)
+      else
+        rewrite_err = "backup failed, nothing rewritten: " .. tostring(backup_err)
+      end
       if not result then
         failed = failed + 1
         lines[#lines + 1] = ("  %-24s FEHLER: %s"):format(repo.name, rewrite_err)
       else
         changed = changed + 1
         rebuilt = rebuilt + result.rebuilt
-        lines[#lines + 1] = ("  %-24s %d Commit(s) neu gebaut"):format(repo.name, result.rebuilt)
+        -- The old -> new SHA map is what re-pins `repo@sha` references and
+        -- `engine.lock` afterwards; it lives next to the bundle.
+        vim.fn.writefile(
+          { vim.json.encode({ repo = repo.name, map = result.map, tags = result.tags }) },
+          backup_dir .. "/" .. repo.name .. ".map.json"
+        )
+        lines[#lines + 1] = ("  %-24s %d Commit(s) neu gebaut, %d Tag(s) verschoben"):format(
+          repo.name,
+          result.rebuilt,
+          #result.tags
+        )
         for _, move in ipairs(result.moves) do
           lines[#lines + 1] = ("  %-24s   %-42s %s -> %s"):format(
             "",
