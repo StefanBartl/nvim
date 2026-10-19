@@ -22,6 +22,12 @@
 --- repositories (docmap-desktop, tasks-vault, tasks-desktop, WKDBooks).
 --- `--only=<name>` narrows to a single repository.
 ---
+--- **Runbook.** Ablauf über viele Repos, Reihenfolge der Gruppen und alle Fallen des Durchlaufs vom
+--- 2026-10-19 (Tag-Pushes starten Release-Workflows, `[skip ci]` hält `ci-verified` zurück, `git cherry`
+--- `+`/`-`, rollende Tags, Pins, fremde uncommittete Dateien …): `$REPOS_DIR/tasks-vault/TOOLS/history-rewrite-runbook.md`.
+--- Read-only Vorab-Inventar: `scripts/strip_coauthor/inventory.lua`; Verweise nach dem Rewrite:
+--- `scripts/strip_coauthor/repin.lua`.
+---
 --- **Backup, tags, map.** Before a repository is rewritten, a verified
 --- `git bundle` of every ref goes to `$STRIP_BACKUP_DIR` (default
 --- `<parent of the repos dir>/repos-backup/strip-coauthor-<date>`); no bundle,
