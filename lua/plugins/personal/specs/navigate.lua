@@ -1578,15 +1578,23 @@ return {
           --   on_conflict = "suffix", -- "overwrite" | "suffix" | "error"
           --   confirm = true,
           -- },
-          -- lsp_diagnostics = {
-          --   enabled = true,
-          --   show_errors = true,
-          --   show_warnings = true,
-          --   show_hints = false,
-          --   show_info = false,
-          --   format = nil, -- fun(counts): string?; default renders the non-zero counts like "E:1 W:2", nil hides the row
-          --   debounce_ms = 300,
-          -- },
+          lsp_diagnostics = {
+            --   enabled = true,
+            --   show_errors = true,
+            --   show_warnings = true,
+            --   show_hints = false,
+            --   show_info = false,
+            --   format = nil, -- fun(counts): string?; default: per severity icons, else signs.text, else "E:1 W:2"; nil hides the row
+            --   debounce_ms = 300,
+            -- Badge prefix per severity. my.nvim sets signs.text to " " (numhl
+            -- only), so without these the tree would show E:/W:.
+            icons = {
+              error = "\u{f057}", -- nf-fa-times_circle
+              warning = "\u{f071}", -- nf-fa-warning
+              hint = "\u{f0335}", -- nf-md-lightbulb
+              info = "\u{f05a}", -- nf-fa-info_circle
+            },
+          },
           -- diff = {
           --   enabled = true,
           --   split = "vsplit", -- "vsplit" | "split"
