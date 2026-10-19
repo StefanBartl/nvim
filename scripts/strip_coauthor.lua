@@ -1,11 +1,11 @@
 ---@brief `scripts/strip_coauthor.lua` — `STRIP_COAUTHOR_ARGS="{scan|rewrite|push} [dir] [--only=<name>] [--yes]"` — remove the
 ---`Co-Authored-By: Claude` trailer from the commits that carry it, across the
----config and the personal plugin checkouts.
+---config and every git repository under `$REPOS_DIR`.
 ---@description
 --- An AI session that commits on this machine signs its commits with a
 --- `Co-Authored-By: Claude …` trailer. That is not wanted in this author's
 --- history, and by the time it is noticed the commits are usually already
---- pushed. Removing it means rewriting those commits — in nine repositories at
+--- pushed. Removing it means rewriting those commits — in dozens of repositories at
 --- once, several of which have live worktrees with uncommitted work in them.
 --- This is that operation, made repeatable.
 ---
@@ -15,12 +15,12 @@
 --- force-push to GitHub the consequence of a keystroke, and there is no
 --- undoing that for anyone who has already fetched.
 ---
---- **What it operates on.** The config repository itself, plus every plugin
---- `plugins.personal.core.list` declares that is actually checked out under `dir`
---- (or `$REPOS_DIR`). Deriving the set from the spec rather than a list kept
---- here means a plugin added to the spec is covered from then on, and one that
---- was never cloned is not reported as a failure. `--only=<name>` narrows to a
---- single repository, completed from that same live set.
+--- **What it operates on.** The config repository itself, plus every git
+--- repository directly under `dir` (or `$REPOS_DIR`), minus `git.lua`'s
+--- `EXCLUDE` (third-party forks such as plenary.nvim). It used to be only the
+--- plugins `plugins.personal.core.list` declares, which missed the biggest
+--- repositories (docmap-desktop, tasks-vault, tasks-desktop, WKDBooks).
+--- `--only=<name>` narrows to a single repository.
 ---
 --- **Branches, not just HEAD.** Every local branch is examined, not the
 --- checked-out one — a config worktree branch carries the same commits as
@@ -39,16 +39,15 @@
 --- trailer from the history everyone will *see*, not from everything that has
 --- ever existed.
 ---
---- **Usage.** Must run through a real startup (`-c "luafile ..."`, not `-l`):
---- the repository set comes from `plugins.personal.core.list`, which needs this
---- config's resolved plugin policy — same constraint as `docmap_projects.lua`.
---- Arguments go in `STRIP_COAUTHOR_ARGS` (not on the command line: nvim would
---- open them as file buffers and the session autosave would remember them):
+--- **Usage.** Runs without this config (`-u NONE -l`), so it starts at once and
+--- needs no plugin policy (the repository set is a directory scan now; before,
+--- `plugins.personal.core.list` forced a full startup, 40 s with 40 plugins, and
+--- the first scans looked hung). Arguments go in `STRIP_COAUTHOR_ARGS`:
 ---
----     STRIP_COAUTHOR_ARGS="scan" nvim --headless -c "luafile scripts/strip_coauthor.lua"
----     STRIP_COAUTHOR_ARGS="rewrite --only=lib.nvim" nvim --headless -c "luafile scripts/strip_coauthor.lua"
----     STRIP_COAUTHOR_ARGS="push" nvim --headless -c "luafile scripts/strip_coauthor.lua"
----     # PowerShell: $env:STRIP_COAUTHOR_ARGS = "scan"; nvim --headless -c "luafile ..."
+---     STRIP_COAUTHOR_ARGS="scan" nvim -n -i NONE --headless -u NONE -l scripts/strip_coauthor.lua
+---     STRIP_COAUTHOR_ARGS="rewrite --only=lib.nvim" nvim -n -i NONE --headless -u NONE -l scripts/strip_coauthor.lua
+---     STRIP_COAUTHOR_ARGS="push" nvim -n -i NONE --headless -u NONE -l scripts/strip_coauthor.lua
+---     # PowerShell: $env:STRIP_COAUTHOR_ARGS = "scan"; nvim -n -i NONE --headless -u NONE -l scripts\strip_coauthor.lua
 ---
 --- Reports go to stdout. `push` asks on stdin (`yes` to proceed); `--yes`
 --- answers for you. With no stdin it aborts — never a silent force-push.

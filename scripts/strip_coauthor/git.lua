@@ -6,7 +6,7 @@
 ---
 --- Not on the runtimepath: `scripts/strip_coauthor.lua` loads this file with
 --- `dofile`, so it must not `require` anything from this config's own modules
---- other than `plugins.personal.core.list`.
+--- at all.
 ---
 --- **Why `commit-tree` + `update-ref` and not a rebase.** Every affected
 --- commit is rebuilt object by object and the branch refs are moved by hand.
@@ -120,10 +120,13 @@ function M.is_git_repo(path)
   return stat ~= nil and stat.type == "directory"
 end
 
+---Repositories that are somebody else's and must never be rewritten (a fork of
+---a third-party project: its history is not ours to change).
+---@type table<string, true>
+M.EXCLUDE = { ["plenary.nvim"] = true }
+
 ---Every repository this command knows about: the config itself, plus every
----personal plugin that is actually checked out under `base_dir`. The plugin
----list comes from `plugins.personal.core.list`, so a plugin added to the spec is
----covered from then on without editing anything here.
+---git repository directly under `base_dir` (minus `M.EXCLUDE`).
 ---@param base_dir string|nil Already resolved (see `M.resolve_base_dir`), or nil.
 ---@return { name: string, path: string }[]
 function M.repos(base_dir)
@@ -138,12 +141,18 @@ function M.repos(base_dir)
     return out
   end
 
-  local entries = require("plugins.personal.core.list").read() or {}
-  for _, entry in ipairs(entries) do
-    local path = base_dir .. "/" .. entry.name
-    if loop.fs_stat(path) and M.is_git_repo(path) then
-      out[#out + 1] = { name = entry.name, path = path }
+  -- Every repository directly under `base_dir`, not only the plugins the spec
+  -- lists: the biggest ones (docmap-desktop, tasks-vault, tasks-desktop,
+  -- WKDBooks, Configs) are not plugins and were missed, ca. 330 trailer commits.
+  local names = {}
+  for name, kind in vim.fs.dir(base_dir) do
+    if kind == "directory" and not M.EXCLUDE[name] and M.is_git_repo(base_dir .. "/" .. name) then
+      names[#names + 1] = name
     end
+  end
+  table.sort(names)
+  for _, name in ipairs(names) do
+    out[#out + 1] = { name = name, path = base_dir .. "/" .. name }
   end
 
   return out
@@ -418,14 +427,25 @@ end
 ---@param dir string
 ---@return StripCoauthor.Pending[]
 function M.pending_push(dir)
-  local depth = "-" .. M.SEARCH_DEPTH
   local out = {}
+
+  ---The trailer commits reachable from `ref`.
+  ---@param ref string
+  ---@return string[]
+  local function trailers_of(ref)
+    local args = { "rev-list", "-i", "--grep=" .. M.GREP }
+    if M.SEARCH_DEPTH then
+      args[#args + 1] = "-" .. M.SEARCH_DEPTH
+    end
+    vim.list_extend(args, { ref, "--" })
+    return git_lines(dir, args)
+  end
 
   for _, branch in ipairs(branches_of(dir)) do
     local remote_ref = "refs/remotes/origin/" .. branch
     if git(dir, { "rev-parse", "--verify", "--quiet", remote_ref }) == 0 then
-      local mine = git_lines(dir, { "rev-list", depth, "--grep=" .. M.GREP, branch, "--" })
-      local theirs = git_lines(dir, { "rev-list", depth, "--grep=" .. M.GREP, remote_ref, "--" })
+      local mine = trailers_of(branch)
+      local theirs = trailers_of(remote_ref)
       if #mine == 0 and #theirs > 0 then
         local _, sha = git(dir, { "rev-parse", remote_ref })
         out[#out + 1] = { branch = branch, remote = sha }
