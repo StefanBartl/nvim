@@ -139,7 +139,7 @@ return function(H)
   eq(machine.build_command(hinted({ Hint = "  (only a remark)" })), nil, "only a remark -> nil")
   eq(machine.build_command(nil), nil, "no item -> nil")
   eq(
-    machine.build_command({ Path = "", Hint = "cargo build" }),
+    machine.build_command(item({ Path = "", Hint = "cargo build" })),
     "cargo build",
     "no path: the hint alone"
   )
