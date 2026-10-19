@@ -546,4 +546,81 @@ function M.push(dir, pending)
   return out
 end
 
+---@class StripCoauthor.PendingTag
+---@field tag string
+---@field remote string The ref value `origin` still holds for the tag (the old history).
+
+---Tags that `rewrite` moved and that `origin` still holds at the old place.
+---
+---Like `pending_push` this is derived, not remembered: a tag is pending when
+---`origin` has it at a value other than the local one, the commit behind the
+---remote value is known here and carries the trailer, and the local tag's
+---history is clean. It asks the server (`ls-remote`), because tags have no
+---remote-tracking refs to compare against.
+---@param dir string
+---@return StripCoauthor.PendingTag[]
+function M.pending_tags(dir)
+  local out = {}
+  local code, listing = git(dir, { "ls-remote", "--tags", "origin" })
+  if code ~= 0 or listing == "" then
+    return out
+  end
+
+  local remote = {}
+  for _, line in ipairs(vim.split(listing, "\n", { trimempty = true })) do
+    local sha, ref = line:match("^(%x+)%s+refs/tags/(.+)$")
+    if sha and not ref:match("%^{}$") then
+      remote[ref] = sha
+    end
+  end
+
+  local function trailers_of(ref)
+    return git_lines(dir, { "rev-list", "-i", "--grep=" .. M.GREP, ref .. "^{commit}", "--" })
+  end
+
+  for _, line in
+    ipairs(
+      git_lines(dir, { "for-each-ref", "--format=%(refname:short) %(objectname)", "refs/tags" })
+    )
+  do
+    local name, local_sha = line:match("^(%S+) (%x+)$")
+    local remote_sha = name and remote[name]
+    if remote_sha and remote_sha ~= local_sha then
+      -- The remote object has to be known here to be judged; otherwise leave the tag alone.
+      if
+        git(dir, { "cat-file", "-e", remote_sha }) == 0
+        and #trailers_of(remote_sha) > 0
+        and #trailers_of(name) == 0
+      then
+        out[#out + 1] = { tag = name, remote = remote_sha }
+      end
+    end
+  end
+
+  return out
+end
+
+---Force-push moved tags, each with a lease on the value this ran against.
+---@param dir string
+---@param pending StripCoauthor.PendingTag[]
+---@return StripCoauthor.PushResult[]
+function M.push_tags(dir, pending)
+  local out = {}
+  for _, item in ipairs(pending) do
+    local ref = "refs/tags/" .. item.tag
+    local lease = ("--force-with-lease=%s:%s"):format(ref, item.remote)
+    local code, _, err = git(dir, { "push", lease, "origin", ref .. ":" .. ref })
+    if code == 0 then
+      out[#out + 1] = { branch = item.tag, status = "pushed" }
+    else
+      out[#out + 1] = {
+        branch = item.tag,
+        status = "failed",
+        detail = vim.split(err, "\n", { trimempty = true })[1],
+      }
+    end
+  end
+  return out
+end
+
 return M

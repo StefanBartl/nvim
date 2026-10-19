@@ -48,21 +48,18 @@ return function(H)
   -- A lightweight tag on "second" and an annotated one on "third" (both change with the rewrite),
   -- one on "fourth" is above them and changes too.
   git(dir, { "tag", "light-v1", "main~2" })
-  git(
-    dir,
-    {
-      "-c",
-      "user.name=T",
-      "-c",
-      "user.email=t@example.com",
-      "tag",
-      "-a",
-      "-m",
-      "release two",
-      "annotated-v2",
-      "main~1",
-    }
-  )
+  git(dir, {
+    "-c",
+    "user.name=T",
+    "-c",
+    "user.email=t@example.com",
+    "tag",
+    "-a",
+    "-m",
+    "release two",
+    "annotated-v2",
+    "main~1",
+  })
 
   -- The way back: a verified bundle of every ref.
   local bundle = H.tmpdir() .. "/before.bundle"
@@ -142,4 +139,56 @@ return function(H)
   gitx.SEARCH_DEPTH = 2
   eq(#gitx.plan(many).trailers, 2, "a cap limits the trailer commits found")
   gitx.SEARCH_DEPTH = nil
+
+  -- Against a real (bare) origin: the rewritten branch and the moved tags are found pending, pushed
+  -- with a lease, and afterwards origin holds no trailer and the tags at their new place.
+  local bare = H.tmpdir()
+  git(bare, { "init", "-q", "--bare", "-b", "main" })
+  local work = H.tmpdir()
+  git(work, { "init", "-q", "-b", "main" })
+  git(work, { "remote", "add", "origin", bare })
+  commit(work, "a", "root", "Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>")
+  commit(work, "b", "second")
+  git(work, { "tag", "light-v1", "main~1" })
+  git(work, {
+    "-c",
+    "user.name=T",
+    "-c",
+    "user.email=t@example.com",
+    "tag",
+    "-a",
+    "-m",
+    "release",
+    "annotated-v2",
+    "main",
+  })
+  git(work, { "push", "-q", "origin", "main", "--tags" })
+  eq(gitx.pending_push(work), {}, "nothing is pending while local and origin agree")
+  eq(gitx.pending_tags(work), {}, "no tag is pending while local and origin agree")
+
+  local work_plan = gitx.plan(work)
+  local work_result = gitx.rewrite(work, work_plan)
+  ok(work_result ~= nil, "the rewrite of the clone works")
+  local pending = gitx.pending_push(work)
+  eq(#pending, 1, "main is pending")
+  local pending_tags = gitx.pending_tags(work)
+  eq(#pending_tags, 2, "both moved tags are pending")
+
+  for _, r in ipairs(gitx.push(work, pending)) do
+    eq(r.status, "pushed", "branch pushed: " .. tostring(r.detail))
+  end
+  for _, r in ipairs(gitx.push_tags(work, pending_tags)) do
+    eq(r.status, "pushed", "tag pushed: " .. tostring(r.detail))
+  end
+  eq(
+    git(bare, { "rev-list", "-i", "--count", "--grep=co-authored-by: claude", "--all" }),
+    "0",
+    "origin holds no trailer any more"
+  )
+  eq(
+    git(bare, { "rev-parse", "annotated-v2^{commit}" }),
+    git(work, { "rev-parse", "main" }),
+    "the annotated tag on origin is at the new commit"
+  )
+  eq(gitx.pending_tags(work), {}, "nothing is pending after the push")
 end

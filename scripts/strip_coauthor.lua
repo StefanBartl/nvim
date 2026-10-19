@@ -318,9 +318,10 @@ local function push(dir, only, skip_confirm)
   local work, total = {}, 0
   for _, repo in ipairs(repos) do
     local pending = gitx.pending_push(repo.path)
-    if #pending > 0 then
-      work[#work + 1] = { repo = repo, pending = pending }
-      total = total + #pending
+    local tags = gitx.pending_tags(repo.path)
+    if #pending > 0 or #tags > 0 then
+      work[#work + 1] = { repo = repo, pending = pending, tags = tags }
+      total = total + #pending + #tags
     end
   end
 
@@ -330,12 +331,15 @@ local function push(dir, only, skip_confirm)
   end
 
   local prompt = {
-    ("Force-Push mit --force-with-lease auf %d Branch(es):"):format(total),
+    ("Force-Push mit --force-with-lease auf %d Ref(s) (Branches und Tags):"):format(total),
     "",
   }
   for _, item in ipairs(work) do
     for _, pending in ipairs(item.pending) do
       prompt[#prompt + 1] = ("  %-24s %s"):format(item.repo.name, pending.branch)
+    end
+    for _, tag in ipairs(item.tags) do
+      prompt[#prompt + 1] = ("  %-24s tag %s"):format(item.repo.name, tag.tag)
     end
   end
   prompt[#prompt + 1] = ""
@@ -355,7 +359,9 @@ local function push(dir, only, skip_confirm)
 
   local lines, pushed, failed = {}, 0, 0
   for _, item in ipairs(work) do
-    for _, result in ipairs(gitx.push(item.repo.path, item.pending)) do
+    local results = gitx.push(item.repo.path, item.pending)
+    vim.list_extend(results, gitx.push_tags(item.repo.path, item.tags))
+    for _, result in ipairs(results) do
       if result.status == "pushed" then
         pushed = pushed + 1
         lines[#lines + 1] = ("  %-24s %-42s gepusht"):format(item.repo.name, result.branch)
