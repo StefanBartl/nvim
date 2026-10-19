@@ -1160,6 +1160,12 @@ function M.enable()
     notify.warn(":MyPlugins sync is unavailable: " .. tostring(sync_routes))
   end
 
+  -- `machine` (machine-switch check over all repos, runs scripts/sync-machine.ps1).
+  local ok_machine, machine = pcall(require, "bindings.usrcmds.plugin_repos.machine")
+  if not ok_machine then
+    notify.warn(":MyPlugins machine is unavailable: " .. tostring(machine))
+  end
+
   composer.verb("MyPlugins", {
     desc = "Manage the personal plugin checkouts, their source mode and the wkdbook tasks",
     -- The task routes (tasks / task / open) are declared in tasks_nvim.ui.routes (nested grammar).
@@ -1345,7 +1351,10 @@ function M.enable()
       },
       vim.list_extend(
         ok_sync and sync_routes.routes() or {},
-        ok_tasks and tasks_routes.routes() or {}
+        vim.list_extend(
+          ok_machine and machine.routes() or {},
+          ok_tasks and tasks_routes.routes() or {}
+        )
       )
     ),
   })
