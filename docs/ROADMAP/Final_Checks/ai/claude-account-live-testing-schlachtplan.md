@@ -441,7 +441,7 @@ found` bzw. `lib.nvim not found` ab).
 
 - Erster Versuch: `CONNECT_TIMEOUT` nach 30 s. Ursache: `io.stdout:setvbuf("line")`
   wirkt unter Windows wie Vollpufferung, die Antworten blieben im Puffer bis zum
-  Schliessen von stdin. Behoben in `documentation.nvim@60dda39` (explizites
+  Schliessen von stdin. Behoben in `documentation.nvim@1c1af2a` (explizites
   `flush()` nach jeder Antwort). Das Logfile steht unter
   `%LOCALAPPDATA%\claude-cli-nodejs\Cache\<projekt>\mcp-logs-<server>\`.
 - Danach: Server verbunden, die Tools werden aufgerufen. Ohne ausdruecklichen
