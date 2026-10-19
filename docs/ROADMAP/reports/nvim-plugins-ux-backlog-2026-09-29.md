@@ -129,7 +129,7 @@ ausgelieferte Standard.
 
 **Commits:** `ui.nvim@b6343b0`, `ui.nvim@542383a`, `ui.nvim@b98a0a9`,
 `lib.nvim@8f96c69`, `lib.nvim@638a03a`, `filetree.nvim@8dbdfd1`,
-`replacer.nvim@27fc1e2` (Doku), `sessions.nvim@ff0a23d`
+`replacer.nvim@2dd00a4` (Doku), `sessions.nvim@7683e6a`
 
 ### 2. filetree.nvim blinkendes Icon — bestätigte, nicht behebbare Grenze
 
@@ -204,7 +204,7 @@ Verhalten geändert. Dabei einen Nebenbefund dokumentiert:
 `keymaps.filter` (Default `<C-f>`) überschreibt auf beiden Engines eine
 vorhandene Standard-Bindung.
 
-**Commit:** `replacer.nvim@27fc1e2`
+**Commit:** `replacer.nvim@2dd00a4`
 
 ### 7. runtime-analysis.nvim 7-Tage-Reminder — bereits korrekt
 
