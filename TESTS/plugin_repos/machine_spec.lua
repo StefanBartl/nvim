@@ -58,11 +58,32 @@ return function(H)
   eq(none, nil, "no JSON -> nil")
   ok(err, "...with a reason")
 
-  local lines, by_line = machine.render(items)
-  eq(by_line[3].Repo, "a.nvim", "line 3 is the first repo")
-  eq(by_line[7].Repo, "e.nvim", "line 7 is the fifth repo")
+  -- Order: pullable, then the dangerous ones (unpushed / diverged), then the rest; current is hidden.
+  local lines, by_line, hls = machine.render(items)
+  eq(by_line[3].Repo, "a.nvim", "pullable first")
+  eq(by_line[4].Repo, "c.nvim", "diverged (unpushed work) before the merely dirty ones")
+  eq(by_line[5].Repo, "b.nvim", "then the rest in script order")
+  eq(by_line[6].Repo, "d.nvim", "...")
+  eq(by_line[7], nil, "a current repo is hidden")
   eq(lines[3]:sub(1, 1), "v", "a pullable repo is marked")
-  eq(lines[4]:sub(1, 1), " ", "a dirty repo is not")
+  eq(lines[4]:sub(1, 1), " ", "a diverged repo is not")
+  eq(hls[3], "DiagnosticOk", "pullable is green")
+  eq(hls[4], "DiagnosticError", "unpushed work is red")
+  eq(hls[5], "DiagnosticWarn", "dirty is yellow")
+  local _, all_by_line = machine.render(items, true)
+  eq(all_by_line[7].Repo, "e.nvim", "a shows the current repo, last")
+
+  eq(machine.rank(behind), 1, "rank pullable")
+  eq(machine.rank(diverged), 2, "rank severe")
+  eq(machine.rank(dirty), 3, "rank attention")
+  eq(machine.rank(current), 4, "rank current")
+  eq(machine.rank(item({ Build = "stale" })), 3, "a stale build alone needs attention")
+  eq(
+    machine.summary(items),
+    "1 pullable | 1 unpushed | 1 dirty | 0 build | 1 current",
+    "window bar totals"
+  )
+  ok(#machine.help_lines() > 8, "the cheat sheet has content")
 
   eq(
     vim.tbl_map(function(i)
