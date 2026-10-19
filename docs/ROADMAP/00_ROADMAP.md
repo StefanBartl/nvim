@@ -1,10 +1,5 @@
 # Roadmap
-tasks new category - muss ausgeweitte werden, zb wnn ich ein neues feature für den user anlege, zb bindings, kann ich odrt nichts ankreuzen
-cursor caret + edit -> beide togglen mit einen usrcmd / mapping)
-cursor caret -> eine breite alterntive imlementieren, die nicht nur ein strich ist, sondern den aktellen char umhüllt und evntuell blinkt
-mdview sync über nvim instazen hinweg
 
-![ui.nvim tab chips color bei er man den text nicht mehr lesen kann]($NVIM_CONFIG_DIR/docs/ROADMAP/assets/00_ROADMAP-1792142508.png)
 
 `:Git dashboard` -> fetch all dauert bei 50 repos relativ lange und mann kann wenn ausgefphrt, wärhendessen kein pull, push oder sowass machen. hier wäre eine bessere lösung sinnvoll wie ihc meine, zb schon im bulk, aber man kann zumindest jende, die bereits fertig fetched wurden, bererits weiter osuhen/pullen. eine möglichkeit wie man die fetches an sich beschleunigen könnte wäre aber generell super
 
