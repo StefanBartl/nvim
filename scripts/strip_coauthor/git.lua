@@ -40,12 +40,25 @@ local loop, fn = vim.uv or vim.loop, vim.fn
 
 ---The trailer, as a git `--grep` basic regex (git-side) and as a Lua pattern
 ---(for the message rewrite). Anchored to the start of a line in both.
+---git matches case-sensitively unless told otherwise (`-i` is passed where the
+---grep is used), and trailers exist as `Co-authored-by:` too.
 M.GREP = "^Co-Authored-By: Claude"
-local LUA_PATTERN = "^Co%-Authored%-By: Claude"
+local LUA_PATTERN = "^co%-authored%-by: claude"
 
----How far back to look. The trailer only ever came from recent sessions; a
----wider window would put history that has been shared for months at risk.
-M.SEARCH_DEPTH = 120
+---Whether a message line is the trailer.
+---@param line string
+---@return boolean
+local function is_trailer(line)
+  return line:lower():match(LUA_PATTERN) ~= nil
+end
+
+---How many trailer commits to look for; nil means all of them. `rev-list -N`
+---counts the commits that MATCH, not the history walked: the old default of 120
+---left every trailer commit past the 120th standing (docmap-desktop has 155).
+---The commits and their parents are read in one `rev-list`, so there is no
+---cost reason to cap it.
+---@type integer|nil
+M.SEARCH_DEPTH = nil
 
 -- =============================================================================
 -- git plumbing
@@ -152,18 +165,51 @@ end
 ---@return StripCoauthor.Plan|nil plan
 ---@return string|nil err
 function M.plan(dir)
-  local depth = "-" .. M.SEARCH_DEPTH
+  -- Three `git` processes in total, whatever the size of the repository. The
+  -- first version spawned one `merge-base` per (trailer, parent, trailer)
+  -- triple and one `rev-list` per branch: 37 s for lib.nvim alone, and a
+  -- scan over all repositories looked hung.
+  local depth = M.SEARCH_DEPTH and { "-" .. M.SEARCH_DEPTH } or {}
 
-  local branches, tips = {}, {}
-  for _, branch in ipairs(branches_of(dir)) do
-    local hits = git_lines(dir, { "rev-list", depth, "--grep=" .. M.GREP, branch, "--" })
-    if #hits > 0 then
-      branches[#branches + 1] = branch
-      local code, tip = git(dir, { "rev-parse", branch })
-      if code ~= 0 then
-        return nil, ("cannot resolve %s"):format(branch)
+  -- 1. The trailer commits, over every local branch.
+  local grep = { "rev-list", "-i", "--grep=" .. M.GREP }
+  vim.list_extend(grep, depth)
+  vim.list_extend(grep, { "--branches", "--" })
+  local trailers = git_lines(dir, grep)
+  if #trailers == 0 then
+    return nil, nil
+  end
+  local is_trailer_commit = {}
+  for _, sha in ipairs(trailers) do
+    is_trailer_commit[sha] = true
+  end
+
+  -- 2. The whole graph, parents first. `has` is true for a commit that is a
+  -- trailer commit or has one below it: exactly the commits a rewrite changes.
+  local has, parents_of = {}, {}
+  local graph = { "rev-list", "--parents", "--topo-order", "--reverse", "--branches", "--" }
+  for _, line in ipairs(git_lines(dir, graph)) do
+    local fields = vim.split(line, " ", { plain = true, trimempty = true })
+    local sha = table.remove(fields, 1)
+    parents_of[sha] = fields
+    local below = false
+    for _, parent in ipairs(fields) do
+      if has[parent] then
+        below = true
+        break
       end
-      tips[#tips + 1] = tip
+    end
+    has[sha] = is_trailer_commit[sha] or below
+  end
+
+  -- 3. The branches that carry a trailer, with their tips.
+  local branches, tips = {}, {}
+  local heads = { "for-each-ref", "--format=%(objectname) %(refname:short)", "refs/heads/" }
+  for _, line in ipairs(git_lines(dir, heads)) do
+    local sha, branch = line:match("^(%x+) (.+)$")
+    if sha and has[sha] then
+      branches[#branches + 1] = branch
+      tips[#tips + 1] = sha
     end
   end
 
@@ -171,35 +217,23 @@ function M.plan(dir)
     return nil, nil
   end
 
-  local args = { "rev-list", depth, "--grep=" .. M.GREP }
-  vim.list_extend(args, tips)
-  args[#args + 1] = "--"
-  local trailers = git_lines(dir, args)
-
   -- The boundary: parents of trailer commits that are not themselves below
   -- another trailer commit (see the module header for why the naive version
   -- silently leaves a trailer behind).
   local excl, seen = {}, {}
   for _, sha in ipairs(trailers) do
-    local _, parents = git(dir, { "log", "-1", "--format=%P", sha })
-    for parent in parents:gmatch("%S+") do
-      local covered = false
-      for _, other in ipairs(trailers) do
-        if git(dir, { "merge-base", "--is-ancestor", other, parent }) == 0 then
-          covered = true
-          break
-        end
-      end
-      if not covered and not seen[parent] then
+    for _, parent in ipairs(parents_of[sha] or {}) do
+      if not has[parent] and not seen[parent] then
         seen[parent] = true
         excl[#excl + 1] = parent
       end
     end
   end
 
-  if #excl == 0 then
-    return nil, "a trailer commit is a root commit — refusing to rewrite"
-  end
+  -- No boundary at all means a trailer sits on a root commit (or below every
+  -- other one): the rewrite then covers the whole history, which `commit-tree`
+  -- handles like any other (a root simply has no `-p`). It used to be refused,
+  -- which left three repositories (takt, tasks-vault, openinnvim) un-fixable.
 
   local list = { "rev-list", "--reverse", "--topo-order" }
   vim.list_extend(list, tips)
@@ -248,7 +282,7 @@ local function message_without_trailer(dir, sha)
   local _, body = git(dir, { "log", "-1", "--format=%B", sha })
   local kept = {}
   for _, line in ipairs(vim.split(body, "\n", { plain = true })) do
-    if not line:match(LUA_PATTERN) then
+    if not is_trailer(line) then
       kept[#kept + 1] = line
     end
   end
@@ -337,7 +371,7 @@ function M.rewrite(dir, plan)
 
     local _, body = git(dir, ranged({ "log", "--format=%B" }, new, plan.excl))
     for _, line in ipairs(vim.split(body, "\n", { plain = true })) do
-      if line:match(LUA_PATTERN) then
+      if is_trailer(line) then
         return nil, ("%s: the trailer survived the rewrite"):format(branch)
       end
     end
