@@ -107,3 +107,11 @@ Das ist Absicht: Ein `sudo`-Passwortprompt gehört an ein Terminal, das der
 Benutzer selbst geöffnet hat, und nicht in einen Hintergrundjob, der ihn
 verschluckt. Aus demselben Grund wird kein `-y` / `--noconfirm` angehängt —
 die Rückfrage des Package-Managers bleibt stehen.
+
+## Maschinenwechsel: alle Repos aktuell halten
+
+Beim Wechsel zwischen den Rechnern prüft `scripts/sync-machine.ps1`, ob jedes Repo unter `$REPOS_DIR`
+aktuell ist, nichts Ungepushtes zurückbleibt und die gebauten Apps nicht älter sind als ihr Quelltext
+(read-only; `-Pull` zieht nur saubere Repos auf `main` per `--ff-only`). In Neovim: `:MyPlugins machine`.
+
+Ablauf, Zustände und Build-Befehle: `$REPOS_DIR/tasks-vault/TOOLS/machine-sync.md`.
