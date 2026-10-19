@@ -24,6 +24,59 @@ return function(H)
 
   ok((vim.uv or vim.loop).fs_stat(machine.script_path()), "the script exists in this config")
 
+  eq(
+    machine.build_cmd({ shell = "pwsh", script = "S.ps1", json = true })[5],
+    "-Json",
+    "json mode adds -Json"
+  )
+
+  -- The report: what the script prints is parsed, rendered and mapped back to its repos.
+  local function item(over)
+    return vim.tbl_extend("force", {
+      Repo = "r",
+      Path = "P",
+      State = "ok",
+      Note = "",
+      Behind = 0,
+      Ahead = 0,
+      Dirty = 0,
+      Pullable = false,
+      Build = "",
+      Hint = "",
+    }, over or {})
+  end
+  local behind = item({ Repo = "a.nvim", State = "BEHIND", Behind = 2, Pullable = true })
+  local dirty = item({ Repo = "b.nvim", State = "BEHIND", Behind = 1, Dirty = 3 })
+  local diverged = item({ Repo = "c.nvim", State = "DIVERGED", Behind = 1, Ahead = 1 })
+  local other = item({ Repo = "d.nvim", State = "BEHIND", Behind = 1 })
+  local current = item({ Repo = "e.nvim" })
+  local json = "noise\n" .. vim.json.encode({ behind, dirty, diverged, other, current })
+
+  local items = assert(machine.parse(json))
+  eq(#items, 5, "the array is found behind leading noise")
+  local none, err = machine.parse("no json at all")
+  eq(none, nil, "no JSON -> nil")
+  ok(err, "...with a reason")
+
+  local lines, by_line = machine.render(items)
+  eq(by_line[3].Repo, "a.nvim", "line 3 is the first repo")
+  eq(by_line[7].Repo, "e.nvim", "line 7 is the fifth repo")
+  eq(lines[3]:sub(1, 1), "v", "a pullable repo is marked")
+  eq(lines[4]:sub(1, 1), " ", "a dirty repo is not")
+
+  eq(
+    vim.tbl_map(function(i)
+      return i.Repo
+    end, machine.pullable(items)),
+    { "a.nvim" },
+    "P pulls only the repo the script marked pullable"
+  )
+  eq(machine.why_not(behind), nil, "pullable: no reason")
+  ok(machine.why_not(dirty):find("uncommitted"), "dirty names the files")
+  ok(machine.why_not(diverged):find("unpushed"), "diverged names the unpushed commits")
+  ok(machine.why_not(other):find("main"), "off main names the branch")
+  eq(machine.why_not(current), "nothing to pull", "current: nothing to pull")
+
   local routes = machine.routes()
   eq(routes[1].path, { "machine" }, "route path")
 end
