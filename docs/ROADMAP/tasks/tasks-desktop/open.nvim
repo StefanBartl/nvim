@@ -39,7 +39,7 @@ Alles ist aktualisiert und gepusht. Die komplette Übergabe für den neuen Chat 
 1. **Reviews (ultracode):**
    - Plan-Ansicht `tasks-desktop@57a98ff`.
    - MSIX-Warnung `d40772f`.
-   - Formular-Vorschlag `tasks.nvim@499eeac`.
+   - Formular-Vorschlag `tasks.nvim@1f32013`.
 2. **Kill-Kriterium-Review nach P2:** Zwei Wochen nutzen, `tasks-hub usage`, dann entscheiden (Task `tasks-app-p2-nutzungs-review`).
 3. **Entscheidung** `tasks-app-datenklassen-opt-in-pruefen`: nach einigen Wochen, ob die Einordnung nötig ist oder Opt-in.
 4. **Schreib-UI, Rest:**

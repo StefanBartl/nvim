@@ -24,7 +24,7 @@ return function(H)
     return repin.translate_text(text, maps, index)
   end
 
-  local out, n = t("done_in: lib.nvim@a83821f and tasks.nvim@865c0c6.")
+  local out, n = t("done_in: lib.nvim@a561474 and tasks.nvim@e913a76.")
   eq(out, "done_in: lib.nvim@1111111 and tasks.nvim@2222222.", "abbreviations keep their length")
   eq(n, 2, "two replacements")
 
