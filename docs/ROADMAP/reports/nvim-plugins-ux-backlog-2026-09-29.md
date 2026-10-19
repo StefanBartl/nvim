@@ -128,7 +128,7 @@ ausgelieferte Standard.
   (reiner Kommentarumbruch, vom Drift-Guard erkannt) — synchronisiert.
 
 **Commits:** `ui.nvim@b6343b0`, `ui.nvim@542383a`, `ui.nvim@b98a0a9`,
-`lib.nvim@8f96c69`, `lib.nvim@638a03a`, `filetree.nvim@8dbdfd1`,
+`lib.nvim@8f96c69`, `lib.nvim@638a03a`, `filetree.nvim@3c47117`,
 `replacer.nvim@2dd00a4` (Doku), `sessions.nvim@7683e6a`
 
 ### 2. filetree.nvim blinkendes Icon — bestätigte, nicht behebbare Grenze

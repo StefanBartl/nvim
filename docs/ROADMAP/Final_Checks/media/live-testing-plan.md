@@ -3,7 +3,7 @@
 > **Zweck:** ein abhakbarer Plan, um jedes Feature dieses Plugins live zu
 > testen — gegen echte Dateien, im echten Terminal. Alle Angaben hier sind
 > gegen den echten Code geprüft (nicht angenommen), Stand 2026-09-14
-> (`media.nvim@e946b77`). Wo etwas nicht live verifiziert werden konnte (kein
+> (`media.nvim@0ac8cf5`). Wo etwas nicht live verifiziert werden konnte (kein
 > `whisper.cpp` auf der Entwicklungsmaschine), steht das explizit dabei —
 > genau dafür ist dieses Dokument da.
 
@@ -100,7 +100,7 @@ bevor du die neuen Features darüber prüfst.
 
 ## 4. Waveform / Spectrogram
 
-**Neu, gebaut und real getestet in dieser Sitzung** (`media.nvim@c416315`) —
+**Neu, gebaut und real getestet in dieser Sitzung** (`media.nvim@71b7263`) —
 hier nochmal von Hand gegenprüfen, live im Editor statt headless.
 
 1. `:Media waveform test.mp4` — ein Bild öffnet sich: eine flache, farbige
@@ -190,7 +190,7 @@ für die beiden Diagnose-Skripte in `hover.nvim/scripts/`).
 
 ## 9. Transkription — der ungeprüfte Teil
 
-**Neu gebaut in dieser Sitzung** (`media.nvim@e946b77`), aber **die
+**Neu gebaut in dieser Sitzung** (`media.nvim@0ac8cf5`), aber **die
 `whisper.cpp`-JSON-Verarbeitung selbst wurde nie gegen einen echten Lauf
 geprüft** — auf der Entwicklungsmaschine ist kein `whisper.cpp` installiert.
 Alles andere in der Pipeline (WAV-Extraktion, Cache, Sidecar-Schreiben,
@@ -293,13 +293,13 @@ hier ansetzen, bevor irgendwas anderes unten getestet wird.
 
 11. **Cancel** (aktualisiert 2026-09-17 — auch dieser Punkt ist überholt):
     der Plan sagte, nichts breche den Lauf ohne expliziten `cancel()`-Aufruf
-    des Aufrufers ab. Seit `media.nvim@feeb08a` hat `:Media transcribe`
+    des Aufrufers ab. Seit `media.nvim@775a745` hat `:Media transcribe`
     einen: mit `progress_style = "float"` das Indikator-Fenster fokussieren
     und im Normal-Modus `<Esc>` drücken. Erwartung: der Lauf stoppt, ffmpeg
     eingeschlossen, und es kommt "transcription cancelled". Gegenprüfen,
     dass wirklich kein `whisper-cli` mehr läuft.
 
-12. **Batch über mehrere Dateien** (neu, `media.nvim@a2ebcb3`): `:Media
+12. **Batch über mehrere Dateien** (neu, `media.nvim@322129a`): `:Media
     dashboard`, mit `<Tab>` drei Audiodateien markieren, `<CR>`. Erwartung:
     **nacheinander**, nicht gleichzeitig — ein Prozess zur Zeit — mit einem
     Fortschritts-Handle, das `3/3` zählt, und drei `.transcript.md` daneben.

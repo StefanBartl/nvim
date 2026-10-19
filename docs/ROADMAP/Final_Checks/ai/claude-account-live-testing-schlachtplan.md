@@ -405,7 +405,7 @@ ausgeführt: `rules.nvim` mit Agent-Bewertung (nur die Engine headless:
 | --- | --- |
 | `:checkhealth ai` | `claude: available` erst nach dem ersten Insert-Modus (Plugin lädt lazy, `event = "InsertEnter"`) |
 | `:Ai ask` | OK (`PONG`) |
-| `:Ai stream` | Antwort vollständig; Panel zeigte nur die erste Zeile und liess sich nicht schliessen, behoben in `ai.nvim@63950d8` (Größe, `nice_quit`, folgt dem Stream) |
+| `:Ai stream` | Antwort vollständig; Panel zeigte nur die erste Zeile und liess sich nicht schliessen, behoben in `ai.nvim@b55b6b0` (Größe, `nice_quit`, folgt dem Stream) |
 | Fehlerpfad `ai.nvim` | OK: `[error] claude API error: invalid x-api-key` |
 | Inline-Completion | OK |
 | `auto`-Resolution | OK, in der Console bestätigt; `:Ai info` zeigt bei `auto` nicht den aufgelösten Provider |
