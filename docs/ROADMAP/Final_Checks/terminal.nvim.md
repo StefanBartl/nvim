@@ -26,7 +26,7 @@ Konvention: `- [ ]` offen, `- [x]` verifiziert. Unter jedem Punkt eine Zeile `No
 
 ## 0 — Vorbereitung
 
-- [ ] `terminal.nvim`, `lib.nvim`, `sessions.nvim`, `ui.nvim`, `testing.nvim`, `sandbox.nvim` pullen (mindestens `terminal.nvim@de5b2ca`, `ui.nvim@1bf63db`, `sessions.nvim@bd0c82a`, `testing.nvim@1f2ddb0`, `sandbox.nvim@589820a`), Neovim neu starten.
+- [ ] `terminal.nvim`, `lib.nvim`, `sessions.nvim`, `ui.nvim`, `testing.nvim`, `sandbox.nvim` pullen (mindestens `terminal.nvim@de5b2ca`, `ui.nvim@cf54a71`, `sessions.nvim@bd0c82a`, `testing.nvim@1f2ddb0`, `sandbox.nvim@589820a`), Neovim neu starten.
   Notiz:
 - [ ] `:checkhealth terminal` ohne Fehler; die Zeilen zu Backend, Multiplexer und `allow-passthrough` stimmen mit der Umgebung überein.
   Notiz:

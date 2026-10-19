@@ -127,7 +127,7 @@ ausgelieferte Standard.
 - Nebenfund: `ui.kit`s in `lib.nvim` eingefrorene Kopie war reindriftet
   (reiner Kommentarumbruch, vom Drift-Guard erkannt) — synchronisiert.
 
-**Commits:** `ui.nvim@b6343b0`, `ui.nvim@542383a`, `ui.nvim@b98a0a9`,
+**Commits:** `ui.nvim@9187455`, `ui.nvim@713fdeb`, `ui.nvim@e37f48a`,
 `lib.nvim@8f96c69`, `lib.nvim@638a03a`, `filetree.nvim@3c47117`,
 `replacer.nvim@2dd00a4` (Doku), `sessions.nvim@7683e6a`
 
@@ -153,7 +153,7 @@ ungefiltert erscheint.
 ergänzt — blockt den leeren Keyword-Kontext, lässt normales Tippen ab einem
 Zeichen unverändert.
 
-**Commit:** `lsp.nvim@79b5714`
+**Commit:** `lsp.nvim@e047cf3`
 
 ### 4. + 6. Chip/`:messages`-Duplikat und Titel-Konzept — umgesetzt (siehe auch Zusatzarbeit unten)
 
@@ -241,7 +241,7 @@ echten Live-State.
   `:UI`-Konvention angepasst statt des vorgeschlagenen `:Ui statusline
   showProgress`) zeigt dieselbe Registry als Popup, ganz ohne Hover/Maus.
 
-**Commit:** `ui.nvim@9f1e792`
+**Commit:** `ui.nvim@a9a8e12`
 
 ---
 
