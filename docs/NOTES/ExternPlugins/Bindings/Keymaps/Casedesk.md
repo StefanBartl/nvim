@@ -16,6 +16,9 @@ markiert die Achse: klein = aktueller Case, groß (letztes Zeichen geshiftet)
 | `<leader>cg` | Normal | Live-Grep im **aktuellen** Case (pickers.nvim) | `:Case grep` |
 | `<leader>cF` | Normal | Fuzzy-Find über **jeden** Case in jedem Bereich (pickers.nvim) | `:Cases files` |
 | `<leader>cG` | Normal | Live-Grep über **jeden** Case in jedem Bereich (pickers.nvim) | `:Cases livegrep` |
+| `<leader>cm` | Normal | Die Cases der letzten zwei Wochen als Liste wie `:UI marks`, `1`–`9`/Enter öffnet (ui.kit.shortlist; seit 2026-10-19) | `:Cases marks` |
+
+Eine Default-Taste, die beim Setup schon belegt ist, lässt casedesk stehen und meldet die übersprungene Aktion (seit 2026-10-19).
 
 Alle vier sind weiche Abhängigkeiten von `pickers.nvim`
 (telescope/fzf-lua/snacks, je nachdem was auflöst) — ohne installiertes
