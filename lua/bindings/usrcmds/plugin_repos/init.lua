@@ -78,7 +78,7 @@ local function clone_all(path, only_name, dry_run)
     return
   end
 
-  local entries, err = plugin_list.read()
+  local entries, err = plugin_list.read_for_clone()
   if not entries then
     notify.error(tostring(err))
     return
@@ -1097,7 +1097,7 @@ function M.enable()
   -- there is no reason to risk a stale copy for a lookup this cheap.
   composer.register_type("MYPLUGINS_NAME", {
     validate = function(raw)
-      local entries = plugin_list.read()
+      local entries = plugin_list.read_for_clone()
       for _, entry in ipairs(entries or {}) do
         if entry.name == raw then
           return true, raw, nil
@@ -1106,7 +1106,7 @@ function M.enable()
       return false, nil, ("'%s' is not in plugins.personal.core.list"):format(raw)
     end,
     complete = function(arg_lead)
-      local entries = plugin_list.read() or {}
+      local entries = plugin_list.read_for_clone() or {}
       local out = {}
       for _, entry in ipairs(entries) do
         if arg_lead == "" or entry.name:sub(1, #arg_lead) == arg_lead then

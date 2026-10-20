@@ -65,4 +65,27 @@ function M.read()
   return entries, nil
 end
 
+---Non-plugin repos that belong next to the plugin checkouts (the rules and the tasks vault). They are not lazy
+---specs -- lazy would try to load them as plugins -- so they are not part of `read()`, which feeds the statusline
+---count, `remove`, `sync` and the picker. Only `:MyPlugins clone` adds them (`read_for_clone`).
+---@type Plugins.Personal.Entry[]
+M.VAULTS = {
+  { repo = "StefanBartl/rules-vault", name = "rules-vault" },
+  { repo = "StefanBartl/tasks-vault", name = "tasks-vault" },
+}
+
+---`read()` plus the vaults, for `:MyPlugins clone`.
+---@return Plugins.Personal.Entry[]|nil entries
+---@return string|nil err
+function M.read_for_clone()
+  local entries, err = M.read()
+  if not entries then
+    return nil, err
+  end
+  for _, vault in ipairs(M.VAULTS) do
+    entries[#entries + 1] = { repo = vault.repo, name = vault.name }
+  end
+  return entries, nil
+end
+
 return M

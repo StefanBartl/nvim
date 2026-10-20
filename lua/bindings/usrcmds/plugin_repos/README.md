@@ -88,6 +88,9 @@ that isn't already present in `dir` (default `$REPOS_DIR`). Never overwrites
 an existing clone — cloning is purely additive, no confirmation needed.
 `--only=<name>` narrows it to one plugin (its basename, e.g. `lib.nvim`).
 
+It also clones the vaults (`rules-vault`, `tasks-vault`, `list.VAULTS`). They are no lazy specs, so they stay out
+of every other command (`remove`, `sync`, the picker, the statusline count) and are only ever cloned, never removed.
+
 ```vim
 :MyPlugins clone
 :MyPlugins clone $REPOS_DIR
