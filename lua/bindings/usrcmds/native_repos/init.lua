@@ -190,6 +190,28 @@ end
 
 local building = false
 
+---Which apps a build run covers. Without a name only the stale or missing ones; with a name that one.
+---An app with a plain build command goes to `todo`, one that is built another way (its setup.exe) only
+---to `hints` -- it is named, never started.
+---@param list Plugins.Personal.Native[]
+---@param states table<string, string>  # app name -> state (see state_of)
+---@param named boolean  # the run was asked for by name
+---@return Plugins.Personal.Native[] todo, string[] hints
+function M.plan_build(list, states, named)
+  local todo, hints = {}, {}
+  for _, native in ipairs(list) do
+    local state = states[native.name]
+    if named or state == "stale" or state == "missing" then
+      if native.build then
+        todo[#todo + 1] = native
+      else
+        hints[#hints + 1] = ("%s: %s"):format(native.name, native.hint)
+      end
+    end
+  end
+  return todo, hints
+end
+
 ---@param only? string
 function M.build(only)
   local base = base_dir()
@@ -200,15 +222,19 @@ function M.build(only)
     notify.warn("A build is already running")
     return
   end
-  local todo = {}
-  for _, native in ipairs(selected(only)) do
-    local state = state_of(native, base .. "/" .. native.name)
-    if only or state == "stale" or state == "missing" then
-      todo[#todo + 1] = native
-    end
+  -- `todo`: what has a plain build command; `hints`: stale or missing apps that are built another way (their
+  -- setup.exe) -- they are named, never started
+  local candidates, states = selected(only), {}
+  for _, native in ipairs(candidates) do
+    states[native.name] = state_of(native, base .. "/" .. native.name)
   end
+  local todo, hints = M.plan_build(candidates, states, only ~= nil)
   if #todo == 0 then
-    notify.info(only and ("Unknown native app: " .. only) or "All builds are current.")
+    if #hints > 0 then
+      notify.info("Nothing to build from here:\n" .. table.concat(hints, "\n"))
+    else
+      notify.info("All builds are current.")
+    end
     return
   end
 
@@ -218,12 +244,14 @@ function M.build(only)
     building = false
     vim.fn.setqflist({}, " ", { title = "MyNative build", items = items })
     if #failed == 0 then
-      notify.info("Build done: " .. table.concat(
-        vim.tbl_map(function(n)
-          return n.name
-        end, todo),
-        ", "
-      ))
+      local names = vim.tbl_map(function(n)
+        return n.name
+      end, todo)
+      local text = "Build done: " .. table.concat(names, ", ")
+      if #hints > 0 then
+        text = text .. "\nNot built from here:\n" .. table.concat(hints, "\n")
+      end
+      notify.info(text)
     else
       notify.error("Build FAILED: " .. table.concat(failed, ", ") .. " (quickfix has the output)")
       vim.cmd("botright copen")
@@ -237,13 +265,6 @@ function M.build(only)
       return
     end
     local dir = base .. "/" .. native.name
-    if not native.build then
-      items[#items + 1] = {
-        text = ("== %s: no plain build command - run by hand: %s"):format(native.name, native.hint),
-      }
-      next_app()
-      return
-    end
     if not uv.fs_stat(dir) then
       failed[#failed + 1] = native.name
       items[#items + 1] = { text = ("== %s: not cloned (:MyNative clone)"):format(native.name) }
@@ -280,9 +301,13 @@ end
 function M.routes()
   local name_arg = { { name = "name", type = "MYNATIVE_NAME", optional = true } }
   local function route(path, desc, fn)
+    local args
+    if path ~= "list" then
+      args = name_arg
+    end
     return {
       path = { path },
-      args = path == "list" and nil or name_arg,
+      args = args,
       desc = desc,
       run = function(ctx)
         fn(ctx.args and ctx.args.name)
