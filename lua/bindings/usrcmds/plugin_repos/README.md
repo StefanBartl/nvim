@@ -42,7 +42,7 @@ those names no longer exist.
 :MyPlugins task set <id> key=value ...
 :MyPlugins task attach <id> <file> [name=]
 :MyPlugins task folderize <id>
-:MyPlugins task done <id> [done_in= date=] [--yes]
+:MyPlugins task done <id> [done_in= commits= date=] [--yes]
 :MyPlugins task template [--to=]
 :MyPlugins task open <id>
 :MyPlugins task preview <id>       " the task file rendered in the browser (mdview.nvim)

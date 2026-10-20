@@ -58,7 +58,8 @@ nächsten Punkt der Liste nehmen und wieder bei 2 anfangen.
 2. Roadmap-Datei aktualisieren und den erledigten Punkt in die zugehörige
    `*_FINISHED.md` daneben verschieben (z. B. `PLUGIN_ROADMAPS.md` ->
    `PLUGIN_ROADMAPS_FINISHED.md`). Bei Vault-Tasks stattdessen
-   `done <id> --done-in=<repo>@<commit>`, nie `status=done` von Hand.
+   `done <id> --commits=<repo>@<sha>,<repo>@<sha>` (alle Commits der Task,
+   `commits` ist ein Listenfeld), nie `status=done` von Hand.
    Vault-Änderungen separat committen/pushen (Repo `tasks-vault`).
 3. Den **nächsten empfohlenen Schritt** analysieren (Abschnitt 2). Dabei
    nicht begründen, welche Punkte übersprungen wurden.

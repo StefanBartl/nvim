@@ -365,7 +365,7 @@ Replaces the former flat `:MyPluginsClone [dir]` / `:MyPluginsRemove [dir]`.
 | `:MyPlugins tasks index [<area>] [--all] [--check]` | (Re)write the generated `ROADMAP/TASKS.md`; `--check` writes nothing and reports rule findings and stale indexes |
 | `:MyPlugins task new <area> [title...] [kind=] [prio=] [effort=] [tags=] [status=]` | Create `ROADMAP/tasks/<slug>.md` and open it; asks for the title (ui.kit form) when missing |
 | `:MyPlugins task set <id> key=value ...` | Change frontmatter of an open task (`<id>` is `<area>/<slug>`); an empty value removes the key |
-| `:MyPlugins task done <id> [done_in=] [date=] [--yes]` | Finish after confirmation: moved to `Backlog/FEATURES\|TASKS/YYYY-MM-DD_<slug>.md`, Backlog README and index updated |
+| `:MyPlugins task done <id> [done_in=] [commits=] [date=] [--yes]` | Finish after confirmation: moved to `Backlog/FEATURES\|TASKS/YYYY-MM-DD_<slug>.md`, Backlog README and index updated |
 | `:MyPlugins task template [--to=clipboard\|buffer\|file:<path>]` | The task file template into the `+` register |
 | `:MyPlugins task open <id>` | Open the file of a task (open, or its finished copy in `Backlog/`) |
 | `:MyPlugins open <area> [tasks\|roadmap\|backlog\|handover\|notes\|all] [--action=files\|grep\|smart] [--list] [--to=]` | pickers.nvim picker over the files of one folder of an area; `--list` delivers the file list instead |
