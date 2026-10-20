@@ -43,10 +43,7 @@ M.list = {
   {
     repo = "StefanBartl/takt",
     name = "takt",
-    artifact = "target/release/takt-player.exe",
-    sources = { "apps", "crates", "Cargo.lock" },
-    build = { "cargo", "build", "--release" },
-    hint = "cargo build --release",
+    hint = "nothing to build yet (the repo is still a skeleton)",
   },
   {
     repo = "StefanBartl/docmap-desktop",

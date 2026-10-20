@@ -13,8 +13,7 @@ Sister of `:MyPlugins` for the native apps next to the plugin checkouts. The lis
 
 - A build is **stale** when the newest commit touching its sources is newer than the artifact (same rule as
   `scripts/sync-machine.ps1`, which keeps its own copy of the table: keep both in step).
-- `build` only runs plain build commands (`cargo build --release` for `takt`, `cmake --build build --config Release`
-  for `loomAI`). The desktop apps (`tasks-desktop`, `rules-desktop`, `docmap-desktop`) are built by their `setup.exe`,
+- `build` only runs plain build commands (`cmake --build build --config Release` for `loomAI`; `takt` has none yet, it is still a skeleton). The desktop apps (`tasks-desktop`, `rules-desktop`, `docmap-desktop`) are built by their `setup.exe`,
   so they only print that hint, as do the library repos. It never installs or starts anything. One build at a time.
 - Add an app: one entry in `natives.lua` (`repo`, `name`, optional `artifact` + `sources` + `build`, `hint`).
 
