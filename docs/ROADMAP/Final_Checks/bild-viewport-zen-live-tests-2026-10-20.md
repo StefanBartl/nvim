@@ -55,6 +55,31 @@ Testbild: ein großer Screenshot, z. B. 1920×1080; im filetree mit `<CR>` öffn
 
 ---
 
+## 3b. Ausschnitt in einen eigenen Float — offen
+
+`images.nvim@916bee6`, Fix `@cb0af77`. Task `images.nvim/zen-ausschnitt-kind-float`.
+
+- [ ] Links ziehen über einen Bereich: der Rahmen färbt sich (Warnfarbe), unten steht
+      `selection 640×360 px at 120,80`; **auf dem Bild selbst wird nichts gemalt**.
+- [ ] Loslassen: kurz `cutting the selection …`, dann öffnet der Bereich in einem eigenen Float,
+      Titel `name.png · 2/2`, scharf (volle Auflösung).
+- [ ] Im Ausschnitt noch einmal markieren → dritte Ebene `3/3`; **der richtige Bereich** des
+      Originals ist zu sehen (Versatz stimmt), nicht ein verschobener.
+- [ ] Zoom/Verschieben im Ausschnitt funktioniert wie im ersten Float.
+- [ ] `<BS>`: eine Ebene zurück, das vorige Bild ist wieder da, im Zoom von vorher.
+- [ ] `q` in der tiefsten Ebene: alle Ebenen sind zu.
+- [ ] Ein Klick (ohne Ziehen) öffnet nichts.
+- [ ] Tastatur: `v`, dann `lll jj` (oder `L`/`J` für 5er-Schritte), `<CR>` → Ausschnitt;
+      `v` … `<Esc>` verwirft nur die Auswahl, der Float bleibt.
+- [ ] Klick in ein **anderes** Fenster, während der Zen-Float fokussiert ist: Fokus wechselt dorthin
+      wie gewohnt (Klick wird durchgereicht).
+- [ ] Während „cutting the selection …“ sofort ein zweites Mal ziehen: es entsteht **kein**
+      zweiter Float.
+- [ ] Nachmessen der Treffgenauigkeit: einen kleinen, klar abgegrenzten Bildteil (ein Icon)
+      markieren — er muss im Ausschnitt vollständig sein (Toleranz ±1 Zelle, dokumentiert).
+
+---
+
 ## 4. Bild in die Zwischenablage (lib.nvim) — offen
 
 `lib.nvim@bc8acf6`, Fix `@8e0dbc4`. Noch ohne Taste im Zen-Float (`gy` kommt mit
