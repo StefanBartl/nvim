@@ -1969,7 +1969,7 @@ return {
           -- moves nothing (Neovim clips the float to col 0); a host terminal's
           -- own outer padding is out of reach of any offset.
           -- Default: nil.
-          -- col_offset = nil,
+          col_offset = 1,
           -- A highlight-group name, a `{ fg, bg }` table or a zero-arg function
           -- returning either; here a function returning the statusline's
           -- mode-pill colours, so the chip matches the current mode.

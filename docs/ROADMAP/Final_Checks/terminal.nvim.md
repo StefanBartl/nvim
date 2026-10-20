@@ -26,7 +26,7 @@ Konvention: `- [ ]` offen, `- [x]` verifiziert. Unter jedem Punkt eine Zeile `No
 
 ## 0 — Vorbereitung
 
-- [ ] `terminal.nvim`, `lib.nvim`, `sessions.nvim`, `ui.nvim`, `testing.nvim`, `sandbox.nvim` pullen (mindestens `terminal.nvim@68b4d63`, `ui.nvim@1bf63db`, `sessions.nvim@fe35ca8`, `testing.nvim@1f2ddb0`, `sandbox.nvim@128ef7f`), Neovim neu starten.
+- [ ] `terminal.nvim`, `lib.nvim`, `sessions.nvim`, `ui.nvim`, `testing.nvim`, `sandbox.nvim` pullen (mindestens `terminal.nvim@de5b2ca`, `ui.nvim@cf54a71`, `sessions.nvim@bd0c82a`, `testing.nvim@1f2ddb0`, `sandbox.nvim@589820a`), Neovim neu starten.
   Notiz:
 - [ ] `:checkhealth terminal` ohne Fehler; die Zeilen zu Backend, Multiplexer und `allow-passthrough` stimmen mit der Umgebung überein.
   Notiz:
@@ -215,7 +215,7 @@ Jeder Fall meldet **einmal** und stört nicht.
   Notiz:
 - [ ] `sandbox.nvim` mit `exec_target = "terminal"`: `:Sandbox container exec <id>` öffnet ein Terminal `sandbox:<id>`, ausblendbar mit `<A-h>`/`:Terminal toggle sandbox:<id>`; mit Default `"split"` unverändert.
   Notiz:
-- [ ] `dap.nvim` mit `terminal = { enable = true }` (`dap.nvim@fce89a4`): eine Debug-Sitzung mit Programmstart im Terminal (z. B. Python/Node-Launch) öffnet ein Terminal `dap:<Konfigurationsname>` als Split, die Programmausgabe steht dort, nach dem Ende bleibt es mit Exit-Code offen; ein neuer Lauf derselben Konfiguration ersetzt es; `:Terminal list` zeigt es; ohne `enable` unverändert nvim-dap-Puffer.
+- [ ] `dap.nvim` mit `terminal = { enable = true }` (`dap.nvim@92e0540`): eine Debug-Sitzung mit Programmstart im Terminal (z. B. Python/Node-Launch) öffnet ein Terminal `dap:<Konfigurationsname>` als Split, die Programmausgabe steht dort, nach dem Ende bleibt es mit Exit-Code offen; ein neuer Lauf derselben Konfiguration ersetzt es; `:Terminal list` zeigt es; ohne `enable` unverändert nvim-dap-Puffer.
   Notiz:
 - [ ] `require("terminal").run({ "lazygit" }, { direct = true, ... })` aus einem anderen Plugin (gitsuite-Fallback): TUI läuft, Fenster schließt/bleibt nach `close`-Einstellung.
   Notiz:
@@ -224,7 +224,7 @@ Jeder Fall meldet **einmal** und stört nicht.
 
 ## K2 — Cheatsheet
 
-`terminal.nvim@f1341eb`, Doku `docs/cheatsheet.md`. Headless und mit Specs geprüft, nie als Bild gesehen.
+`terminal.nvim@bdaf625`, Doku `docs/cheatsheet.md`. Headless und mit Specs geprüft, nie als Bild gesehen.
 
 - [ ] `:Terminal cheat` aus einem offenen Terminal: das Float sitzt am rechten Rand, das Terminal links bleibt lesbar (bei dem 80-%-Float-Terminal überdeckt es dessen rechten Rand: stört das?), Titel `bash · 1/9 About`, Markdown sieht gut aus (Tabellen, Backticks ausgeblendet).
   Notiz:

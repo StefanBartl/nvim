@@ -405,7 +405,7 @@ ausgeführt: `rules.nvim` mit Agent-Bewertung (nur die Engine headless:
 | --- | --- |
 | `:checkhealth ai` | `claude: available` erst nach dem ersten Insert-Modus (Plugin lädt lazy, `event = "InsertEnter"`) |
 | `:Ai ask` | OK (`PONG`) |
-| `:Ai stream` | Antwort vollständig; Panel zeigte nur die erste Zeile und liess sich nicht schliessen, behoben in `ai.nvim@63950d8` (Größe, `nice_quit`, folgt dem Stream) |
+| `:Ai stream` | Antwort vollständig; Panel zeigte nur die erste Zeile und liess sich nicht schliessen, behoben in `ai.nvim@b55b6b0` (Größe, `nice_quit`, folgt dem Stream) |
 | Fehlerpfad `ai.nvim` | OK: `[error] claude API error: invalid x-api-key` |
 | Inline-Completion | OK |
 | `auto`-Resolution | OK, in der Console bestätigt; `:Ai info` zeigt bei `auto` nicht den aufgelösten Provider |
@@ -441,7 +441,7 @@ found` bzw. `lib.nvim not found` ab).
 
 - Erster Versuch: `CONNECT_TIMEOUT` nach 30 s. Ursache: `io.stdout:setvbuf("line")`
   wirkt unter Windows wie Vollpufferung, die Antworten blieben im Puffer bis zum
-  Schliessen von stdin. Behoben in `documentation.nvim@60dda39` (explizites
+  Schliessen von stdin. Behoben in `documentation.nvim@1c1af2a` (explizites
   `flush()` nach jeder Antwort). Das Logfile steht unter
   `%LOCALAPPDATA%\claude-cli-nodejs\Cache\<projekt>\mcp-logs-<server>\`.
 - Danach: Server verbunden, die Tools werden aufgerufen. Ohne ausdruecklichen

@@ -1,11 +1,11 @@
 ---@brief `scripts/strip_coauthor.lua` — `STRIP_COAUTHOR_ARGS="{scan|rewrite|push} [dir] [--only=<name>] [--yes]"` — remove the
 ---`Co-Authored-By: Claude` trailer from the commits that carry it, across the
----config and the personal plugin checkouts.
+---config and every git repository under `$REPOS_DIR`.
 ---@description
 --- An AI session that commits on this machine signs its commits with a
 --- `Co-Authored-By: Claude …` trailer. That is not wanted in this author's
 --- history, and by the time it is noticed the commits are usually already
---- pushed. Removing it means rewriting those commits — in nine repositories at
+--- pushed. Removing it means rewriting those commits — in dozens of repositories at
 --- once, several of which have live worktrees with uncommitted work in them.
 --- This is that operation, made repeatable.
 ---
@@ -15,12 +15,26 @@
 --- force-push to GitHub the consequence of a keystroke, and there is no
 --- undoing that for anyone who has already fetched.
 ---
---- **What it operates on.** The config repository itself, plus every plugin
---- `plugins.personal.core.list` declares that is actually checked out under `dir`
---- (or `$REPOS_DIR`). Deriving the set from the spec rather than a list kept
---- here means a plugin added to the spec is covered from then on, and one that
---- was never cloned is not reported as a failure. `--only=<name>` narrows to a
---- single repository, completed from that same live set.
+--- **What it operates on.** The config repository itself, plus every git
+--- repository directly under `dir` (or `$REPOS_DIR`), minus `git.lua`'s
+--- `EXCLUDE` (third-party forks such as plenary.nvim). It used to be only the
+--- plugins `plugins.personal.core.list` declares, which missed the biggest
+--- repositories (docmap-desktop, tasks-vault, tasks-desktop, WKDBooks).
+--- `--only=<name>` narrows to a single repository.
+---
+--- **Runbook.** Ablauf über viele Repos, Reihenfolge der Gruppen und alle Fallen des Durchlaufs vom
+--- 2026-10-19 (Tag-Pushes starten Release-Workflows, `[skip ci]` hält `ci-verified` zurück, `git cherry`
+--- `+`/`-`, rollende Tags, Pins, fremde uncommittete Dateien …): `$REPOS_DIR/tasks-vault/TOOLS/history-rewrite-runbook.md`.
+--- Read-only Vorab-Inventar: `scripts/strip_coauthor/inventory.lua`; Verweise nach dem Rewrite:
+--- `scripts/strip_coauthor/repin.lua`.
+---
+--- **Backup, tags, map.** Before a repository is rewritten, a verified
+--- `git bundle` of every ref goes to `$STRIP_BACKUP_DIR` (default
+--- `<parent of the repos dir>/repos-backup/strip-coauthor-<date>`); no bundle,
+--- no rewrite. Tags on a rewritten commit move with it (an annotated tag gets
+--- a new tag object with the same message). The old -> new SHA map of each
+--- repository is written next to its bundle (`<repo>.map.json`): it is what
+--- re-pins `repo@sha` references and `engine.lock` afterwards.
 ---
 --- **Branches, not just HEAD.** Every local branch is examined, not the
 --- checked-out one — a config worktree branch carries the same commits as
@@ -39,16 +53,15 @@
 --- trailer from the history everyone will *see*, not from everything that has
 --- ever existed.
 ---
---- **Usage.** Must run through a real startup (`-c "luafile ..."`, not `-l`):
---- the repository set comes from `plugins.personal.core.list`, which needs this
---- config's resolved plugin policy — same constraint as `docmap_projects.lua`.
---- Arguments go in `STRIP_COAUTHOR_ARGS` (not on the command line: nvim would
---- open them as file buffers and the session autosave would remember them):
+--- **Usage.** Runs without this config (`-u NONE -l`), so it starts at once and
+--- needs no plugin policy (the repository set is a directory scan now; before,
+--- `plugins.personal.core.list` forced a full startup, 40 s with 40 plugins, and
+--- the first scans looked hung). Arguments go in `STRIP_COAUTHOR_ARGS`:
 ---
----     STRIP_COAUTHOR_ARGS="scan" nvim --headless -c "luafile scripts/strip_coauthor.lua"
----     STRIP_COAUTHOR_ARGS="rewrite --only=lib.nvim" nvim --headless -c "luafile scripts/strip_coauthor.lua"
----     STRIP_COAUTHOR_ARGS="push" nvim --headless -c "luafile scripts/strip_coauthor.lua"
----     # PowerShell: $env:STRIP_COAUTHOR_ARGS = "scan"; nvim --headless -c "luafile ..."
+---     STRIP_COAUTHOR_ARGS="scan" nvim -n -i NONE --headless -u NONE -l scripts/strip_coauthor.lua
+---     STRIP_COAUTHOR_ARGS="rewrite --only=lib.nvim" nvim -n -i NONE --headless -u NONE -l scripts/strip_coauthor.lua
+---     STRIP_COAUTHOR_ARGS="push" nvim -n -i NONE --headless -u NONE -l scripts/strip_coauthor.lua
+---     # PowerShell: $env:STRIP_COAUTHOR_ARGS = "scan"; nvim -n -i NONE --headless -u NONE -l scripts\strip_coauthor.lua
 ---
 --- Reports go to stdout. `push` asks on stdin (`yes` to proceed); `--yes`
 --- answers for you. With no stdin it aborts — never a silent force-push.
@@ -192,6 +205,19 @@ end
 -- rewrite
 -- =============================================================================
 
+---Where the bundles and the SHA maps of a rewrite go: `$STRIP_BACKUP_DIR`, else
+---`<parent of the repos dir>/repos-backup/strip-coauthor-<date>` (E:/repos-backup/...).
+---@param dir string|nil
+---@return string
+local function backup_dir_for(dir)
+  local env = vim.env.STRIP_BACKUP_DIR
+  if env and env ~= "" then
+    return (env:gsub("[/\\]$", ""))
+  end
+  local base = (gitx.resolve_base_dir(dir) or vim.fn.stdpath("config")):gsub("[/\\]$", "")
+  return vim.fs.dirname(base) .. "/repos-backup/strip-coauthor-" .. os.date("%Y-%m-%d")
+end
+
 ---@param dir string|nil
 ---@param only string|nil
 local function rewrite(dir, only)
@@ -209,14 +235,33 @@ local function rewrite(dir, only)
       failed = failed + 1
       lines[#lines + 1] = ("  %-24s FEHLER: %s"):format(repo.name, plan_err)
     elseif plan then
-      local result, rewrite_err = gitx.rewrite(repo.path, plan)
+      -- The way back first: a verified bundle of every ref. No bundle, no rewrite.
+      local backup_dir = backup_dir_for(dir)
+      local backed_up, backup_err =
+        gitx.backup(repo.path, backup_dir .. "/" .. repo.name .. ".bundle")
+      local result, rewrite_err
+      if backed_up then
+        result, rewrite_err = gitx.rewrite(repo.path, plan)
+      else
+        rewrite_err = "backup failed, nothing rewritten: " .. tostring(backup_err)
+      end
       if not result then
         failed = failed + 1
         lines[#lines + 1] = ("  %-24s FEHLER: %s"):format(repo.name, rewrite_err)
       else
         changed = changed + 1
         rebuilt = rebuilt + result.rebuilt
-        lines[#lines + 1] = ("  %-24s %d Commit(s) neu gebaut"):format(repo.name, result.rebuilt)
+        -- The old -> new SHA map is what re-pins `repo@sha` references and
+        -- `engine.lock` afterwards; it lives next to the bundle.
+        vim.fn.writefile(
+          { vim.json.encode({ repo = repo.name, map = result.map, tags = result.tags }) },
+          backup_dir .. "/" .. repo.name .. ".map.json"
+        )
+        lines[#lines + 1] = ("  %-24s %d Commit(s) neu gebaut, %d Tag(s) verschoben"):format(
+          repo.name,
+          result.rebuilt,
+          #result.tags
+        )
         for _, move in ipairs(result.moves) do
           lines[#lines + 1] = ("  %-24s   %-42s %s -> %s"):format(
             "",
@@ -279,9 +324,10 @@ local function push(dir, only, skip_confirm)
   local work, total = {}, 0
   for _, repo in ipairs(repos) do
     local pending = gitx.pending_push(repo.path)
-    if #pending > 0 then
-      work[#work + 1] = { repo = repo, pending = pending }
-      total = total + #pending
+    local tags = gitx.pending_tags(repo.path)
+    if #pending > 0 or #tags > 0 then
+      work[#work + 1] = { repo = repo, pending = pending, tags = tags }
+      total = total + #pending + #tags
     end
   end
 
@@ -291,12 +337,15 @@ local function push(dir, only, skip_confirm)
   end
 
   local prompt = {
-    ("Force-Push mit --force-with-lease auf %d Branch(es):"):format(total),
+    ("Force-Push mit --force-with-lease auf %d Ref(s) (Branches und Tags):"):format(total),
     "",
   }
   for _, item in ipairs(work) do
     for _, pending in ipairs(item.pending) do
       prompt[#prompt + 1] = ("  %-24s %s"):format(item.repo.name, pending.branch)
+    end
+    for _, tag in ipairs(item.tags) do
+      prompt[#prompt + 1] = ("  %-24s tag %s"):format(item.repo.name, tag.tag)
     end
   end
   prompt[#prompt + 1] = ""
@@ -316,7 +365,9 @@ local function push(dir, only, skip_confirm)
 
   local lines, pushed, failed = {}, 0, 0
   for _, item in ipairs(work) do
-    for _, result in ipairs(gitx.push(item.repo.path, item.pending)) do
+    local results = gitx.push(item.repo.path, item.pending)
+    vim.list_extend(results, gitx.push_tags(item.repo.path, item.tags))
+    for _, result in ipairs(results) do
       if result.status == "pushed" then
         pushed = pushed + 1
         lines[#lines + 1] = ("  %-24s %-42s gepusht"):format(item.repo.name, result.branch)

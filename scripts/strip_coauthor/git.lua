@@ -6,7 +6,7 @@
 ---
 --- Not on the runtimepath: `scripts/strip_coauthor.lua` loads this file with
 --- `dofile`, so it must not `require` anything from this config's own modules
---- other than `plugins.personal.core.list`.
+--- at all.
 ---
 --- **Why `commit-tree` + `update-ref` and not a rebase.** Every affected
 --- commit is rebuilt object by object and the branch refs are moved by hand.
@@ -40,12 +40,25 @@ local loop, fn = vim.uv or vim.loop, vim.fn
 
 ---The trailer, as a git `--grep` basic regex (git-side) and as a Lua pattern
 ---(for the message rewrite). Anchored to the start of a line in both.
+---git matches case-sensitively unless told otherwise (`-i` is passed where the
+---grep is used), and trailers exist as `Co-authored-by:` too.
 M.GREP = "^Co-Authored-By: Claude"
-local LUA_PATTERN = "^Co%-Authored%-By: Claude"
+local LUA_PATTERN = "^co%-authored%-by: claude"
 
----How far back to look. The trailer only ever came from recent sessions; a
----wider window would put history that has been shared for months at risk.
-M.SEARCH_DEPTH = 120
+---Whether a message line is the trailer.
+---@param line string
+---@return boolean
+local function is_trailer(line)
+  return line:lower():match(LUA_PATTERN) ~= nil
+end
+
+---How many trailer commits to look for; nil means all of them. `rev-list -N`
+---counts the commits that MATCH, not the history walked: the old default of 120
+---left every trailer commit past the 120th standing (docmap-desktop has 155).
+---The commits and their parents are read in one `rev-list`, so there is no
+---cost reason to cap it.
+---@type integer|nil
+M.SEARCH_DEPTH = nil
 
 -- =============================================================================
 -- git plumbing
@@ -107,10 +120,13 @@ function M.is_git_repo(path)
   return stat ~= nil and stat.type == "directory"
 end
 
+---Repositories that are somebody else's and must never be rewritten (a fork of
+---a third-party project: its history is not ours to change).
+---@type table<string, true>
+M.EXCLUDE = { ["plenary.nvim"] = true }
+
 ---Every repository this command knows about: the config itself, plus every
----personal plugin that is actually checked out under `base_dir`. The plugin
----list comes from `plugins.personal.core.list`, so a plugin added to the spec is
----covered from then on without editing anything here.
+---git repository directly under `base_dir` (minus `M.EXCLUDE`).
 ---@param base_dir string|nil Already resolved (see `M.resolve_base_dir`), or nil.
 ---@return { name: string, path: string }[]
 function M.repos(base_dir)
@@ -125,12 +141,18 @@ function M.repos(base_dir)
     return out
   end
 
-  local entries = require("plugins.personal.core.list").read() or {}
-  for _, entry in ipairs(entries) do
-    local path = base_dir .. "/" .. entry.name
-    if loop.fs_stat(path) and M.is_git_repo(path) then
-      out[#out + 1] = { name = entry.name, path = path }
+  -- Every repository directly under `base_dir`, not only the plugins the spec
+  -- lists: the biggest ones (docmap-desktop, tasks-vault, tasks-desktop,
+  -- WKDBooks, Configs) are not plugins and were missed, ca. 330 trailer commits.
+  local names = {}
+  for name, kind in vim.fs.dir(base_dir) do
+    if kind == "directory" and not M.EXCLUDE[name] and M.is_git_repo(base_dir .. "/" .. name) then
+      names[#names + 1] = name
     end
+  end
+  table.sort(names)
+  for _, name in ipairs(names) do
+    out[#out + 1] = { name = name, path = base_dir .. "/" .. name }
   end
 
   return out
@@ -152,18 +174,51 @@ end
 ---@return StripCoauthor.Plan|nil plan
 ---@return string|nil err
 function M.plan(dir)
-  local depth = "-" .. M.SEARCH_DEPTH
+  -- Three `git` processes in total, whatever the size of the repository. The
+  -- first version spawned one `merge-base` per (trailer, parent, trailer)
+  -- triple and one `rev-list` per branch: 37 s for lib.nvim alone, and a
+  -- scan over all repositories looked hung.
+  local depth = M.SEARCH_DEPTH and { "-" .. M.SEARCH_DEPTH } or {}
 
-  local branches, tips = {}, {}
-  for _, branch in ipairs(branches_of(dir)) do
-    local hits = git_lines(dir, { "rev-list", depth, "--grep=" .. M.GREP, branch, "--" })
-    if #hits > 0 then
-      branches[#branches + 1] = branch
-      local code, tip = git(dir, { "rev-parse", branch })
-      if code ~= 0 then
-        return nil, ("cannot resolve %s"):format(branch)
+  -- 1. The trailer commits, over every local branch.
+  local grep = { "rev-list", "-i", "--grep=" .. M.GREP }
+  vim.list_extend(grep, depth)
+  vim.list_extend(grep, { "--branches", "--" })
+  local trailers = git_lines(dir, grep)
+  if #trailers == 0 then
+    return nil, nil
+  end
+  local is_trailer_commit = {}
+  for _, sha in ipairs(trailers) do
+    is_trailer_commit[sha] = true
+  end
+
+  -- 2. The whole graph, parents first. `has` is true for a commit that is a
+  -- trailer commit or has one below it: exactly the commits a rewrite changes.
+  local has, parents_of = {}, {}
+  local graph = { "rev-list", "--parents", "--topo-order", "--reverse", "--branches", "--" }
+  for _, line in ipairs(git_lines(dir, graph)) do
+    local fields = vim.split(line, " ", { plain = true, trimempty = true })
+    local sha = table.remove(fields, 1)
+    parents_of[sha] = fields
+    local below = false
+    for _, parent in ipairs(fields) do
+      if has[parent] then
+        below = true
+        break
       end
-      tips[#tips + 1] = tip
+    end
+    has[sha] = is_trailer_commit[sha] or below
+  end
+
+  -- 3. The branches that carry a trailer, with their tips.
+  local branches, tips = {}, {}
+  local heads = { "for-each-ref", "--format=%(objectname) %(refname:short)", "refs/heads/" }
+  for _, line in ipairs(git_lines(dir, heads)) do
+    local sha, branch = line:match("^(%x+) (.+)$")
+    if sha and has[sha] then
+      branches[#branches + 1] = branch
+      tips[#tips + 1] = sha
     end
   end
 
@@ -171,35 +226,23 @@ function M.plan(dir)
     return nil, nil
   end
 
-  local args = { "rev-list", depth, "--grep=" .. M.GREP }
-  vim.list_extend(args, tips)
-  args[#args + 1] = "--"
-  local trailers = git_lines(dir, args)
-
   -- The boundary: parents of trailer commits that are not themselves below
   -- another trailer commit (see the module header for why the naive version
   -- silently leaves a trailer behind).
   local excl, seen = {}, {}
   for _, sha in ipairs(trailers) do
-    local _, parents = git(dir, { "log", "-1", "--format=%P", sha })
-    for parent in parents:gmatch("%S+") do
-      local covered = false
-      for _, other in ipairs(trailers) do
-        if git(dir, { "merge-base", "--is-ancestor", other, parent }) == 0 then
-          covered = true
-          break
-        end
-      end
-      if not covered and not seen[parent] then
+    for _, parent in ipairs(parents_of[sha] or {}) do
+      if not has[parent] and not seen[parent] then
         seen[parent] = true
         excl[#excl + 1] = parent
       end
     end
   end
 
-  if #excl == 0 then
-    return nil, "a trailer commit is a root commit — refusing to rewrite"
-  end
+  -- No boundary at all means a trailer sits on a root commit (or below every
+  -- other one): the rewrite then covers the whole history, which `commit-tree`
+  -- handles like any other (a root simply has no `-p`). It used to be refused,
+  -- which left three repositories (takt, tasks-vault, openinnvim) un-fixable.
 
   local list = { "rev-list", "--reverse", "--topo-order" }
   vim.list_extend(list, tips)
@@ -248,7 +291,7 @@ local function message_without_trailer(dir, sha)
   local _, body = git(dir, { "log", "-1", "--format=%B", sha })
   local kept = {}
   for _, line in ipairs(vim.split(body, "\n", { plain = true })) do
-    if not line:match(LUA_PATTERN) then
+    if not is_trailer(line) then
       kept[#kept + 1] = line
     end
   end
@@ -337,12 +380,48 @@ function M.rewrite(dir, plan)
 
     local _, body = git(dir, ranged({ "log", "--format=%B" }, new, plan.excl))
     for _, line in ipairs(vim.split(body, "\n", { plain = true })) do
-      if line:match(LUA_PATTERN) then
+      if is_trailer(line) then
         return nil, ("%s: the trailer survived the rewrite"):format(branch)
       end
     end
 
     moves[#moves + 1] = { branch = branch, old = old, new = new }
+  end
+
+  -- Tags that sit on a rewritten commit move with it: a release tag left on
+  -- the old history would keep the trailer reachable and point at a commit
+  -- that is on no branch any more. A lightweight tag is just re-pointed; an
+  -- annotated one gets a new tag object (same name, tagger, date and message,
+  -- new `object` line) because the old object names the old commit.
+  local tag_moves = {}
+  local tag_fmt = "%(refname:short) %(objecttype) %(objectname) %(*objectname) %(*objecttype)"
+  for _, line in ipairs(git_lines(dir, { "for-each-ref", "--format=" .. tag_fmt, "refs/tags" })) do
+    local name, kind, obj, rest = line:match("^(%S+) (%S+) (%x+) ?(.*)$")
+    local peeled, peeled_kind = (rest or ""):match("^(%x+) (%S+)$")
+    local commit = (kind == "commit" and obj)
+      or (kind == "tag" and peeled_kind == "commit" and peeled)
+      or nil
+    local new_commit = commit and map[commit]
+    if name and new_commit then
+      local new_ref = new_commit
+      if kind == "tag" then
+        local code, body = git(dir, { "cat-file", "tag", obj })
+        if code ~= 0 then
+          return nil, ("cannot read the tag %s"):format(name)
+        end
+        local text, replaced = body:gsub("^object %x+", "object " .. new_commit, 1)
+        if replaced ~= 1 then
+          return nil, ("the tag %s has an unexpected format"):format(name)
+        end
+        local mk_code, mk_sha, mk_err = git(dir, { "mktag" }, { stdin = text .. "\n" })
+        if mk_code ~= 0 or mk_sha == "" then
+          return nil, ("cannot recreate the tag %s: %s"):format(name, mk_err)
+        end
+        new_ref = mk_sha
+      end
+      tag_moves[#tag_moves + 1] =
+        { tag = name, kind = kind, old = obj, new = new_ref, commit = new_commit }
+    end
   end
 
   -- `update-ref` is given the value it expects to replace, so a repository
@@ -356,10 +435,35 @@ function M.rewrite(dir, plan)
         ("%s moved while this ran, nothing further was changed: %s"):format(move.branch, err)
     end
   end
+  for _, move in ipairs(tag_moves) do
+    local code, _, err = git(dir, { "update-ref", "refs/tags/" .. move.tag, move.new, move.old })
+    if code ~= 0 then
+      return nil, ("the tag %s moved while this ran: %s"):format(move.tag, err)
+    end
+  end
 
-  return { rebuilt = #plan.commits, moves = moves }, nil
+  return { rebuilt = #plan.commits, moves = moves, tags = tag_moves, map = map }, nil
 end
 
+---Write a bundle of every ref of `dir` (branches, tags, remote-tracking refs)
+---to `file` and verify it. The bundle is the way back: `git clone <file> x`
+---restores the repository as it was before the rewrite.
+---@param dir string
+---@param file string
+---@return boolean ok
+---@return string|nil err
+function M.backup(dir, file)
+  vim.fn.mkdir(vim.fs.dirname(file), "p")
+  local code, _, err = git(dir, { "bundle", "create", file, "--all" })
+  if code ~= 0 then
+    return false, err
+  end
+  local vcode, _, verr = git(dir, { "bundle", "verify", file })
+  if vcode ~= 0 then
+    return false, verr
+  end
+  return true, nil
+end
 -- =============================================================================
 -- Push
 -- =============================================================================
@@ -384,14 +488,25 @@ end
 ---@param dir string
 ---@return StripCoauthor.Pending[]
 function M.pending_push(dir)
-  local depth = "-" .. M.SEARCH_DEPTH
   local out = {}
+
+  ---The trailer commits reachable from `ref`.
+  ---@param ref string
+  ---@return string[]
+  local function trailers_of(ref)
+    local args = { "rev-list", "-i", "--grep=" .. M.GREP }
+    if M.SEARCH_DEPTH then
+      args[#args + 1] = "-" .. M.SEARCH_DEPTH
+    end
+    vim.list_extend(args, { ref, "--" })
+    return git_lines(dir, args)
+  end
 
   for _, branch in ipairs(branches_of(dir)) do
     local remote_ref = "refs/remotes/origin/" .. branch
     if git(dir, { "rev-parse", "--verify", "--quiet", remote_ref }) == 0 then
-      local mine = git_lines(dir, { "rev-list", depth, "--grep=" .. M.GREP, branch, "--" })
-      local theirs = git_lines(dir, { "rev-list", depth, "--grep=" .. M.GREP, remote_ref, "--" })
+      local mine = trailers_of(branch)
+      local theirs = trailers_of(remote_ref)
       if #mine == 0 and #theirs > 0 then
         local _, sha = git(dir, { "rev-parse", remote_ref })
         out[#out + 1] = { branch = branch, remote = sha }
@@ -423,6 +538,115 @@ function M.push(dir, pending)
     else
       out[#out + 1] = {
         branch = item.branch,
+        status = "failed",
+        detail = vim.split(err, "\n", { trimempty = true })[1],
+      }
+    end
+  end
+  return out
+end
+
+---@class StripCoauthor.PendingTag
+---@field tag string
+---@field remote string The ref value `origin` still holds for the tag (the old history).
+
+---Tags that `rewrite` moved and that `origin` still holds at the old place.
+---
+---Like `pending_push` this is derived, not remembered: a tag is pending when
+---`origin` has it at a value other than the local one, the commit behind the
+---remote value is known here and carries the trailer, and the local tag's
+---history is clean. It asks the server (`ls-remote`), because tags have no
+---remote-tracking refs to compare against.
+---@param dir string
+---@return StripCoauthor.PendingTag[]
+function M.pending_tags(dir)
+  local out = {}
+  local code, listing = git(dir, { "ls-remote", "--tags", "origin" })
+  if code ~= 0 or listing == "" then
+    return out
+  end
+
+  local remote = {}
+  for _, line in ipairs(vim.split(listing, "\n", { trimempty = true })) do
+    local sha, ref = line:match("^(%x+)%s+refs/tags/(.+)$")
+    if sha and not ref:match("%^{}$") then
+      remote[ref] = sha
+    end
+  end
+
+  local function trailers_of(ref)
+    return git_lines(dir, { "rev-list", "-i", "--grep=" .. M.GREP, ref .. "^{commit}", "--" })
+  end
+
+  for _, line in
+    ipairs(
+      git_lines(dir, { "for-each-ref", "--format=%(refname:short) %(objectname)", "refs/tags" })
+    )
+  do
+    local name, local_sha = line:match("^(%S+) (%x+)$")
+    local remote_sha = name and remote[name]
+    if remote_sha and remote_sha ~= local_sha then
+      -- The remote object has to be known here to be judged; otherwise leave the tag alone.
+      if
+        git(dir, { "cat-file", "-e", remote_sha }) == 0
+        and #trailers_of(remote_sha) > 0
+        and #trailers_of(name) == 0
+      then
+        out[#out + 1] = { tag = name, remote = remote_sha }
+      end
+    end
+  end
+
+  return out
+end
+
+---Force-push moved tags, each with a lease on the value this ran against.
+---
+---One push per tag, except for MORE THAN THREE tags: those go out in a single
+---push, because GitHub creates no push events when more than three tags arrive
+---at once. A repository with tag-triggered release workflows (docmap-desktop:
+---`on: push: tags: v*`, which would build and re-publish every release) stays
+---quiet that way; sent one by one, each tag would start its own release run.
+---@param dir string
+---@param pending StripCoauthor.PendingTag[]
+---@return StripCoauthor.PushResult[]
+function M.push_tags(dir, pending)
+  local out = {}
+
+  if #pending > 3 then
+    local args = { "push" }
+    local specs = {}
+    for _, item in ipairs(pending) do
+      local ref = "refs/tags/" .. item.tag
+      args[#args + 1] = ("--force-with-lease=%s:%s"):format(ref, item.remote)
+      specs[#specs + 1] = ref .. ":" .. ref
+    end
+    args[#args + 1] = "origin"
+    vim.list_extend(args, specs)
+    local code, _, err = git(dir, args)
+    for _, item in ipairs(pending) do
+      if code == 0 then
+        out[#out + 1] = { branch = item.tag, status = "pushed" }
+      else
+        out[#out + 1] = {
+          branch = item.tag,
+          status = "failed",
+          detail = vim.split(err, "\n", { trimempty = true })[1],
+        }
+      end
+    end
+    return out
+  end
+
+  for _, item in ipairs(pending) do
+    local ref = "refs/tags/" .. item.tag
+    local lease = ("--force-with-lease=%s:%s"):format(ref, item.remote)
+    local code, _, err = git(dir, { "push", lease, "origin", ref .. ":" .. ref })
+    if code == 0 then
+      out[#out + 1] = { branch = item.tag, status = "pushed" }
+    else
+      out[#out + 1] = {
+        branch = item.tag,
         status = "failed",
         detail = vim.split(err, "\n", { trimempty = true })[1],
       }

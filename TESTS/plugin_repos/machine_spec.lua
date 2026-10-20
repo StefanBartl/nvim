@@ -100,4 +100,47 @@ return function(H)
 
   local routes = machine.routes()
   eq(routes[1].path, { "machine" }, "route path")
+  -- `b`: the command goes to the clipboard with a folder change in front and without the trailing
+  -- remark of the hint (PowerShell would read "(builds UI, then hub)" as an argument).
+  local function hinted(over)
+    return vim.tbl_extend("force", { Path = [[E:\repos\tasks-desktop]], Hint = "" }, over)
+  end
+  eq(
+    machine.build_command(
+      hinted({ Hint = [[.\tools\dev-hub.ps1 -Release   (builds UI, then hub)]] })
+    ),
+    [[Set-Location -LiteralPath 'E:\repos\tasks-desktop'; .\tools\dev-hub.ps1 -Release]],
+    "cd first, the trailing remark is dropped"
+  )
+  eq(
+    machine.build_command(hinted({
+      Path = [[E:\repos\mdview.nvim]],
+      Hint = "sh scripts/rebuild-changed.sh HEAD~1 HEAD   (or: node scripts/build-go.mjs; npm run build)",
+    })),
+    [[Set-Location -LiteralPath 'E:\repos\mdview.nvim'; sh scripts/rebuild-changed.sh HEAD~1 HEAD]],
+    "a remark that itself contains ; and : is dropped as a whole"
+  )
+  eq(
+    machine.build_command(hinted({ Hint = "cargo build --release" })),
+    [[Set-Location -LiteralPath 'E:\repos\tasks-desktop'; cargo build --release]],
+    "a hint without a remark is kept as it is"
+  )
+  eq(
+    machine.build_command(hinted({ Hint = "make (all)" })),
+    [[Set-Location -LiteralPath 'E:\repos\tasks-desktop'; make (all)]],
+    "a parenthesis after ONE space belongs to the command"
+  )
+  eq(
+    machine.build_command(hinted({ Path = [[E:\it's\repo]], Hint = "cargo build" })),
+    [[Set-Location -LiteralPath 'E:\it''s\repo'; cargo build]],
+    "a quote in the path is doubled for PowerShell"
+  )
+  eq(machine.build_command(hinted({ Hint = "" })), nil, "no hint -> nil")
+  eq(machine.build_command(hinted({ Hint = "  (only a remark)" })), nil, "only a remark -> nil")
+  eq(machine.build_command(nil), nil, "no item -> nil")
+  eq(
+    machine.build_command(item({ Path = "", Hint = "cargo build" })),
+    "cargo build",
+    "no path: the hint alone"
+  )
 end
