@@ -24,6 +24,9 @@ those names no longer exist.
 :MyPlugins sync [dir] [--only=<name>] [--dry-run] [--no-fetch] [--jobs=<n>]
 :MyPlugins sync issues
 :MyPlugins machine [--pull] [--only=a,b]    " report; <CR> pulls the repo, P all, b build cmd, a show current, ? cheat sheet
+:MyPlugins ci [repo] [--fast]                " local CI of the private repos (quickfix)
+:MyPlugins ci status [repo]                  " last result per repo, current commit or not
+:MyPlugins ci hook install|remove [repo]     " pre-push hook (scripts/ci.sh --fast)
 :MyPlugins reclone [dir] [--only=<name>]
 :MyPlugins dashboard [dir] [--fetch] [--fetch-this]
 :MyPlugins mode [auto|dir|remote|disabled]
@@ -282,6 +285,24 @@ quitting Neovim waits up to 20 s for a running assist (it must not stop between 
 `stash pop`). They are local, so nothing in them can hang on the network. If one is killed from the
 outside anyway, it may leave a stale `.git/index.lock`; a failure that mentions it says so and what
 to do. After a pull, `:checktime` reloads buffers whose file changed.
+
+### `:MyPlugins ci [repo] [--fast]`, `ci status`, `ci hook install|remove`
+
+Local CI of the private repos `rules-vault`, `casedesk.nvim` and `tasks-vault`. GitHub-hosted minutes of private
+repositories are limited (and stop with a spending-limit message), so the checks run here instead. Each repo has a
+`scripts/ci.sh` with exactly the steps of its workflow; the workflow calls the same script, so there is one source.
+
+- `ci [repo]`: runs `scripts/ci.sh` of one repo, or of all three one after the other (never in parallel), through Git
+  Bash on Windows. The output goes to the quickfix list (opened when a repo is red).
+- `ci --fast`: only the cheap gates (stylua, luacheck for casedesk.nvim; the other two take seconds anyway).
+- `ci status [repo]`: reads `<repo>/.ci-last.json` (commit, time, green/red; gitignored, written by `ci.sh`) and says
+  whether the result is for the current commit.
+- `ci hook install|remove [repo]`: a `pre-push` hook that runs `scripts/ci.sh --fast` and blocks the push when it is
+  red; `git push --no-verify` skips it. A hook that is not ours is never overwritten or removed.
+
+`scripts/ci.sh` also runs from a shell: `scripts/ci.sh` in the repo. It finds `lib.nvim`, `rules.nvim`, `tasks.nvim`
+(and for casedesk.nvim `ui.nvim`, `testing.nvim`) via `$<NAME>_DIR`, `<repo>/.deps/<name>` or a sibling checkout.
+Code: `ci.lua`; spec: `TESTS/plugin_repos/ci_spec.lua`.
 
 ### `:MyPlugins reclone [dir] [--only=<name>]`
 

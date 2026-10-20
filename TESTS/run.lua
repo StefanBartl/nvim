@@ -57,6 +57,7 @@ local specs = {
   "plugin_repos/help_float_spec.lua",
   "plugin_repos/jump_spec.lua",
   "plugin_repos/machine_spec.lua",
+  "plugin_repos/ci_spec.lua",
   "plugin_repos/usrcmds_help_spec.lua",
   "bindings_explorer/usrcmds_help_spec.lua",
   "bindings_explorer/report_dir_spec.lua",

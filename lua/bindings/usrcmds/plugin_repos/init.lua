@@ -1166,6 +1166,14 @@ function M.enable()
     notify.warn(":MyPlugins machine is unavailable: " .. tostring(machine))
   end
 
+  -- `ci` (local CI of the private repos, runs their scripts/ci.sh). Guarded like the others.
+  local ok_ci, ci = pcall(require, "bindings.usrcmds.plugin_repos.ci")
+  if ok_ci then
+    ci.register_types()
+  else
+    notify.warn(":MyPlugins ci is unavailable: " .. tostring(ci))
+  end
+
   composer.verb("MyPlugins", {
     desc = "Manage the personal plugin checkouts, their source mode and the wkdbook tasks",
     -- The task routes (tasks / task / open) are declared in tasks_nvim.ui.routes (nested grammar).
@@ -1353,7 +1361,7 @@ function M.enable()
         ok_sync and sync_routes.routes() or {},
         vim.list_extend(
           ok_machine and machine.routes() or {},
-          ok_tasks and tasks_routes.routes() or {}
+          vim.list_extend(ok_ci and ci.routes() or {}, ok_tasks and tasks_routes.routes() or {})
         )
       )
     ),
