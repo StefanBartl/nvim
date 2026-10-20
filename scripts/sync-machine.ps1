@@ -49,12 +49,12 @@ $natives = @{
     'tasks-desktop' = @{
         Artifact = 'target\release\tasks-hub.exe'
         Sources  = @('crates', 'ui', 'Cargo.lock', 'engine.lock')
-        Hint     = '.\tools\dev-hub.ps1 -Release   (builds UI, then hub)'
+        Hint     = 'run its setup.exe'
     }
     'rules-desktop' = @{
         Artifact = 'target\release\rules-hub.exe'
         Sources  = @('crates', 'ui', 'Cargo.lock')
-        Hint     = 'cargo build --release'
+        Hint     = 'run its setup.exe'
     }
     'mdview.nvim' = @{
         Artifact = 'native\server\mdview-server.exe'

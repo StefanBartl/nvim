@@ -3,7 +3,7 @@
 ---@description
 --- Native apps are no lazy specs: they are built, not loaded. This is their list: where the repo is, which
 --- artifact a build produces, which paths feed it, and (when a plain build exists) the command that builds it.
---- `hint` is what to run by hand when there is no pure build command (`tasks-desktop`'s script also starts the hub).
+--- `hint` is what to do by hand when there is no build command (the desktop apps are built by their setup.exe).
 --- The same facts live in `scripts/sync-machine.ps1` (`$natives`) for the machine-switch check; keep both in step.
 
 local M = {}
@@ -23,15 +23,14 @@ M.list = {
     name = "tasks-desktop",
     artifact = "target/release/tasks-hub.exe",
     sources = { "crates", "ui", "Cargo.lock", "engine.lock" },
-    hint = "pwsh tools/dev-hub.ps1 -Release   (builds the UI, then the hub, and RUNS it)",
+    hint = "built by its setup.exe (no build command here)",
   },
   {
     repo = "StefanBartl/rules-desktop",
     name = "rules-desktop",
     artifact = "target/release/rules-hub.exe",
     sources = { "crates", "ui", "Cargo.lock" },
-    build = { "cargo", "build", "--release" },
-    hint = "cargo build --release",
+    hint = "built by its setup.exe (no build command here)",
   },
   {
     repo = "StefanBartl/loomAI",
@@ -52,7 +51,7 @@ M.list = {
   {
     repo = "StefanBartl/docmap-desktop",
     name = "docmap-desktop",
-    hint = "see the README of the repo (Tauri app, no plain build command known here)",
+    hint = "built by its setup.exe (no build command here)",
   },
   {
     repo = "StefanBartl/appkit",
