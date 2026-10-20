@@ -80,6 +80,24 @@ Testbild: ein großer Screenshot, z. B. 1920×1080; im filetree mit `<CR>` öffn
 
 ---
 
+## 3c. Speichern (`gs`) und Kopieren (`gy`) — offen
+
+`images.nvim@85f04b5`, Fix `@152174e`. Task `images.nvim/zen-ausschnitt-speichern-kopieren`.
+
+- [ ] Ungezoomt im ersten Float `gs`: Meldung „this is the whole original“, keine Datei.
+- [ ] Gezoomt `gs`: Meldung `saved …/name.crop-<x>-<y>-<w>x<h>.png`, die Datei liegt neben dem
+      Original und zeigt **genau** den sichtbaren Ausschnitt, scharf.
+- [ ] `gs` zweimal schnell hintereinander: zwei Dateien (`…` und `…-2`), keine überschrieben.
+- [ ] In einem Ausschnitt-Float (2/2) `gs`: die Datei zeigt diesen Ausschnitt, an der richtigen
+      Stelle des Originals (Koordinaten im Namen = Position im Original).
+- [ ] `gy` gezoomt, dann in Paint `Strg+V`: der sichtbare Ausschnitt erscheint.
+- [ ] `gy` ungezoomt auf einer PNG: das ganze Bild erscheint in Paint.
+- [ ] Optional: eine animierte GIF öffnen, zoomen, `gs`/`gy` → erster Frame, keine Fehlermeldung.
+- [ ] Optional: `display.zen.save = { ask = true }` → `gs` fragt nach dem Namen; ein vorhandener
+      Name wird abgelehnt („exists, not overwritten“).
+
+---
+
 ## 4. Bild in die Zwischenablage (lib.nvim) — offen
 
 `lib.nvim@bc8acf6`, Fix `@8e0dbc4`. Noch ohne Taste im Zen-Float (`gy` kommt mit
