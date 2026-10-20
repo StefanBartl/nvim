@@ -75,7 +75,7 @@ end
 
 ---Decode the text of a `.ci-last.json`.
 ---@param text string
----@return { commit: string, time: string, state: string, note: string }|nil
+---@return { commit: string, dirty: boolean, time: string, state: string, note: string }|nil
 function M.parse_last(text)
   local ok, doc = pcall(vim.json.decode, text)
   if not ok or type(doc) ~= "table" or type(doc.state) ~= "string" then
@@ -83,6 +83,7 @@ function M.parse_last(text)
   end
   return {
     commit = tostring(doc.commit or ""),
+    dirty = doc.dirty == true,
     time = tostring(doc.time or ""),
     state = doc.state,
     note = tostring(doc.note or ""),
@@ -91,17 +92,22 @@ end
 
 ---One line of `ci status`.
 ---@param repo string
----@param last { commit: string, time: string, state: string, note: string }|nil
+---@param last { commit: string, dirty?: boolean, time: string, state: string, note: string }|nil
 ---@param head string|nil Current HEAD of the repo
 ---@return string
 function M.status_line(repo, last, head)
   if not last then
     return ("%-14s no run yet"):format(repo)
   end
-  local fresh = head ~= nil and head == last.commit
+  local fresh = head ~= nil and head == last.commit and not last.dirty
   local when = last.time ~= "" and last.time or "?"
   local what = last.state == "green" and "GREEN" or "RED"
-  local tail = fresh and "current commit" or "an older commit (HEAD moved on)"
+  local tail = "current commit"
+  if last.dirty then
+    tail = "uncommitted files (no proof for the commit)"
+  elseif not fresh then
+    tail = "an older commit (HEAD moved on)"
+  end
   local note = (last.state ~= "green" and last.note ~= "") and (" - " .. last.note) or ""
   return ("%-14s %-5s %s  %s%s"):format(repo, what, when, tail, note)
 end
@@ -117,7 +123,7 @@ local function head_of(dir)
 end
 
 ---@param dir string
----@return { commit: string, time: string, state: string, note: string }|nil
+---@return { commit: string, dirty: boolean, time: string, state: string, note: string }|nil
 local function read_last(dir)
   local fd = io.open(dir .. "/.ci-last.json", "r")
   if not fd then
@@ -169,10 +175,19 @@ local function to_quickfix(results)
   vim.fn.setqflist({}, " ", { title = "MyPlugins ci", items = items })
 end
 
+local running = false
+
+---Longest a single repo may run (casedesk.nvim needs about two minutes).
+local TIMEOUT_MS = 15 * 60 * 1000
+
 ---Run the CI of one repo or of all, one after the other.
 ---@param opts? { repo?: string, fast?: boolean }
 function M.run(opts)
   opts = opts or {}
+  if running then
+    notify.warn("A CI run is already in progress")
+    return
+  end
   local base = ops.resolve_base_dir(nil)
   if not base then
     notify.error("REPOS_DIR is not set")
@@ -183,6 +198,7 @@ function M.run(opts)
   local index = 0
 
   local function finish()
+    running = false
     to_quickfix(results)
     local failed = {}
     for _, res in ipairs(results) do
@@ -213,19 +229,31 @@ function M.run(opts)
       return
     end
     notify.info(("CI %d/%d: %s ..."):format(index, #names, name))
-    vim.system(M.build_cmd(dir, opts.fast), { text = true, cwd = dir }, function(res)
-      vim.schedule(function()
-        local text = (res.stdout or "") .. (res.stderr or "")
-        results[#results + 1] = {
-          repo = name,
-          code = res.code,
-          lines = vim.split(text, "\r?\n", { trimempty = true }),
-        }
-        next_repo()
-      end)
-    end)
+    -- vim.system throws when the executable cannot be started (no Git Bash): a red run, not a crash.
+    local started, err = pcall(
+      vim.system,
+      M.build_cmd(dir, opts.fast),
+      { text = true, cwd = dir, timeout = TIMEOUT_MS },
+      function(res)
+        vim.schedule(function()
+          local text = (res.stdout or "") .. (res.stderr or "")
+          local lines = vim.split(text, "\r?\n", { trimempty = true })
+          if res.code == 124 then
+            lines[#lines + 1] = "timed out after " .. (TIMEOUT_MS / 60000) .. " minutes"
+          end
+          results[#results + 1] = { repo = name, code = res.code, lines = lines }
+          next_repo()
+        end)
+      end
+    )
+    if not started then
+      results[#results + 1] =
+        { repo = name, code = 1, lines = { "cannot start: " .. tostring(err) } }
+      next_repo()
+    end
   end
 
+  running = true
   next_repo()
 end
 
@@ -236,22 +264,42 @@ function M.hook_text()
     "#!/bin/sh",
     M.HOOK_MARK .. " (git push --no-verify skips it)",
     'root="$(git rev-parse --show-toplevel)"',
-    '[ -x "$root/scripts/ci.sh" ] || exit 0',
+    '[ -f "$root/scripts/ci.sh" ] || exit 0',
     'echo "pre-push: scripts/ci.sh --fast"',
-    '"$root/scripts/ci.sh" --fast || { echo "pre-push: CI is red, push blocked" >&2; exit 1; }',
+    'bash "$root/scripts/ci.sh" --fast || { echo "pre-push: CI is red, push blocked" >&2; exit 1; }',
     "",
   }, "\n")
 end
 
+---Hook folder of a checkout, as git sees it (a worktree's `.git` is a file, `core.hooksPath` may move it).
+---@param dir string
+---@return string|nil
+function M.hooks_dir(dir)
+  local res = vim
+    .system({ "git", "-C", dir, "rev-parse", "--git-path", "hooks" }, { text = true })
+    :wait()
+  local out = vim.trim(res.stdout or "")
+  if res.code ~= 0 or out == "" then
+    return nil
+  end
+  if out:match("^%a:[/\\]") or out:sub(1, 1) == "/" then
+    return out
+  end
+  return dir .. "/" .. out
+end
+
+---@param base string
 ---@param name string
 ---@param action "install"|"remove"
 local function hook_one(base, name, action)
   local dir = repo_dir(base, name)
-  local path = dir .. "/.git/hooks/pre-push"
-  if not uv.fs_stat(dir .. "/.git") then
+  local hooks = uv.fs_stat(dir) and M.hooks_dir(dir)
+  if not hooks then
     notify.warn(name .. ": not a git checkout at " .. dir)
     return
   end
+  local path = hooks .. "/pre-push"
+
   local existing
   local fd = io.open(path, "r")
   if fd then
