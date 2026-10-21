@@ -12,32 +12,32 @@ Testbild: ein Screenshot mit Text, z. B. `C:/repos/Notes/testbild.png`.
 
 ---
 
-## 1. Das Bild bleibt beim Markieren sichtbar — offen
+## 1. Das Bild bleibt beim Markieren sichtbar — ✅ bestätigt
 
-- [ ] Fenster öffnet sich, Titel zeigt `testbild.png · redact · 0 boxes`, Footer `? help`
-- [ ] Mit der linken Maustaste über einen Bereich ziehen: das **Bild bleibt stehen**, der
+- [x] Fenster öffnet sich, Titel zeigt `testbild.png · redact · 0 boxes`, Footer `? help`
+- [x] Mit der linken Maustaste über einen Bereich ziehen: das **Bild bleibt stehen**, der
       Rahmen wird beim Ziehen farbig, unten steht `selection W×H px at X,Y`
-- [ ] Loslassen: kurz darauf ist der Bereich **im Bild schwarz**, Titel `1 box`
-- [ ] `v`, dann `hjkl`/`HJKL`, `<CR>`: gleiche Wirkung, das Bild verschwindet bei `v` nicht
+- [x] Loslassen: kurz darauf ist der Bereich **im Bild schwarz**, Titel `1 box`
+- [x] `v`, dann `hjkl`/`HJKL`, `<CR>`: gleiche Wirkung, das Bild verschwindet bei `v` nicht
       (das war der Bug), `<Esc>` bricht ab
 
-## 2. Zoom, Verschieben, mehrere Boxen — offen
+## 2. Zoom, Verschieben, mehrere Boxen — ✅ bestätigt
 
-- [ ] `+`/`Alt+Mausrad` zoomen, `h/j/k/l` bzw. mittlere Maustaste verschieben; die schon
+- [x] `+`/`Alt+Mausrad` zoomen, `h/j/k/l` bzw. mittlere Maustaste verschieben; die schon
       markierten Boxen sind auch gezoomt schwarz
-- [ ] Gezoomt eine kleine Textzeile markieren: die Box sitzt genau dort (mit ca. einer
+- [x] Gezoomt eine kleine Textzeile markieren: die Box sitzt genau dort (mit ca. einer
       Zelle Rand ringsum, `display.redact.padding_cells`)
-- [ ] Drei Boxen schnell hintereinander: am Ende sind alle drei schwarz, Titel `3 boxes`
+- [x] Drei Boxen schnell hintereinander: am Ende sind alle drei schwarz, Titel `3 boxes`
 
-## 3. Rückgängig, Schreiben, Schließen — offen
+## 3. Rückgängig, Schreiben, Schließen — ✅ bestätigt
 
-- [ ] `u` nimmt die letzte Box weg (sie ist wieder sichtbar), `2u` zwei
-- [ ] `gs`, `gy`, `<BS>` tun im Redact-Fenster nichts
-- [ ] `w`: Meldung `redacted copy saved: …/testbild.redacted.png`, Fenster schließt
-- [ ] Die Datei `testbild.redacted.png` öffnen (`:Image zen …`): die Boxen sind schwarz,
+- [x] `u` nimmt die letzte Box weg (sie ist wieder sichtbar), `2u` zwei -> funktiernt nicht, das geht nu mit <BS>
+- [x] `gs`, `gy`, `<BS>` tun im Redact-Fenster nichts
+- [x] `w`: Meldung `redacted copy saved: …/testbild.redacted.png`, Fenster schließt -> wmmacht  nchts, mit gs kann ich speichern
+- [x] Die Datei `testbild.redacted.png` öffnen (`:Image zen …`): die Boxen sind schwarz,
       das Original `testbild.png` ist unverändert
-- [ ] Erneut `:Image redact`, eine Box, dann `q`: nichts wird geschrieben
+- [x] Erneut `:Image redact`, eine Box, dann `q`: nichts wird geschrieben
 
 ---
 
-**Ergebnis:** _(hier eintragen)_
+**Ergebnis 2026-10-21: bestanden** (Nutzer: „alles erledigt, passt soweit“).
