@@ -5,8 +5,8 @@
 --
 -- The SHAs below are made up on purpose. This file is a tracked text file of the config, so the real
 -- `repin.lua --apply` after the rewrite of 2026-10-19 translated the real ones it held (809f7c32:
--- the lib.nvim SHA a83821f of the first case became a561474), and the fixture no longer matched
--- its own map. Made-up SHAs occur in no real map, so no repin run can touch them.
+-- in the first case the lib.nvim SHA a83821f became a561474 and the tasks.nvim one 865c0c6 became
+-- e913a76), and the fixture no longer matched its own map. Made-up SHAs occur in no real map, so no repin run can touch them.
 
 return function(H)
   local eq = H.eq
