@@ -803,6 +803,16 @@ return {
       -- each case (docs/tabline-groups.md in casedesk.nvim). Off by default.
       tabline_groups = { enabled = true, marker = "fill" },
 
+      -- Case tasks (docs/tasks.md in casedesk.nvim): `:Case task new|list|open|done`
+      -- and `:Tricentis task new` / `:Tricentis tasks` write to this tasks.nvim vault,
+      -- not to the vault of `:Tasks`. SAP cases -> SAP-Support, CS cases -> CS.
+      -- Default: { vault = nil, areas = { SAP = "SAP-Support", CS = "CS" } }.
+      tasks = {
+        vault = (vim.env.REPOS_DIR and vim.env.REPOS_DIR ~= "")
+            and (vim.env.REPOS_DIR .. "/tricentis-vault")
+          or nil,
+      },
+
       -- Paths. Normally only `repo_root` needs setting; `root`, `cases_root`,
       -- `workflow_templates_dir`, `sla_doc_path` and every built-in area's `dir`
       -- follow it unless set explicitly (an explicit value is never recomputed).
