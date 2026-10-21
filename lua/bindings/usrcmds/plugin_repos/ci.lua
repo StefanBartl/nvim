@@ -2,9 +2,10 @@
 ---@brief `:MyPlugins ci [repo] [--fast]`, `ci status`, `ci hook install|remove [repo]` - local CI for the private repos.
 ---@description
 --- GitHub-hosted minutes of private repositories are limited, so the CI of the private repos
---- (`rules-vault`, `casedesk.nvim`, `tasks-vault`) runs on this machine. Each of them has a
---- `scripts/ci.sh` with exactly the steps of its workflow (the workflow calls the same script),
---- and writes `<repo>/.ci-last.json` (commit, time, state) when it is done.
+--- (`rules-vault`, `casedesk.nvim`, `tasks-vault`, `my.nvim`) runs on this machine. Each of them has a
+--- `scripts/ci.sh` with exactly the steps of its workflow (the workflow calls the same script; `my.nvim`'s
+--- workflow runs the same gates on a self-hosted runner instead), and writes `<repo>/.ci-last.json`
+--- (commit, time, state) when it is done.
 ---
 ---  - `ci [repo]`            run `scripts/ci.sh` of one repo, or of all of them one after the other
 ---                           (never in parallel); the output goes to the quickfix list, the verdict to a notification
@@ -22,7 +23,7 @@ local M = {}
 local uv = vim.uv or vim.loop
 
 ---The private repos that have a local CI, in the order `ci` runs them.
-M.REPOS = { "rules-vault", "casedesk.nvim", "tasks-vault" }
+M.REPOS = { "rules-vault", "casedesk.nvim", "tasks-vault", "my.nvim" }
 
 ---First line of the hook we write; `hook remove` only deletes a file that carries it.
 M.HOOK_MARK = "# MyPlugins ci pre-push hook"
@@ -346,10 +347,10 @@ function M.hook(action, repo)
   end
 end
 
----The argument type of the repo name (the three private repos).
+---The argument type of the repo name (the private repos with a local CI).
 function M.register_types()
   require("lib.nvim.bindings.usercmd.composer").register_type("MYPLUGINS_CI_REPO", {
-    desc = "A private repo with a local CI (rules-vault, casedesk.nvim, tasks-vault)",
+    desc = "A private repo with a local CI (rules-vault, casedesk.nvim, tasks-vault, my.nvim)",
     validate = function(raw)
       if M.is_known(raw) then
         return true, raw, nil
@@ -374,7 +375,7 @@ function M.routes()
       flags = {
         { name = "fast", bool = true, desc = "Only the cheap gates (what the pre-push hook runs)" },
       },
-      desc = "Local CI of the private repos (rules-vault, casedesk.nvim, tasks-vault): runs scripts/ci.sh of one repo or of all one after the other, output to the quickfix list. --fast runs the cheap gates only. Replaces GitHub minutes, which private repos have only a few of",
+      desc = "Local CI of the private repos (rules-vault, casedesk.nvim, tasks-vault, my.nvim): runs scripts/ci.sh of one repo or of all one after the other, output to the quickfix list. --fast runs the cheap gates only. Replaces GitHub minutes, which private repos have only a few of",
       run = function(ctx)
         M.run({ repo = ctx.args.repo, fast = ctx.flags.fast == true })
       end,

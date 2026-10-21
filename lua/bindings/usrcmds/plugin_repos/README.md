@@ -291,11 +291,13 @@ to do. After a pull, `:checktime` reloads buffers whose file changed.
 
 ### `:MyPlugins ci [repo] [--fast]`, `ci status`, `ci hook install|remove`
 
-Local CI of the private repos `rules-vault`, `casedesk.nvim` and `tasks-vault`. GitHub-hosted minutes of private
-repositories are limited (and stop with a spending-limit message), so the checks run here instead. Each repo has a
-`scripts/ci.sh` with exactly the steps of its workflow; the workflow calls the same script, so there is one source.
+Local CI of the private repos `rules-vault`, `casedesk.nvim`, `tasks-vault` and `my.nvim`. GitHub-hosted minutes of
+private repositories are limited (and stop with a spending-limit message), so the checks run here instead. Each repo
+has a `scripts/ci.sh` with exactly the steps of its workflow; the workflow calls the same script, so there is one
+source. (`my.nvim`'s workflow keeps its own jobs on a self-hosted runner; its `ci.sh` runs the same four gates:
+stylua, luacheck, test suite, conformance.)
 
-- `ci [repo]`: runs `scripts/ci.sh` of one repo, or of all three one after the other (never in parallel), through Git
+- `ci [repo]`: runs `scripts/ci.sh` of one repo, or of all four one after the other (never in parallel), through Git
   Bash on Windows. The output goes to the quickfix list (opened when a repo is red).
 - `ci --fast`: only the cheap gates (stylua, luacheck for casedesk.nvim; the other two take seconds anyway).
 - `ci status [repo]`: reads `<repo>/.ci-last.json` (commit, time, green/red; gitignored, written by `ci.sh`) and says

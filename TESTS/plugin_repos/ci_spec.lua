@@ -10,8 +10,11 @@ return function(H)
   eq(ci.build_cmd("R", true, "B"), { "B", "R/scripts/ci.sh", "--fast" }, "--fast is passed on")
 
   ok(
-    ci.is_known("rules-vault") and ci.is_known("casedesk.nvim") and ci.is_known("tasks-vault"),
-    "the three repos"
+    ci.is_known("rules-vault")
+      and ci.is_known("casedesk.nvim")
+      and ci.is_known("tasks-vault")
+      and ci.is_known("my.nvim"),
+    "the four repos"
   )
   ok(not ci.is_known("lib.nvim"), "other repos have no local CI")
 
