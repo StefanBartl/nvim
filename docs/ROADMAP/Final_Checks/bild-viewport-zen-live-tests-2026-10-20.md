@@ -1,5 +1,11 @@
 # Bild-Viewport im Zen-Float — Live-Tests (Stand 2026-10-20)
 
+> **Ergebnis 2026-10-21: alles bestanden.** Nach den Fixes `images.nvim@6efad7f` (Meldungs-Floats
+> von noice beendeten die Auswahl bzw. rissen ein Loch ins Bild) und `@f5fe121` hat der Nutzer
+> neu getestet: „jetzt funktioniert alles“. Die Tasks Maus, Ausschnitt-Float und
+> Speichern/Kopieren sind abgeschlossen; offen im Plan nur noch die optionale hover-Etappe
+> (`hover.nvim/zoom-mathematik-aus-images-viewport`).
+
 Was aus dem Plan `ALL/bild-viewport-zoom-pan-ausschnitt-float-und-speichern-im-zen`
 (tasks-vault) gebaut ist und nur am echten Terminal geprüft werden kann. Headless
 lösen Mausereignisse keine Mappings aus, und ob WezTerm ein OSC-1337-Bild stehen
