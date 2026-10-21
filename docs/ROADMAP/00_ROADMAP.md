@@ -8,6 +8,7 @@ mdview sync über nvim instazen hinweg
 
 `:Git dashboard` -> fetch all dauert bei 50 repos relativ lange und mann kann wenn ausgefphrt, wärhendessen kein pull, push oder sowass machen. hier wäre eine bessere lösung sinnvoll wie ihc meine, zb schon im bulk, aber man kann zumindest jende, die bereits fertig fetched wurden, bererits weiter osuhen/pullen. eine möglichkeit wie man die fetches an sich beschleunigen könnte wäre aber generell super
 
+- gh stats web ui
 
 `:Git dashboard` -> fetch all dauert bei 50 repos relativ lange und mann kann wenn ausgefphrt, wärhendessen kein pull, push oder sowass machen. hier wäre eine bessere lösung sinnvoll wie ihc meine, zb schon im bulk, aber man kann zumindest jende, die bereits fertig fetched wurden, bererits weiter osuhen/pullen. eine möglichkeit wie man die fetches an sich beschleunigen könnte wäre aber generell super
 
