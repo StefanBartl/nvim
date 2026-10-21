@@ -350,7 +350,9 @@ end
 ---The argument type of the repo name (the private repos with a local CI).
 function M.register_types()
   require("lib.nvim.bindings.usercmd.composer").register_type("MYPLUGINS_CI_REPO", {
-    desc = "A private repo with a local CI (rules-vault, casedesk.nvim, tasks-vault, my.nvim)",
+    -- No list of the repos here: completion shows them, and the text has to stay within the 80
+    -- characters of the option float (`H.check_arg_texts`) as the list grows.
+    desc = "A private repo with a local CI (<Tab> lists them)",
     validate = function(raw)
       if M.is_known(raw) then
         return true, raw, nil
