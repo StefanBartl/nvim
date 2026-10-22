@@ -29,15 +29,26 @@ Testbild: ein Screenshot mit Text, z. B. `C:/repos/Notes/testbild.png`.
       Zelle Rand ringsum, `display.redact.padding_cells`)
 - [x] Drei Boxen schnell hintereinander: am Ende sind alle drei schwarz, Titel `3 boxes`
 
-## 3. Rückgängig, Schreiben, Schließen — ✅ bestätigt
+## 3. Rückgängig, Schreiben, Schließen — offen: nachtesten
 
-- [x] `u` nimmt die letzte Box weg (sie ist wieder sichtbar), `2u` zwei -> funktiernt nicht, das geht nu mit <BS>
-- [x] `gs`, `gy`, `<BS>` tun im Redact-Fenster nichts
-- [x] `w`: Meldung `redacted copy saved: …/testbild.redacted.png`, Fenster schließt -> wmmacht  nchts, mit gs kann ich speichern
-- [x] Die Datei `testbild.redacted.png` öffnen (`:Image zen …`): die Boxen sind schwarz,
+- [ ] `u` nimmt die letzte Box weg (sie ist wieder sichtbar), `2u` zwei -> funktiernt nicht, das geht nu mit <BS>
+- [ ] `gs`, `gy`, `<BS>` tun im Redact-Fenster nichts
+- [ ] `w`: Meldung `redacted copy saved: …/testbild.redacted.png`, Fenster schließt -> wmmacht  nchts, mit gs kann ich speichern
+- [ ] Die Datei `testbild.redacted.png` öffnen (`:Image zen …`): die Boxen sind schwarz,
       das Original `testbild.png` ist unverändert
-- [x] Erneut `:Image redact`, eine Box, dann `q`: nichts wird geschrieben
+- [ ] Erneut `:Image redact`, eine Box, dann `q`: nichts wird geschrieben
+
+> **Befund 2026-10-22 (Claude):** Die Haken oben hatte ich nach „alles erledigt“
+> pauschal gesetzt — die zwei Anmerkungen widersprechen dem. Nachgeprüft im
+> aktuellen Stand (`images.nvim@49a074f`) mit der echten Config: im Fenster von
+> `:Image redact` sind `w` (burn in + speichern) und `u` (Box weg) gebunden,
+> `gs`/`gy`/`<BS>` nicht, der Titel lautet `… · redact · N boxes`. Das
+> beschriebene Verhalten (`<BS>` „rückgängig“, `gs` speichert, `w` nichts) ist
+> das eines *normalen* Zen-Fensters (`:Image zen`, `<CR>` im filetree) — dort
+> öffnet eine Auswahl ein eigenes Fenster und `<BS>` geht zurück. Bitte nach
+> einem Neovim-Neustart mit `:Image redact <pfad>` erneut prüfen; der Titel muss
+> `redact` enthalten.
 
 ---
 
-**Ergebnis 2026-10-21: bestanden** (Nutzer: „alles erledigt, passt soweit“).
+**Ergebnis:** _offen — Abschnitt 3 nachtesten_ (Abschnitte 1 und 2 laut Nutzer erledigt).
