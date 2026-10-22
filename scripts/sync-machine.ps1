@@ -11,7 +11,7 @@
   -Pull   fast-forwards clean repos that sit on their default branch
           (git pull --ff-only). Never touches dirty or diverged repos.
   -Json   print one JSON array (repo, path, state, behind, ahead, dirty,
-          pullable, build, hint, note) instead of the table; used by
+          pullable, build, hint, command, note) instead of the table; used by
           :MyPlugins machine. Exit code is unchanged.
 
   Exit code: 0 = everything current, 1 = something needs attention.
@@ -44,27 +44,38 @@ $extra = @(
 )
 
 # Native build artifacts: where the artifact lives, which paths feed it, and
-# what to run when it is stale. Hints only - builds are never started here.
+# what to do when it is stale. Builds are never started here.
+#   Hint     what to do, for a person to read (may be prose: "run its setup.exe")
+#   Command  the one command that builds it, run in the repo folder by
+#            `:MyPlugins machine` (B) and copied by b; empty when there is none
+#            (the desktop apps are built by their setup.exe). ONE native
+#            command, no chain: it has to run in Windows PowerShell 5.1 too
+#            (no `&&`), and only the last exit code is reported. It must build
+#            exactly the Artifact below and fail with a non-zero exit code.
 $natives = @{
     'tasks-desktop' = @{
         Artifact = 'target\release\tasks-hub.exe'
         Sources  = @('crates', 'ui', 'Cargo.lock', 'engine.lock')
         Hint     = 'run its setup.exe'
+        Command  = ''
     }
     'rules-desktop' = @{
         Artifact = 'target\release\rules-hub.exe'
         Sources  = @('crates', 'ui', 'Cargo.lock')
         Hint     = 'run its setup.exe'
+        Command  = ''
     }
     'mdview.nvim' = @{
         Artifact = 'native\server\mdview-server.exe'
         Sources  = @('native\server', 'src')
         Hint     = 'sh scripts/rebuild-changed.sh HEAD~1 HEAD   (or: node scripts/build-go.mjs; npm run build)'
+        Command  = 'node scripts/build-go.mjs'
     }
     'loomAI' = @{
         Artifact = 'build\loomai.exe'
         Sources  = @('src', 'CMakeLists.txt')
         Hint     = 'cmake --build build --config Release'
+        Command  = 'cmake --build build --config Release'
     }
 }
 
@@ -89,7 +100,7 @@ foreach ($name in $names) {
     $dir = Join-Path $ReposDir $name
     if (-not (Test-Path (Join-Path $dir '.git'))) {
         if ($extra -contains $name) {
-            $rows.Add([pscustomobject]@{ Repo = $name; Path = $dir; State = 'MISSING (clone it)'; Note = ''; Behind = 0; Ahead = 0; Dirty = 0; Pullable = $false; Build = ''; Hint = '' })
+            $rows.Add([pscustomobject]@{ Repo = $name; Path = $dir; State = 'MISSING (clone it)'; Note = ''; Behind = 0; Ahead = 0; Dirty = 0; Pullable = $false; Build = ''; Hint = ''; Command = '' })
             $attention.Add("$name : not cloned on this machine")
         }
         continue
@@ -133,13 +144,13 @@ foreach ($name in $names) {
     }
     if ($branch -ne 'main' -and $branch -ne 'master') { $notes.Add("on branch $branch") }
 
-    $buildState = ''; $buildHint = ''
+    $buildState = ''; $buildHint = ''; $buildCommand = ''
     # Native build freshness: artifact older than the newest source commit.
     if ($natives.ContainsKey($name)) {
         $nat = $natives[$name]
         $art = Join-Path $dir $nat.Artifact
         if (-not (Test-Path $art)) {
-            $notes.Add('build MISSING'); $buildState = 'missing'; $buildHint = $nat.Hint
+            $notes.Add('build MISSING'); $buildState = 'missing'; $buildHint = $nat.Hint; $buildCommand = $nat.Command
             $attention.Add("$name : no build at $($nat.Artifact) - $($nat.Hint)")
         } else {
             $srcArgs = @('log', '-1', '--format=%ct', '--') + $nat.Sources
@@ -148,7 +159,7 @@ foreach ($name in $names) {
                 $srcTime = [DateTimeOffset]::FromUnixTimeSeconds([int64]$ct).UtcDateTime
                 $artTime = (Get-Item $art).LastWriteTimeUtc
                 if ($artTime -lt $srcTime) {
-                    $notes.Add('build STALE'); $buildState = 'stale'; $buildHint = $nat.Hint
+                    $notes.Add('build STALE'); $buildState = 'stale'; $buildHint = $nat.Hint; $buildCommand = $nat.Command
                     $attention.Add("$name : build older than its sources - $($nat.Hint)")
                 } else { $notes.Add('build current'); $buildState = 'current' }
             }
@@ -162,7 +173,7 @@ foreach ($name in $names) {
         Repo = $name; Path = $dir; State = $state; Note = ($notes -join ', ')
         Behind = $behind; Ahead = $ahead; Dirty = $dirtyCount
         Pullable = [bool]($behind -gt 0 -and $ahead -eq 0 -and $dirtyCount -eq 0 -and $isMain)
-        Build = $buildState; Hint = $buildHint
+        Build = $buildState; Hint = $buildHint; Command = $buildCommand
     })
 }
 

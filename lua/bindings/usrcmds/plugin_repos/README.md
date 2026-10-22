@@ -23,7 +23,7 @@ those names no longer exist.
 :MyPlugins update [dir] [--only=<name>]
 :MyPlugins sync [dir] [--only=<name>] [--dry-run] [--no-fetch] [--jobs=<n>]
 :MyPlugins sync issues
-:MyPlugins machine [--pull] [--only=a,b]    " report; <CR> pulls the repo, P all, b build cmd, a show current, ? cheat sheet
+:MyPlugins machine [--pull] [--only=a,b]    " report; <CR> pulls the repo, P all, b build cmd, B build in a float terminal, a show current, ? cheat sheet
 :MyPlugins ci [repo] [--fast]                " local CI of the private repos (quickfix)
 :MyPlugins ci status [repo]                  " last result per repo, current commit or not
 :MyPlugins ci hook install|remove [repo]     " pre-push hook (scripts/ci.sh --fast)

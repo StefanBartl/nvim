@@ -100,47 +100,253 @@ return function(H)
 
   local routes = machine.routes()
   eq(routes[1].path, { "machine" }, "route path")
-  -- `b`: the command goes to the clipboard with a folder change in front and without the trailing
-  -- remark of the hint (PowerShell would read "(builds UI, then hub)" as an argument).
-  local function hinted(over)
-    return vim.tbl_extend("force", { Path = [[E:\repos\tasks-desktop]], Hint = "" }, over)
+  -- `b`: the script's Command goes to the clipboard with a folder change in front. The Hint is
+  -- prose for a person ("run its setup.exe") and is never copied as a command.
+  local function commanded(over)
+    return vim.tbl_extend(
+      "force",
+      { Repo = "r", Path = [[E:\repos\mdview.nvim]], Hint = "", Command = "" },
+      over
+    )
   end
   eq(
-    machine.build_command(
-      hinted({ Hint = [[.\tools\dev-hub.ps1 -Release   (builds UI, then hub)]] })
-    ),
-    [[Set-Location -LiteralPath 'E:\repos\tasks-desktop'; .\tools\dev-hub.ps1 -Release]],
-    "cd first, the trailing remark is dropped"
+    machine.build_command(commanded({ Command = "node scripts/build-go.mjs" })),
+    [[Set-Location -LiteralPath 'E:\repos\mdview.nvim'; node scripts/build-go.mjs]],
+    "cd first, then the Command"
   )
   eq(
-    machine.build_command(hinted({
-      Path = [[E:\repos\mdview.nvim]],
-      Hint = "sh scripts/rebuild-changed.sh HEAD~1 HEAD   (or: node scripts/build-go.mjs; npm run build)",
-    })),
-    [[Set-Location -LiteralPath 'E:\repos\mdview.nvim'; sh scripts/rebuild-changed.sh HEAD~1 HEAD]],
-    "a remark that itself contains ; and : is dropped as a whole"
+    machine.build_command(commanded({ Command = "make (all)" })),
+    [[Set-Location -LiteralPath 'E:\repos\mdview.nvim'; make (all)]],
+    "the Command is taken as it is"
   )
   eq(
-    machine.build_command(hinted({ Hint = "cargo build --release" })),
-    [[Set-Location -LiteralPath 'E:\repos\tasks-desktop'; cargo build --release]],
-    "a hint without a remark is kept as it is"
-  )
-  eq(
-    machine.build_command(hinted({ Hint = "make (all)" })),
-    [[Set-Location -LiteralPath 'E:\repos\tasks-desktop'; make (all)]],
-    "a parenthesis after ONE space belongs to the command"
-  )
-  eq(
-    machine.build_command(hinted({ Path = [[E:\it's\repo]], Hint = "cargo build" })),
-    [[Set-Location -LiteralPath 'E:\it''s\repo'; cargo build]],
+    machine.build_command(commanded({ Path = [[E:\it's\repo]], Command = "cmake --build build" })),
+    [[Set-Location -LiteralPath 'E:\it''s\repo'; cmake --build build]],
     "a quote in the path is doubled for PowerShell"
   )
-  eq(machine.build_command(hinted({ Hint = "" })), nil, "no hint -> nil")
-  eq(machine.build_command(hinted({ Hint = "  (only a remark)" })), nil, "only a remark -> nil")
+  eq(
+    machine.build_command(commanded({ Hint = "run its setup.exe" })),
+    nil,
+    "prose in the Hint, no Command -> nil"
+  )
+  eq(
+    machine.build_command(commanded({ Hint = "cargo build", Command = vim.NIL })),
+    nil,
+    "a null Command is no command, even when the Hint looks like one"
+  )
   eq(machine.build_command(nil), nil, "no item -> nil")
   eq(
-    machine.build_command(item({ Path = "", Hint = "cargo build" })),
+    machine.build_command(commanded({ Path = "", Command = "cargo build" })),
     "cargo build",
-    "no path: the hint alone"
+    "no path: the command alone"
   )
+
+  -- B: the build in a float terminal (terminal.nvim), in the repo's folder. The items are the
+  -- script's own (scripts/sync-machine.ps1, $natives): a Command next to the Hint, empty for the
+  -- desktop apps.
+  local mdview = item({
+    Repo = "mdview.nvim",
+    Hint = "sh scripts/rebuild-changed.sh HEAD~1 HEAD   (or: node scripts/build-go.mjs; npm run build)",
+    Command = "node scripts/build-go.mjs",
+  })
+  local desktop = item({ Repo = "tasks-desktop", Hint = "run its setup.exe", Command = "" })
+  local function wrapped(cmd)
+    return ("$ErrorActionPreference = 'Stop'; %s; exit $LASTEXITCODE"):format(cmd)
+  end
+  eq(
+    machine.build_argv(mdview, "pwsh"),
+    { "pwsh", "-NoProfile", "-Command", wrapped("node scripts/build-go.mjs") },
+    "the Command, as one PowerShell command passing the tool's exit code on"
+  )
+  local no_argv, why = machine.build_argv(desktop, "pwsh")
+  eq(no_argv, nil, "a desktop app (setup.exe) has no command to run")
+  eq(why, "tasks-desktop: no build command - run its setup.exe", "...and says what to do instead")
+  eq(machine.build_command(desktop), nil, "b copies nothing for it either")
+  eq(
+    (machine.build_argv(item({ Hint = "make (all)" }), "pwsh")),
+    nil,
+    "no Command field at all: nothing to run, whatever the Hint says"
+  )
+
+  local repo = H.tmpdir()
+  local runs, done = {}, {}
+  local fake_terminal = {
+    run = function(argv, opts)
+      runs[#runs + 1] = { argv = argv, opts = opts }
+      return true, nil, { bufnr = 1 }
+    end,
+  }
+  ok(
+    machine.build_in_terminal(vim.tbl_extend("force", mdview, { Path = repo }), {
+      terminal = fake_terminal,
+      shell = "pwsh",
+      on_done = function(code, winid)
+        done[#done + 1] = { code, winid }
+      end,
+    }),
+    "a build with a folder and a command starts"
+  )
+  local o = runs[1].opts
+  eq(o.direct, true, "the build is the terminal's job, no shell typed into")
+  eq(o.cwd, repo, "in the repo's folder")
+  eq(o.layout, "float")
+  eq(o.close, "never", "the output stays readable after the build")
+  eq(o.session, false, "a saved session does not start it again")
+  eq(o.name, "build:mdview.nvim", "a named terminal, listed by :Terminal list")
+  eq(runs[1].argv[4], wrapped("node scripts/build-go.mjs"))
+  eq(
+    machine.build_in_terminal(
+      vim.tbl_extend("force", mdview, { Path = repo }),
+      { terminal = fake_terminal }
+    ),
+    false,
+    "a second B on the same folder while the first build runs starts nothing"
+  )
+
+  -- q closes the float in normal mode: on_open maps it on the terminal buffer.
+  local term_buf = vim.api.nvim_create_buf(false, true)
+  o.on_open({ bufnr = term_buf })
+  eq(
+    vim.api.nvim_buf_call(term_buf, function()
+      return vim.fn.maparg("q", "n", false, true).buffer
+    end),
+    1,
+    "q is mapped buffer-locally"
+  )
+  o.on_exit(0)
+  eq(done, { { 0, nil } }, "the exit code reaches on_done (no window shows the buffer)")
+  vim.api.nvim_buf_delete(term_buf, { force = true })
+
+  eq(
+    machine.build_in_terminal(
+      vim.tbl_extend("force", mdview, { Path = repo .. "/gone" }),
+      { terminal = fake_terminal }
+    ),
+    false,
+    "a folder that is not there starts nothing"
+  )
+  eq(
+    machine.build_in_terminal(
+      vim.tbl_extend("force", desktop, { Path = repo }),
+      { terminal = fake_terminal }
+    ),
+    false
+  )
+  eq(machine.build_in_terminal(nil, { terminal = fake_terminal }), false, "a line without a repo")
+  eq(#runs, 1, "terminal.run was asked for none of these, nor for the guarded second B")
+  eq(
+    machine.build_in_terminal(vim.tbl_extend("force", mdview, { Path = repo }), {
+      terminal = {
+        run = function()
+          return false, "E36"
+        end,
+      },
+    }),
+    false,
+    "a terminal that could not start is reported as not started"
+  )
+  ok(
+    machine.build_in_terminal(
+      vim.tbl_extend("force", mdview, { Path = repo }),
+      { terminal = fake_terminal }
+    ),
+    "and that failure did not leave the folder marked as building"
+  )
+
+  -- The default on_done: a successful build re-checks only once the float is closed.
+  local reran = 0
+  local real_run = machine.run
+  machine.run = function()
+    reran = reran + 1
+  end
+  local float_buf = vim.api.nvim_create_buf(false, true)
+  local float = vim.api.nvim_open_win(
+    float_buf,
+    false,
+    { relative = "editor", row = 1, col = 1, width = 10, height = 3 }
+  )
+  local captured
+  machine.build_in_terminal(vim.tbl_extend("force", mdview, { Path = H.tmpdir() }), {
+    terminal = {
+      run = function(_, opts)
+        captured = opts
+        return true, nil, { bufnr = float_buf }
+      end,
+    },
+  })
+  captured.on_open({ bufnr = float_buf })
+  captured.on_exit(0)
+  eq(reran, 0, "not while the float is still open")
+  vim.api.nvim_win_close(float, true)
+  vim.wait(200, function()
+    return reran > 0
+  end)
+  eq(reran, 1, "once it is closed")
+
+  -- A second B on the folder while the finished build's float is open: terminal.nvim replaces
+  -- the terminal of that name and closes the old float -- that close must not re-check.
+  reran = 0
+  local again = H.tmpdir()
+  local float2_buf = vim.api.nvim_create_buf(false, true)
+  local float2 = vim.api.nvim_open_win(
+    float2_buf,
+    false,
+    { relative = "editor", row = 1, col = 1, width = 10, height = 3 }
+  )
+  local first
+  machine.build_in_terminal(vim.tbl_extend("force", mdview, { Path = again }), {
+    terminal = {
+      run = function(_, opts)
+        first = opts
+        return true, nil, { bufnr = float2_buf, backend = "native" }
+      end,
+    },
+  })
+  first.on_open({ bufnr = float2_buf })
+  first.on_exit(0)
+  machine.build_in_terminal(vim.tbl_extend("force", mdview, { Path = again }), {
+    terminal = {
+      run = function()
+        -- what terminal.nvim does for a name it already has: close the old one first
+        vim.api.nvim_win_close(float2, true)
+        return true, nil, { bufnr = 999, backend = "native" }
+      end,
+    },
+  })
+  vim.wait(200, function()
+    return reran > 0
+  end)
+  eq(reran, 0, "the replaced float of the first build did not re-check under the second")
+  machine.run = real_run
+
+  -- A multiplexer pane never reports its end: no lock left that nothing would release.
+  local pane_dir = H.tmpdir()
+  local pane_terminal = {
+    run = function()
+      return true, nil, { backend = "tmux" }
+    end,
+  }
+  ok(
+    machine.build_in_terminal(
+      vim.tbl_extend("force", mdview, { Path = pane_dir }),
+      { terminal = pane_terminal }
+    )
+  )
+  ok(
+    machine.build_in_terminal(
+      vim.tbl_extend("force", mdview, { Path = pane_dir }),
+      { terminal = pane_terminal }
+    ),
+    "a second B is possible: the pane's end is unknown, so the folder is not kept locked"
+  )
+
+  -- why_not promises b / B only where there is a command.
+  H.lacks(
+    machine.why_not(item({ Build = "stale", Hint = "run its setup.exe", Command = "" })),
+    "B runs it",
+    "no promise for a desktop app"
+  )
+  H.has(machine.why_not(vim.tbl_extend("force", mdview, { Build = "stale" })), "B runs it")
+
+  H.has(table.concat(machine.help_lines(), "\n"), " B ", "the cheat sheet names B")
 end

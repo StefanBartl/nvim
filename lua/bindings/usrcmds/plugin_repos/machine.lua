@@ -13,6 +13,7 @@
 ---  - `<CR>` / double click   fast-forward the repo under the cursor (`git pull --ff-only`)
 ---  - `P`                     fast-forward every repo that can be (clean, on main, behind)
 ---  - `b`                     copy the build command of the repo under the cursor
+---  - `B`                     run that build in a float terminal, in the repo's folder
 ---  - `a`                     show / hide the repos that are current
 ---  - `]` / `[`               next / previous line that needs attention
 ---  - `R`                     run the check again
@@ -32,6 +33,11 @@ local SCRATCH_NAME = "MyPlugins-machine"
 local NS = vim.api.nvim_create_namespace("MyPluginsMachine")
 local HEADER_LINES = 2
 
+---The last report: what the script answered, which line is which repo, the options of the run
+---(so `R`, a pull and a finished build can run it again) and whether current repos are shown.
+---@type { items: MyPlugins.MachineItem[], by_line: table<integer, MyPlugins.MachineItem>, opts: table, all: boolean }
+local current = { items = {}, by_line = {}, opts = {}, all = false }
+
 ---@class MyPlugins.MachineItem
 ---@field Repo string
 ---@field Path string
@@ -42,7 +48,8 @@ local HEADER_LINES = 2
 ---@field Dirty integer
 ---@field Pullable boolean
 ---@field Build string
----@field Hint string
+---@field Hint string     # what to do, for a person to read (may be prose: "run its setup.exe")
+---@field Command? string # the command that builds it; "" when there is none (older scripts: absent)
 
 ---Path of the script inside the config this module was loaded from (so a worktree or a
 ---junctioned config finds its own copy, not the one under stdpath("config")).
@@ -127,6 +134,212 @@ function M.rank(item)
   return 4
 end
 
+---The command that builds the repo of a line, or nil when it has none.
+---
+---The script's `Command`, and nothing else: the desktop apps are built by their setup.exe, and
+---their `Hint` ("run its setup.exe") is prose, not something to run or paste. Script and module
+---live in the same config, so there is no older script without the field; a missing or `null`
+---`Command` means no command, never "run the Hint".
+---@param item MyPlugins.MachineItem|nil
+---@return string|nil
+function M.build_hint(item)
+  if not item or type(item.Command) ~= "string" then
+    return nil
+  end
+  local cmd = vim.trim(item.Command)
+  return cmd ~= "" and cmd or nil
+end
+
+---What to tell the person when a line has no build command: the hint, which then says what
+---to do by hand ("run its setup.exe"), or that there is nothing.
+---@param item MyPlugins.MachineItem|nil
+---@return string
+function M.no_command_message(item)
+  if item and type(item.Hint) == "string" and item.Hint ~= "" then
+    return ("%s: no build command - %s"):format(item.Repo, item.Hint)
+  end
+  return "No build command for this line."
+end
+
+---The argv `B` runs: the build hint as one PowerShell command, started in the repo's folder
+---by the caller (`cwd`), never through a `Set-Location` string -- the folder is a spawn option,
+---so a path with quotes or spaces needs no escaping at all.
+---
+---PowerShell because the commands are written for it (the check is a PowerShell script too);
+---`sh scripts/...` and `cmake ...` run there as well. pwsh when installed, else Windows
+---PowerShell -- and off Windows without pwsh, nothing (nil plus the reason).
+---
+---**The exit code is the tool's.** Windows PowerShell 5.1 reports 1 for any failing native
+---command, and a later succeeding statement would mask an earlier failure; so a failing cmdlet
+---stops the run (`$ErrorActionPreference = 'Stop'`) and the last native exit code is passed on.
+---`-NoProfile`: whatever only the profile puts on PATH (a VS dev shell, nvm) is not there.
+---@param item MyPlugins.MachineItem|nil
+---@param shell? string
+---@return string[]|nil argv nil when the line has no build command, or there is no PowerShell
+---@return string|nil why
+function M.build_argv(item, shell)
+  local cmd = M.build_hint(item)
+  if not cmd then
+    return nil, M.no_command_message(item)
+  end
+  if not shell then
+    if vim.fn.executable("pwsh") == 1 then
+      shell = "pwsh"
+    elseif vim.fn.has("win32") == 1 then
+      shell = "powershell"
+    else
+      return nil, "no PowerShell (pwsh) on this machine to run the build with"
+    end
+  end
+  return {
+    shell,
+    "-NoProfile",
+    "-Command",
+    ("$ErrorActionPreference = 'Stop'; %s; exit $LASTEXITCODE"):format(cmd),
+  }
+end
+
+---Folders with a build running from here (B), so a second B does not start another build in
+---the same folder.
+---@type table<string, boolean>
+local building = {}
+
+---Folders whose finished build waits for its float to close before the check runs again: the
+---autocmd id, so a new B on the folder can drop it. Replacing the terminal of the same name
+---closes the old float, and that close must not re-check while the new build runs.
+---@type table<string, integer>
+local pending_recheck = {}
+
+---Run `fn` once `winid` is closed, or now when it already is. Returns the autocmd id when it
+---waits.
+---@param winid integer|nil
+---@param fn fun()
+---@return integer|nil autocmd
+local function after_close(winid, fn)
+  if not winid or not vim.api.nvim_win_is_valid(winid) then
+    fn()
+    return nil
+  end
+  return vim.api.nvim_create_autocmd("WinClosed", {
+    pattern = tostring(winid),
+    once = true,
+    callback = function()
+      vim.schedule(fn)
+    end,
+  })
+end
+
+---Run the build of `item` in a float terminal, in its folder -- a terminal.nvim terminal
+---(`build:<repo>`, so `:Terminal list` shows it), started with `direct = true`: the build IS
+---the job, no shell in between, and its exit code comes back.
+---
+---The float stays open when the build ends, so the output can be read: `q` in normal mode
+---closes it (`<Esc>` gets there from terminal mode). A build that succeeded runs the check again
+----- but only
+---once the float is closed: the report would otherwise take the focus while the float still
+---covers it, and the key meant to close the float would land in the report (`<CR>` there pulls
+---the repo under the cursor).
+---@param item MyPlugins.MachineItem|nil
+---@param deps? { terminal?: { run: fun(cmd: string[], opts: table): (boolean, string|nil, table|nil) }, shell?: string, on_done?: fun(code: integer, winid: integer|nil) }
+---@return boolean started
+function M.build_in_terminal(item, deps)
+  deps = deps or {}
+  if not item then
+    notify.info("No build command for this line.")
+    return false
+  end
+  local argv, why = M.build_argv(item, deps.shell)
+  if not argv then
+    notify.info(why or M.no_command_message(item))
+    return false
+  end
+  if type(item.Path) ~= "string" or item.Path == "" or vim.fn.isdirectory(item.Path) ~= 1 then
+    notify.warn(("%s: the folder is not there (%s)"):format(item.Repo, tostring(item.Path)))
+    return false
+  end
+  if building[item.Path] then
+    notify.info(item.Repo .. ": a build is already running here")
+    return false
+  end
+  -- The float of the last build of this folder may still be open, waiting to re-check when it
+  -- closes; this B replaces it, and that close must not re-check under the new build.
+  if pending_recheck[item.Path] then
+    pcall(vim.api.nvim_del_autocmd, pending_recheck[item.Path])
+    pending_recheck[item.Path] = nil
+  end
+  local terminal = deps.terminal
+  if not terminal then
+    local ok_term, mod = pcall(require, "terminal")
+    if not ok_term or type(mod) ~= "table" or type(mod.run) ~= "function" then
+      notify.warn("terminal.nvim is not available - b copies the command instead")
+      return false
+    end
+    terminal = mod
+  end
+  local on_done = deps.on_done
+    or function(code, winid)
+      if code == 0 then
+        notify.info(item.Repo .. ": build done - close the window to re-check")
+        pending_recheck[item.Path] = after_close(winid, function()
+          pending_recheck[item.Path] = nil
+          M.run(current.opts)
+        end)
+      else
+        notify.warn(("%s: build failed (exit %d)"):format(item.Repo, code))
+      end
+    end
+  ---@type integer|nil
+  local term_buf
+  building[item.Path] = true
+  local started, _, handle = terminal.run(argv, {
+    direct = true,
+    name = "build:" .. item.Repo,
+    layout = "float",
+    cwd = item.Path,
+    title = (" build: %s "):format(item.Repo),
+    close = "never",
+    -- A build is a one-off: a saved session must not start it again on the next launch.
+    session = false,
+    on_open = function(handle)
+      term_buf = handle and handle.bufnr or nil
+      if term_buf and vim.api.nvim_buf_is_valid(term_buf) then
+        -- In terminal mode any key closes the finished terminal; in normal mode (after
+        -- <C-\><C-n> to scroll the output) nothing would, so `q` does.
+        vim.keymap.set(
+          "n",
+          "q",
+          "<Cmd>close<CR>",
+          { buffer = term_buf, nowait = true, desc = "Close" }
+        )
+      end
+    end,
+    on_exit = function(code)
+      building[item.Path] = nil
+      -- The window showing the build, if any (a multiplexer backend has none here).
+      -- In any tab, not only the current one (`bufwinid`): the reader may have moved on.
+      local winid = term_buf and vim.fn.win_findbuf(term_buf)[1] or nil
+      on_done(code, winid)
+    end,
+  })
+  if not started then
+    -- terminal.nvim has said why already.
+    building[item.Path] = nil
+    return false
+  end
+  if handle and handle.backend and handle.backend ~= "native" then
+    -- A tmux or WezTerm pane never reports the end of its command: no lock that nothing would
+    -- release, and no promise of a re-check.
+    building[item.Path] = nil
+    notify.info(
+      ("%s: building in a %s pane - its end is not reported here, R re-checks"):format(
+        item.Repo,
+        handle.backend
+      )
+    )
+  end
+  return true
+end
+
 ---The command `b` puts on the clipboard: go to the repo first, then build.
 ---
 ---The hint of the script carries a trailing remark after three or more spaces
@@ -137,11 +350,8 @@ end
 ---@param item MyPlugins.MachineItem
 ---@return string|nil cmd nil when the line has no build hint
 function M.build_command(item)
-  if not item or item.Hint == nil or item.Hint == "" then
-    return nil
-  end
-  local hint = item.Hint:gsub("%s%s+%b()%s*$", ""):gsub("%s+$", "")
-  if hint == "" then
+  local hint = M.build_hint(item)
+  if not hint then
     return nil
   end
   if item.Path == nil or item.Path == "" then
@@ -161,9 +371,10 @@ function M.why_not(item)
   end
   if item.Behind == 0 then
     if item.Build == "stale" or item.Build == "missing" then
-      return ("nothing to pull, but the build is %s - %s (b copies it)"):format(
+      return ("nothing to pull, but the build is %s - %s%s"):format(
         item.Build,
-        item.Hint
+        item.Hint,
+        M.build_hint(item) and " (b copies, B runs it)" or ""
       )
     end
     return "nothing to pull"
@@ -181,7 +392,7 @@ end
 ---@param items MyPlugins.MachineItem[]
 ---@return string
 function M.summary(items)
-  local pull, unpushed, dirty, build, current = 0, 0, 0, 0, 0
+  local pull, unpushed, dirty, build, up_to_date = 0, 0, 0, 0, 0
   for _, it in ipairs(items) do
     if it.Pullable then
       pull = pull + 1
@@ -196,7 +407,7 @@ function M.summary(items)
       build = build + 1
     end
     if not M.needs_attention(it) then
-      current = current + 1
+      up_to_date = up_to_date + 1
     end
   end
   return ("%d pullable | %d unpushed | %d dirty | %d build | %d current"):format(
@@ -204,7 +415,7 @@ function M.summary(items)
     unpushed,
     dirty,
     build,
-    current
+    up_to_date
   )
 end
 
@@ -253,7 +464,7 @@ end
 ---@return table<integer, string> hls  line number -> highlight group
 function M.render(items, all)
   local lines = {
-    "MyPlugins machine   <CR> pull   P pull all   b build cmd (cd + build)   a show current   R recheck   ? help",
+    "MyPlugins machine   <CR> pull   P pull all   b build cmd   B build here   a show current   R recheck   ? help",
     "",
   }
   local by_line, hls = {}, {}
@@ -304,6 +515,7 @@ function M.help_lines()
     " <CR> / 2-click   fast-forward the repo under the cursor",
     " P                fast-forward every repo marked v",
     " b                copy the build command of the repo",
+    " B                run that build in a float terminal, in the repo's folder",
     " a                show / hide the repos that are current",
     " ] / [            next / previous line that needs attention",
     " R                run the check again",
@@ -315,13 +527,10 @@ function M.help_lines()
     " Red     unpushed / diverged / missing / fetch failed",
     " Yellow  dirty, off main, stale or missing build",
     " Only repos marked v are ever pulled (git pull --ff-only).",
-    " Builds are never started here; b copies the command.",
+    " A build starts only on B; b copies the command instead.",
     "",
   }
 end
-
----@type { items: MyPlugins.MachineItem[], by_line: table<integer, MyPlugins.MachineItem>, opts: table, all: boolean }
-local current = { items = {}, by_line = {}, opts = {}, all = false }
 
 ---Fast-forward the given repos (in parallel), then re-run the check.
 ---@param repos MyPlugins.MachineItem[]
@@ -406,18 +615,21 @@ local function set_keymaps(bufnr)
   end, "Pull every repo that can be fast-forwarded")
   map("b", function()
     local it = under_cursor()
-    if not it or it.Hint == "" then
-      notify.info("No build hint for this line.")
+    if not it then
+      notify.info("No build command for this line.")
       return
     end
     local cmd = M.build_command(it)
     if not cmd then
-      notify.info("No build hint for this line.")
+      notify.info(M.no_command_message(it))
       return
     end
     vim.fn.setreg("+", cmd)
     notify.info("Copied: " .. cmd)
   end, "Copy the build command of the repo under the cursor")
+  map("B", function()
+    M.build_in_terminal(under_cursor())
+  end, "Run the build of the repo under the cursor in a float terminal")
   map("a", function()
     current.all = not current.all
     M.redraw()
@@ -538,7 +750,7 @@ function M.routes()
         },
         { name = "only", type = "STRING", desc = "Comma list of repo names to check" },
       },
-      desc = "Machine-switch check over ALL repos in $REPOS_DIR (plugins, vaults, native apps): behind / ahead / dirty and stale native builds in a scratch buffer, sorted by what you can do; <CR> pulls the repo under the cursor, P pulls all that can be, b copies the build command, a shows the current ones, ? opens the cheat sheet. --pull fast-forwards before the report, --only=a,b limits the run. Runs scripts/sync-machine.ps1",
+      desc = "Machine-switch check over ALL repos in $REPOS_DIR (plugins, vaults, native apps): behind / ahead / dirty and stale native builds in a scratch buffer, sorted by what you can do; <CR> pulls the repo under the cursor, P pulls all that can be, b copies the build command, B runs it in a float terminal in the repo's folder, a shows the current ones, ? opens the cheat sheet. --pull fast-forwards before the report, --only=a,b limits the run. Runs scripts/sync-machine.ps1",
       run = function(ctx)
         M.run({ pull = ctx.flags.pull == true, only = ctx.flags.only })
       end,
