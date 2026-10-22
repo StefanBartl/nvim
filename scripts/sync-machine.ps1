@@ -67,7 +67,7 @@ $natives = @{
     }
     'mdview.nvim' = @{
         Artifact = 'native\server\mdview-server.exe'
-        Sources  = @('native\server', 'src')
+        Sources  = @('native\server')
         Hint     = 'sh scripts/rebuild-changed.sh HEAD~1 HEAD   (or: node scripts/build-go.mjs; npm run build)'
         Command  = 'node scripts/build-go.mjs'
     }

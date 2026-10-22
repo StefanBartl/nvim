@@ -252,6 +252,8 @@ return function(H)
     ),
     "and that failure did not leave the folder marked as building"
   )
+  -- end that build, so no folder stays locked for the cases below
+  runs[#runs].opts.on_exit(1)
 
   -- The default on_done: a successful build re-checks only once the float is closed.
   local reran = 0
@@ -304,11 +306,13 @@ return function(H)
   })
   first.on_open({ bufnr = float2_buf })
   first.on_exit(0)
+  local second
   machine.build_in_terminal(vim.tbl_extend("force", mdview, { Path = again }), {
     terminal = {
-      run = function()
+      run = function(_, run_opts)
         -- what terminal.nvim does for a name it already has: close the old one first
         vim.api.nvim_win_close(float2, true)
+        second = run_opts
         return true, nil, { bufnr = 999, backend = "native" }
       end,
     },
@@ -317,6 +321,7 @@ return function(H)
     return reran > 0
   end)
   eq(reran, 0, "the replaced float of the first build did not re-check under the second")
+  second.on_exit(1) -- end it: no folder stays locked for the cases below
   machine.run = real_run
 
   -- A multiplexer pane never reports its end: no lock left that nothing would release.
@@ -347,6 +352,113 @@ return function(H)
     "no promise for a desktop app"
   )
   H.has(machine.why_not(vim.tbl_extend("force", mdview, { Build = "stale" })), "B runs it")
+  H.has(
+    machine.why_not(vim.tbl_extend("force", mdview, { Build = "stale" })),
+    "node scripts/build-go.mjs",
+    "it names the command B runs"
+  )
+  H.lacks(
+    machine.why_not(vim.tbl_extend("force", mdview, { Build = "stale" })),
+    "rebuild-changed",
+    "and not the prose hint"
+  )
+
+  -- ── the focus, once more: when the check may run ─────────────────────────
+  local checks = 0
+  local saved_run = machine.run
+  machine.run = function()
+    checks = checks + 1
+  end
+  local function float_for()
+    local b = vim.api.nvim_create_buf(false, true)
+    local w = vim.api.nvim_open_win(
+      b,
+      false,
+      { relative = "editor", row = 1, col = 1, width = 10, height = 3 }
+    )
+    return b, w
+  end
+  local function start(path, bufnr)
+    local opts_of
+    machine.build_in_terminal(vim.tbl_extend("force", mdview, { Path = path }), {
+      terminal = {
+        run = function(_, run_opts)
+          opts_of = run_opts
+          return true, nil, { bufnr = bufnr, backend = "native" }
+        end,
+      },
+    })
+    opts_of.on_open({ bufnr = bufnr })
+    return opts_of
+  end
+
+  -- the float closed before the build ended: no check that would take the focus anywhere
+  local gone_buf, gone_win = float_for()
+  local early = start(H.tmpdir(), gone_buf)
+  vim.api.nvim_win_close(gone_win, true)
+  early.on_exit(0)
+  vim.wait(100)
+  eq(checks, 0, "no automatic check once the float is gone (R re-checks)")
+
+  -- two builds: Q finishes and its float closes while P still runs -> no check yet
+  local p_buf, p_win = float_for()
+  local q_buf, q_win = float_for()
+  local p = start(H.tmpdir(), p_buf)
+  local q = start(H.tmpdir(), q_buf)
+  q.on_exit(0)
+  vim.api.nvim_win_close(q_win, true)
+  vim.wait(100)
+  eq(checks, 0, "not while P still runs under its float")
+  p.on_exit(0)
+  vim.api.nvim_win_close(p_win, true)
+  vim.wait(200, function()
+    return checks > 0
+  end)
+  eq(checks, 1, "once the last float is closed, one check")
+
+  -- the float, not a split that shows the same buffer, is the window whose closing counts
+  checks = 0
+  local s_buf = vim.api.nvim_create_buf(false, true)
+  vim.cmd("split")
+  local split_win = vim.api.nvim_get_current_win()
+  vim.api.nvim_win_set_buf(split_win, s_buf)
+  vim.cmd("wincmd p")
+  local f_win = vim.api.nvim_open_win(
+    s_buf,
+    true,
+    { relative = "editor", row = 1, col = 1, width = 10, height = 3 }
+  )
+  local s = start(H.tmpdir(), s_buf) -- on_open runs with the float current
+  vim.cmd("wincmd p")
+  s.on_exit(0)
+  vim.api.nvim_win_close(f_win, true)
+  vim.wait(200, function()
+    return checks > 0
+  end)
+  eq(checks, 1, "closing the float re-checks, though a split shows the buffer too")
+  pcall(vim.api.nvim_win_close, split_win, true)
+  machine.run = saved_run
+
+  -- a terminal.nvim that throws does not leave the folder locked
+  local thrown = H.tmpdir()
+  eq(
+    machine.build_in_terminal(vim.tbl_extend("force", mdview, { Path = thrown }), {
+      terminal = {
+        run = function()
+          error("lazy load failed")
+        end,
+      },
+    }),
+    false
+  )
+  ok(
+    machine.build_in_terminal(
+      vim.tbl_extend("force", mdview, { Path = thrown }),
+      { terminal = fake_terminal }
+    ),
+    "the next B on that folder starts"
+  )
+  runs[#runs].opts.on_exit(1)
 
   H.has(table.concat(machine.help_lines(), "\n"), " B ", "the cheat sheet names B")
 end

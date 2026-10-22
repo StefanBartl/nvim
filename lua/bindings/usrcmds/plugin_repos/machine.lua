@@ -210,6 +210,21 @@ local building = {}
 ---@type table<string, integer>
 local pending_recheck = {}
 
+---Run the check again -- unless a build of B is still running or another finished build's float
+---is still open: the report takes the focus when it is shown, and under an open float the next key
+---(`q`, `<CR>`) would land in it. The last float to close runs it.
+---@type boolean A check was wanted and put off because another build was still out.
+local recheck_owed = false
+local function recheck_when_settled(wanted)
+  if wanted then
+    recheck_owed = true
+  end
+  if recheck_owed and next(building) == nil and next(pending_recheck) == nil then
+    recheck_owed = false
+    M.run(current.opts)
+  end
+end
+
 ---Run `fn` once `winid` is closed, or now when it already is. Returns the autocmd id when it
 ---waits.
 ---@param winid integer|nil
@@ -278,20 +293,39 @@ function M.build_in_terminal(item, deps)
   end
   local on_done = deps.on_done
     or function(code, winid)
-      if code == 0 then
-        notify.info(item.Repo .. ": build done - close the window to re-check")
-        pending_recheck[item.Path] = after_close(winid, function()
-          pending_recheck[item.Path] = nil
-          M.run(current.opts)
-        end)
-      else
+      if code ~= 0 then
         notify.warn(("%s: build failed (exit %d)"):format(item.Repo, code))
+        -- A check another build put off is owed now -- after this float is closed too.
+        if recheck_owed and winid then
+          pending_recheck[item.Path] = after_close(winid, function()
+            pending_recheck[item.Path] = nil
+            recheck_when_settled(false)
+          end)
+        else
+          recheck_when_settled(false)
+        end
+        return
       end
+      if not winid then
+        -- The float went before the build ended: a check now would take the focus wherever the
+        -- reader is. Say so instead.
+        notify.info(item.Repo .. ": build done - R re-checks")
+        return
+      end
+      notify.info(item.Repo .. ": build done - close the window to re-check")
+      pending_recheck[item.Path] = after_close(winid, function()
+        pending_recheck[item.Path] = nil
+        recheck_when_settled(true)
+      end)
     end
   ---@type integer|nil
   local term_buf
+  ---@type integer|nil
+  local float_win
   building[item.Path] = true
-  local started, _, handle = terminal.run(argv, {
+  -- pcall: a terminal.nvim that throws (a setup or lazy-load error) must not leave the folder
+  -- locked until a restart.
+  local ran, started, _, handle = pcall(terminal.run, argv, {
     direct = true,
     name = "build:" .. item.Repo,
     layout = "float",
@@ -302,6 +336,12 @@ function M.build_in_terminal(item, deps)
     session = false,
     on_open = function(handle)
       term_buf = handle and handle.bufnr or nil
+      -- `run` enters the float it opens: that window, not whichever other window may show the
+      -- same buffer later (a split of it, another tab), is the one whose closing re-checks.
+      local cur = vim.api.nvim_get_current_win()
+      if term_buf and vim.api.nvim_win_get_buf(cur) == term_buf then
+        float_win = cur
+      end
       if term_buf and vim.api.nvim_buf_is_valid(term_buf) then
         -- In terminal mode any key closes the finished terminal; in normal mode (after
         -- <C-\><C-n> to scroll the output) nothing would, so `q` does.
@@ -315,12 +355,27 @@ function M.build_in_terminal(item, deps)
     end,
     on_exit = function(code)
       building[item.Path] = nil
-      -- The window showing the build, if any (a multiplexer backend has none here).
-      -- In any tab, not only the current one (`bufwinid`): the reader may have moved on.
-      local winid = term_buf and vim.fn.win_findbuf(term_buf)[1] or nil
+      -- The float, if it is still open and still shows the build; else any window showing it
+      -- (in any tab: the reader may have moved on); nil when none does (closed early, or a
+      -- multiplexer backend).
+      local winid = float_win
+      if
+        not (
+          winid
+          and vim.api.nvim_win_is_valid(winid)
+          and vim.api.nvim_win_get_buf(winid) == term_buf
+        )
+      then
+        winid = term_buf and vim.fn.win_findbuf(term_buf)[1] or nil
+      end
       on_done(code, winid)
     end,
   })
+  if not ran then
+    building[item.Path] = nil
+    notify.error(("%s: terminal.nvim failed: %s"):format(item.Repo, tostring(started)))
+    return false
+  end
   if not started then
     -- terminal.nvim has said why already.
     building[item.Path] = nil
@@ -342,11 +397,9 @@ end
 
 ---The command `b` puts on the clipboard: go to the repo first, then build.
 ---
----The hint of the script carries a trailing remark after three or more spaces
----(`.\tools\dev-hub.ps1 -Release   (builds UI, then hub)`); pasted into PowerShell that remark
----would be read as an argument, so it is dropped. The folder change comes first because the build
----commands are relative (`.\tools\...`, `cargo build`, `sh scripts/...`) and a terminal that sits
----anywhere else (the config, another repo) would build nothing or the wrong thing.
+---The script's `Command` (`M.build_hint`), never the prose `Hint`. The folder change comes first
+---because the commands are relative (`node scripts/...`, `cmake --build build`) and a terminal that
+---sits anywhere else (the config, another repo) would build nothing or the wrong thing.
 ---@param item MyPlugins.MachineItem
 ---@return string|nil cmd nil when the line has no build hint
 function M.build_command(item)
@@ -371,10 +424,11 @@ function M.why_not(item)
   end
   if item.Behind == 0 then
     if item.Build == "stale" or item.Build == "missing" then
+      local cmd = M.build_hint(item)
       return ("nothing to pull, but the build is %s - %s%s"):format(
         item.Build,
-        item.Hint,
-        M.build_hint(item) and " (b copies, B runs it)" or ""
+        cmd or item.Hint,
+        cmd and " (b copies, B runs it)" or ""
       )
     end
     return "nothing to pull"
