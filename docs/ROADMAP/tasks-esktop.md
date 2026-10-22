@@ -16,7 +16,7 @@ UI-bezogene offene Tasks (Status open, soweit nicht anders angegeben):
   - `tasks-desktop-app-logo-statt-schriftzug-tasks-in-der-menuele`
   - `tasks-desktop-hover-erklaerungen-fuer-live-kritischer-pfad-u`
 - Ansichten:
-  - `tasks-app-ansichten-gruppieren-und-visualisieren` (prio 2, L)
+  - `tasks-app-ansichten-gruppieren-und-visualisieren` (prio 2, L) 🟡
   - `tasks-app-abhaengigkeits-ansicht-reihen-pfeile-drag-drop`
   - `tasks-app-kalender-und-zeitleisten-ansicht`
   - `tasks-desktop-verbindungen-gruppierung-netz-darstellung-rust`
