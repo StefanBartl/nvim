@@ -362,6 +362,15 @@ das Usercmd `:Neotree` (siehe [Usercmds/NeoTree.md](../Usercmds/NeoTree.md)).
 | `<M-r>` | filetree `tree_toggle`: Position `right` | [custom] |
 | `<leader>ns` | filetree `source_switcher`: Source-Picker öffnen | [custom] (`features.source_switcher.keymap_pick`) |
 
+**Testphase seit 2026-10-23:** `tree_toggle.collapse_on_toggle = true` (in
+`plugins/personal/specs/navigate.lua`). Öffnet eine dieser Tasten den Tree,
+werden vorher alle Ordner zugeklappt, nur die Kette zur Datei des aktuellen
+Buffers bleibt offen; ohne Datei (Scratch, Hilfe, Terminal) bleibt alles zu.
+Das Schließen per Taste ändert nichts. Zum Zuklappen von Hand: neo-tree `z`
+oder `:Filetree collapse` (filetree `collapse_all`; dessen Default-Taste `W`
+ist hier abgeschaltet, weil `W` der Window-Picker ist). Beobachtungen zur
+Testphase in der Task `filetree.nvim/collapse-on-toggle-keep-current-path`.
+
 Die E95-Selbstheilung (zweiter Toggle, bevor der erste fertig gerendert hat,
 hinterließ ein leeres, unfokussierbares Tree-Fenster) sitzt jetzt im
 neo-tree-Adapter von filetree.nvim (`toggle_at`), nicht mehr im Keymap.

@@ -1255,12 +1255,21 @@ return {
           -- the keyboard the user makes. The E95 self-heal lives in the adapter.
           tree_toggle = {
             enabled = true,
+            -- Trial since 2026-10-23 (tasks-vault filetree.nvim/collapse-on-toggle-keep-current-path):
+            -- opening the tree with these keys collapses every folder except the current
+            -- file's chain. The plugin default (false) is decided after the trial.
+            collapse_on_toggle = true,
             -- reveal = true, -- reveal the current file when opening
             -- reveal_force_cwd = true, -- re-root to the cwd when that file lies outside the tree
             -- keymap_current = "<M-c>", -- string | string[] | false; toggle in the current window
             -- keymap_float = "<M-f>",
             -- keymap_left = "<M-l>",
             -- keymap_right = "<M-r>",
+          },
+          -- Collapse every folder back to the root (`:Filetree collapse`). Its default key `W`
+          -- is this config's neo-tree window-picker key, and neo-tree's own `z` does the same.
+          collapse_all = {
+            keymap = false,
           },
           -- Path-copy family.
           path_copy = {
