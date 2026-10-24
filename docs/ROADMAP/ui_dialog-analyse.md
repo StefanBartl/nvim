@@ -74,3 +74,8 @@ testing `guard/prompt.lua` fängt fremde Prompts ab (Test-Guard). Dokumentation 
 - Stufe 2: Gruppe B (`kit.input`/`kit.form`), pro Repo eine Task.
 - Stufe 3: Gruppe C, nur wo der Dialog Auswahl mit wenigen Optionen ist, sonst `kit.select`.
 - Je Stufe: Spec pro Repo, die den Aufruf ohne `vim.fn.confirm`/`vim.ui.*` prüft. Zusätzlich ein Lint/Grep-Check in der CI (verbietet die nativen Aufrufe außerhalb der Fallbacks).
+
+## Tasks
+
+- `ALL/alle-user-dialoge-auf-ui-kit-vereinheitlichen` (Umsetzung)
+- `ALL/ui-kit-kopien-und-dialog-konvention-festlegen` (Entscheidung, vorab)
