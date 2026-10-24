@@ -59,6 +59,21 @@ if (-not $rulesVault) {
     Write-Host "  RULES_VAULT bereits gesetzt: $rulesVault"
 }
 
+# TASKS_VAULT: Wurzel des Repos tasks-vault (Task-Vault: Areas mit ROADMAP/tasks, Backlog, Notizen, TOOLS). Der Hub
+# von tasks-desktop und die CLI von tasks.nvim lesen sie; der Vault ist seit 2026-10-12 ein eigenes Repo, nicht
+# mehr ein Ordner in WKDBooks. Auf jeder Maschine liegt er unter $REPOS_DIR/tasks-vault.
+$tasksVault = [Environment]::GetEnvironmentVariable('TASKS_VAULT', 'User')
+if (-not $tasksVault) {
+    $candidate = Join-Path $reposDir 'tasks-vault'
+    if (Test-Path $candidate) {
+        Set-UserEnvVar -name 'TASKS_VAULT' -value $candidate
+    } else {
+        Write-Host "  TASKS_VAULT nicht gesetzt und $candidate fehlt: Repo tasks-vault klonen, dann das Skript erneut ausfuehren." -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  TASKS_VAULT bereits gesetzt: $tasksVault"
+}
+
 Write-Host "  Hinweis: neu gesetzte User-Env-Vars gelten erst in neuen Shells/Sessions."
 
 # --- 2. ~/.claude/CLAUDE.md (Symlink, Fallback Kopie) -----------------------
