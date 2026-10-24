@@ -215,7 +215,7 @@ return {
     -- Path/link hover for every filetype. Lives in its own plugin rather than
     -- in lib.nvim because it opens windows, installs autocmds in every
     -- buffer, borrows keymaps, ships usercommands and knows four sibling
-    -- plugins by name -- see documentation.nvim/docs/ECOSYSTEM.md for the
+    -- plugins by name -- see docmap.nvim/docs/ecosystem.md for the
     -- rule behind that split.
     --
     -- `lazy = false` because `enable()` must run from something that isn't

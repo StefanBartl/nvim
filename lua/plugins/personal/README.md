@@ -32,7 +32,7 @@ file of its category *and* into the matching group of `source.lua`'s mode table.
 | [`specs/edit.lua`](specs/edit.lua) | cascade, replacer, emojis, language, markdown, data |
 | [`specs/navigate.lua`](specs/navigate.lua) | gopath, hover, open, pickers, filetree, fileops, sessions |
 | [`specs/inspect.lua`](specs/inspect.lua) | dap, debugging, diff, lsp, insights, runtime-analysis, recommender, spotlight, cmdlog, rules, testing |
-| [`specs/project.lua`](specs/project.lua) | sandbox, github_stats, reposcope, documentation, gitsuite, casedesk, tasks, terminal |
+| [`specs/project.lua`](specs/project.lua) | sandbox, github_stats, reposcope, docmap, gitsuite, casedesk, tasks, terminal |
 | [`specs/view.lua`](specs/view.lua) | ui, color_my_ascii, images, mdview, media, pdfport |
 
 The website's eighth category, `desktop`, holds a standalone app and has no
@@ -238,7 +238,7 @@ here reaches:
 | `wkdnvchad.ui.statusline` — `plugin_summary`'s own/external badge | `list.read()` |
 | `config.telemetry` | `list.read()` |
 | `bindings.usrcmds.bindings_explorer.config` — `:Bindings check repo` | `export.projects()` |
-| documentation.nvim (`:DocMapAll`, via `opts.generate_all`), docmap-desktop | `export.projects()` |
+| docmap.nvim (`:DocMapAll`, via `opts.generate_all`), docmap-desktop | `export.projects()` |
 | pickers.nvim's `repos_dir` and its collection paths | `utils.repos_path` |
 
 ---

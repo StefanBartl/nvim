@@ -455,7 +455,7 @@ for `search`, `browse`, `check` and `report`.
 
 `:DocMapAll` (and `:DocMap all`) used to live here
 (`lua/bindings/usrcmds/docmap_all/`, now deleted) and is now
-`documentation.nvim`'s own command, registered by its own `setup()` when
+`docmap.nvim`'s own command, registered by its own `setup()` when
 `opts.generate_all.projects` is configured. See that plugin's own
 `docs/commands.md`/`docs/WORKFLOW.md` for the current design. What stayed
 behind, config-local:

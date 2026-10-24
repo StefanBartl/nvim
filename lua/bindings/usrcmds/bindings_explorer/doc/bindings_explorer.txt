@@ -67,7 +67,7 @@ Full feature list with examples: `docs/FEATURES.md` next to this file.
         :Bindings search autocmds BufEnter
         :Bindings search keymaps hover.nvim
         :Bindings search keymaps hover.nvim zoom
-        :Bindings search keymaps plugin=documentat
+        :Bindings search keymaps plugin=docm
 <
 
 ------------------------------------------------------------------------------
@@ -87,7 +87,7 @@ Full feature list with examples: `docs/FEATURES.md` next to this file.
     `q`/`<Esc>` closes.
 
     Unlike `search`, this slot has no query to be confused with, so a
-    prefix resolves here too (`:Bindings browse usercmds documentat`), and
+    prefix resolves here too (`:Bindings browse usercmds docm`), and
     a token that is neither a scope nor a stem is reported as an error.
 
     Examples: >vim
@@ -299,7 +299,7 @@ A token is matched against the stems in this order:
        lazy.nvim names; it lives in `plugin_scope.normalize` and is shared,
        so `:Bindings search dap` and `:Bindings check dap` cannot disagree;
     3. ONLY in the `plugin={prefix}` form: prefix matching
-       (`plugin=documentat` -> `documentation.nvim`). A prefix naming more
+       (`plugin=docm` -> `docmap.nvim`). A prefix naming more
        than one stem is an error listing them, never a guess.
 
 One token may name several sheets, and that is not an error: `dap` is

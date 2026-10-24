@@ -144,7 +144,7 @@ plugins.modes({
   ["sandbox.nvim"] = "dir",
   ["github_stats.nvim"] = "dir",
   ["reposcope.nvim"] = "dir",
-  ["documentation.nvim"] = "dir",
+  ["docmap.nvim"] = "dir",
   ["gitsuite.nvim"] = "dir",
   ["casedesk.nvim"] = "dir",
   ["tasks.nvim"] = "dir",
