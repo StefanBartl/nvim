@@ -1,7 +1,7 @@
 ---@module 'bindings.usrcmds.native_repos'
 ---@brief `:MyNative {list|clone|pull|build} [name]` - the native apps next to the plugin checkouts.
 ---@description
---- Sister of `:MyPlugins` for the native apps (tasks-desktop, rules-desktop, loomAI, takt, docmap-desktop, appkit;
+--- Sister of `:MyPlugins` for the native apps (tasks-desktop, rules-desktop, ai-desktop, takt, docmap-desktop, appkit;
 --- the list is `plugins.personal.core.natives`). They are no lazy specs, so `:MyPlugins` never sees them.
 ---
 ---  - `list`           per app: cloned or not, git state, and whether the build is current (artifact older than the
@@ -343,7 +343,7 @@ end
 ---Registers `:MyNative`.
 function M.enable()
   composer.register_type("MYNATIVE_NAME", {
-    desc = "Name of a native app (tasks-desktop, rules-desktop, loomAI, takt, ...)",
+    desc = "Name of a native app (tasks-desktop, rules-desktop, ai-desktop, takt, ...)",
     validate = function(raw)
       if natives.get(raw) then
         return true, raw, nil

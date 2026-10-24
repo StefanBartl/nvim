@@ -33,9 +33,9 @@ M.list = {
     hint = "built by its setup.exe (no build command here)",
   },
   {
-    repo = "StefanBartl/loomAI",
-    name = "loomAI",
-    artifact = "build/loomai.exe",
+    repo = "StefanBartl/ai-desktop",
+    name = "ai-desktop",
+    artifact = "build/ai-desktop.exe",
     sources = { "src", "CMakeLists.txt" },
     build = { "cmake", "--build", "build", "--config", "Release" },
     hint = "cmake --build build --config Release",

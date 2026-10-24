@@ -1,6 +1,6 @@
 # Schlachtplan: alle fünf Plugins/Apps live gegen einen echten Claude-Account testen
 
-> Anlass: $250 API-Guthaben erhalten — guter Zeitpunkt, `ai.nvim`, `loomAI`,
+> Anlass: $250 API-Guthaben erhalten — guter Zeitpunkt, `ai.nvim`, `ai-desktop`,
 > `rules.nvim`, `documentation.nvim` und `docmap-desktop` einmal vollständig
 > gegen einen echten Claude-Account zu konfigurieren und durchzutesten,
 > inklusive Agent-Modus und `rules.nvim` ("Rulers"). Dieser Report ist ein
@@ -17,7 +17,7 @@
 - [0. Die wichtigste Unterscheidung zuerst: zwei völlig verschiedene "Claude-Zugänge"](#0-die-wichtigste-unterscheidung-zuerst-zwei-völlig-verschiedene-claude-zugänge)
 - [1. Kurzübersicht: wer hat überhaupt eine Claude-Anbindung, und welche Art](#1-kurzübersicht-wer-hat-überhaupt-eine-claude-anbindung-und-welche-art)
 - [2. `ai.nvim` (direkter API-Provider)](#2-ainvim-direkter-api-provider)
-- [3. `loomAI` (ModelRouter-Server + Dashboard)](#3-loomai-modelrouter-server--dashboard)
+- [3. `ai-desktop` (ModelRouter-Server + Dashboard)](#3-ai-desktop-modelrouter-server--dashboard)
 - [4. `rules.nvim` ("Rulers") — keine eigene Anbindung, Agent-Modus über Claude Code selbst](#4-rulesnvim-rulers--keine-eigene-anbindung-agent-modus-über-claude-code-selbst)
 - [5. `documentation.nvim` — der echte Agent-Modus-Zugang (MCP-Server)](#5-documentationnvim--der-echte-agent-modus-zugang-mcp-server)
 - [6. `docmap-desktop` — reiner Viewer, keine eigene Anbindung](#6-docmap-desktop--reiner-viewer-keine-eigene-anbindung)
@@ -35,10 +35,10 @@ bestimmt, wofür die $250 API-Guthaben überhaupt greifen:
 
 | Zugangsart | Was es ist | Wofür genutzt | Abrechnung |
 | --- | --- | --- | --- |
-| **Anthropic API-Key** (`ANTHROPIC_API_KEY`, von `console.anthropic.com`) | Direkter, pay-as-you-go-abgerechneter HTTP-Zugriff auf die Messages API | `ai.nvim`s `claude`-Provider, `loomAI`s ModelRouter (Präfix `claude-`) | **Zieht auf das API-Guthaben** |
+| **Anthropic API-Key** (`ANTHROPIC_API_KEY`, von `console.anthropic.com`) | Direkter, pay-as-you-go-abgerechneter HTTP-Zugriff auf die Messages API | `ai.nvim`s `claude`-Provider, `ai-desktop`s ModelRouter (Präfix `claude-`) | **Zieht auf das API-Guthaben** |
 | **Claude-Account/Abo** (Claude Code, Claude Desktop, claude.ai) | Der Account, mit dem man sich in Claude Code/Claude Desktop anmeldet | MCP-Clients (z. B. `documentation.nvim`s MCP-Server als Tool-Quelle für Claude Code im Agent-Modus) | Läuft über das Abo/den Plan, **nicht** automatisch über das API-Guthaben — außer Claude Code ist explizit auf einen eigenen `ANTHROPIC_API_KEY` umgestellt |
 
-Kurz: Nur `ai.nvim` und `loomAI` verbrauchen unmittelbar das neue Guthaben.
+Kurz: Nur `ai.nvim` und `ai-desktop` verbrauchen unmittelbar das neue Guthaben.
 `documentation.nvim`s MCP-Anbindung (der eigentliche "Agent-Modus"-Test) läuft
 über den Claude-Account/die Claude-Code-Session selbst, unabhängig vom
 API-Guthaben, sofern Claude Code nicht separat auf API-Billing umgestellt
@@ -51,7 +51,7 @@ wurde.
 | Plugin/App | Direkte Claude-API-Anbindung | Agent-Modus-Anbindung (MCP) | Status im Code |
 | --- | --- | --- | --- |
 | `ai.nvim` | ✅ `lua/ai/providers/claude.lua` (Anthropic Messages API, Streaming, Vision, Dokumente) | ❌ nicht vorgesehen (bewusste Scope-Grenze, siehe `docs/scope.md`) | Fertig, verdrahtet in der Config, aber laut vorhandenem Live-Testing-Plan **nie gegen einen echten Key getestet** |
-| `loomAI` | ✅ `src/anthropic_client.cpp`, ModelRouter-Präfix `claude-` | ⚠️ Dashboard zeigt "Agent-Modus", ist aber **reine Simulation** (`run_simulation_agent()`), keine echte LLM-Anbindung | ModelRouter fertig; Dashboard-Agent-Anzeige veraltet/irreführend |
+| `ai-desktop` | ✅ `src/anthropic_client.cpp`, ModelRouter-Präfix `claude-` | ⚠️ Dashboard zeigt "Agent-Modus", ist aber **reine Simulation** (`run_simulation_agent()`), keine echte LLM-Anbindung | ModelRouter fertig; Dashboard-Agent-Anzeige veraltet/irreführend |
 | `rules.nvim` | ❌ keine | ❌ keine eigene — Output ist für einen externen Agenten (z. B. Claude Code) gedacht | Fertig (Alpha), rein mechanischer Checker |
 | `documentation.nvim` | ❌ keine | ✅ echter MCP-Server (`lua/documentation/mcp/`), Tools für Modul-Karte, Call-Graph, Findings | Fertig, seit 2026-08-11 (Phase 1 des V1-Erweiterungsplans), **noch nie live gegen einen echten MCP-Client getestet** laut Repo-Doku |
 | `docmap-desktop` | ❌ keine | ❌ keine | Reiner Viewer für documentation.nvim-Maps |
@@ -117,11 +117,11 @@ falls im selben Rutsch alle Cloud-Provider durchgetestet werden sollen.
 
 ---
 
-## 3. `loomAI` (ModelRouter-Server + Dashboard)
+## 3. `ai-desktop` (ModelRouter-Server + Dashboard)
 
 ### 3.1 Konfiguration
 
-1. Bauen, falls `build/` fehlt oder veraltet (siehe `README.md` im loomAI-Repo):
+1. Bauen, falls `build/` fehlt oder veraltet (siehe `README.md` im ai-desktop-Repo):
    ```bash
    mkdir -p third_party/nlohmann
    curl -sL https://github.com/nlohmann/json/releases/download/v3.11.3/json.hpp \
@@ -132,8 +132,8 @@ falls im selben Rutsch alle Cloud-Provider durchgetestet werden sollen.
    cmake --build build -j4
    ```
 2. `ANTHROPIC_API_KEY` muss gesetzt sein (derselbe Key wie bei `ai.nvim`,
-   loomAI liest ihn eigenständig für seinen `anthropic_client.cpp`).
-3. Starten und laufen lassen: `./build/loomai` (eigenes Terminal offen
+   ai-desktop liest ihn eigenständig für seinen `anthropic_client.cpp`).
+3. Starten und laufen lassen: `./build/ai-desktop` (eigenes Terminal offen
    lassen — kein Daemon-Modus).
 4. `curl http://127.0.0.1:8080/health` → `backends.anthropic` sollte `true`
    zeigen, sobald der Key gesetzt ist.
@@ -146,8 +146,8 @@ falls im selben Rutsch alle Cloud-Provider durchgetestet werden sollen.
      -H 'Content-Type: application/json' \
      -d '{"model":"claude-opus-4-5","prompt":"Reply with exactly the word: PONG"}'
    ```
-2. Denselben Test über `ai.nvim`s `loomai`-Provider laufen lassen
-   (`:Ai provider loomai`, Modell auf ein `claude-*`-Modell stellen, falls
+2. Denselben Test über `ai.nvim`s `ai-desktop`-Provider laufen lassen
+   (`:Ai provider ai-desktop`, Modell auf ein `claude-*`-Modell stellen, falls
    das Plugin das erlaubt — sonst nur den direkten `curl`-Test nutzen) und
    vergleichen, ob die Antwort identisch durchkommt.
 3. `/ask/stream` mit demselben Modell testen (SSE, `data: {"delta": "..."}`-
@@ -329,7 +329,7 @@ zu "kostet Guthaben" zu "braucht den Account statt API-Key":
 4. **`ai.nvim` mit `claude`-Provider** (Abschnitt 2) — erster Punkt, der
    tatsächlich das API-Guthaben verbraucht. Klein anfangen (ein `:Ai ask`
    mit kurzer Antwort), bevor Streaming/Completion/`auto`-Resolution folgen.
-5. **`loomAI` mit Anthropic-Backend** (Abschnitt 3) — letzter Schritt, weil
+5. **`ai-desktop` mit Anthropic-Backend** (Abschnitt 3) — letzter Schritt, weil
    er `ai.nvim`s Ergebnis als Vergleichsbasis nutzt (derselbe Key, derselbe
    Provider, zwei verschiedene Codepfade — Abweichungen wären ein Bug in
    einem der beiden).
@@ -339,7 +339,7 @@ zu "kostet Guthaben" zu "braucht den Account statt API-Key":
 ## 8. Kostenrisiko und Absicherung
 
 - Jeder `:Ai ask`/`:Ai stream`-Aufruf gegen `claude` und jeder
-  `/ask`-Aufruf gegen loomAIs `claude-*`-Präfix zieht auf das API-Guthaben.
+  `/ask`-Aufruf gegen ai-desktops `claude-*`-Präfix zieht auf das API-Guthaben.
   Für reine Funktionstests reichen sehr kurze Prompts (`"Reply with exactly
   the word: PONG"`) — bewusst so kurz halten, nicht mit langen
   Streaming-Antworten oder großen Attachments (PDF/Bild) anfangen.
@@ -360,7 +360,7 @@ zu "kostet Guthaben" zu "braucht den Account statt API-Key":
   relevant, sobald `auto`-Resolution mit allen Backends getestet wird. Siehe
   vorhandenen Live-Testing-Plan, Abschnitt "Ein echter Bug, der
   Ollama-Tests sofort blockiert".
-- **loomAI-Dashboard zeigt weiterhin nur die Simulation** — kein Ticket
+- **ai-desktop-Dashboard zeigt weiterhin nur die Simulation** — kein Ticket
   dafür in diesem Report, nur die Erwartung dokumentiert (Abschnitt 3.3),
   damit es beim Testen nicht mit einem Bug verwechselt wird.
 - **`GEMINI_API_KEY`** war laut vorhandenem Plan nie live getestet — nicht
@@ -378,10 +378,10 @@ zu "kostet Guthaben" zu "braucht den Account statt API-Key":
 
 - `ai.nvim`: `docs/ROADMAP/Final_Checks/ai/live-testing-plan.md` (dieses
   Repo) — der bereits vorhandene, sehr ausführliche Testplan für
-  `ai.nvim`/`loomAI`.
+  `ai.nvim`/`ai-desktop`.
 - `ai.nvim`: `docs/scope.md`, `docs/quickstart.md`, `docs/configuration.md`,
   `lua/ai/providers/claude.lua`.
-- `loomAI`: `README.md`, `src/main.cpp` (`run_simulation_agent`),
+- `ai-desktop`: `README.md`, `src/main.cpp` (`run_simulation_agent`),
   `src/anthropic_client.cpp`.
 - `rules.nvim`: `README.md`, `lua/rules/bindings/usrcmds.lua`,
   `lua/rules/report/json.lua`.
@@ -394,12 +394,12 @@ zu "kostet Guthaben" zu "braucht den Account statt API-Key":
 
 ## 11. Ergebnis des Live-Durchlaufs (2026-10-12)
 
-Ausgeführt wurden `ai.nvim` (Abschnitt 2) und `loomAI` (Abschnitt 3) mit einem
+Ausgeführt wurden `ai.nvim` (Abschnitt 2) und `ai-desktop` (Abschnitt 3) mit einem
 echten Key (Organisation "StWork's Individual Org", 200 USD Guthaben). Nicht
 ausgeführt: `rules.nvim` mit Agent-Bewertung (nur die Engine headless:
 `DEP` 6 pass / 1 manual, `ERR` 1 pass / 34 manual), `documentation.nvim`-MCP,
 `docmap-desktop`. Kosten: einstellig im Cent-Bereich, nicht einzeln erfasst
-(Modelle: `claude-sonnet-5-5` für `ai.nvim`, `claude-haiku-5-5` für `loomAI`).
+(Modelle: `claude-sonnet-5-5` für `ai.nvim`, `claude-haiku-5-5` für `ai-desktop`).
 
 | Punkt | Ergebnis |
 | --- | --- |
@@ -409,10 +409,10 @@ ausgeführt: `rules.nvim` mit Agent-Bewertung (nur die Engine headless:
 | Fehlerpfad `ai.nvim` | OK: `[error] claude API error: invalid x-api-key` |
 | Inline-Completion | OK |
 | `auto`-Resolution | OK, in der Console bestätigt; `:Ai info` zeigt bei `auto` nicht den aufgelösten Provider |
-| `loomAI` `/ask` | OK: `PONG`, mit `usage` und `stop_reason` |
-| `loomAI` `/ask/stream` | OK, aber ohne `usage` und `stop_reason` (Task `docmap-desktop/loomai-stream-usage-und-cancel`) |
-| Fehlerpfad `loomAI` | OK: `anthropic: invalid x-api-key` (`/health` meldet nur das Vorhandensein eines Keys) |
-| `ai.nvim` über `loomai`-Provider | OK, sobald `model = { loomai = "claude-haiku-5-5" }` gesetzt ist; ohne Modell leitet loomAI an Ollama weiter ("Could not establish connection") |
+| `ai-desktop` `/ask` | OK: `PONG`, mit `usage` und `stop_reason` |
+| `ai-desktop` `/ask/stream` | OK, aber ohne `usage` und `stop_reason` (Task `docmap-desktop/ai-desktop-stream-usage-und-cancel`) |
+| Fehlerpfad `ai-desktop` | OK: `anthropic: invalid x-api-key` (`/health` meldet nur das Vorhandensein eines Keys) |
+| `ai.nvim` über `ai-desktop`-Provider | OK, sobald `model = { ai-desktop = "claude-haiku-5-5" }` gesetzt ist; ohne Modell leitet ai-desktop an Ollama weiter ("Could not establish connection") |
 
 ### 11.1 `rules.nvim`: Agent-Bewertung der manuellen ERR-Regeln
 

@@ -22,7 +22,7 @@ return function(H)
     ok(not entry.build or entry.artifact, "a build command comes with an artifact: " .. entry.name)
     ok(not entry.artifact or entry.sources, "an artifact comes with sources: " .. entry.name)
   end
-  eq(natives.get("loomAI").build[1], "cmake", "loomAI builds with cmake")
+  eq(natives.get("ai-desktop").build[1], "cmake", "ai-desktop builds with cmake")
   eq(natives.get("nope"), nil, "unknown name")
   eq(vim.tbl_contains(natives.names(), "takt"), true, "takt is listed")
 

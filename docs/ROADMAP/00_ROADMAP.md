@@ -60,7 +60,7 @@ mdview sync über nvim instazen hinweg
 - nvim -> omarchy ascii style umbau - was ist alles möglich um den look hinzubekommen beside themes?
   -> Task: `nvim-config/omarchy-look-beyond-themes`
 
-- claude api ai.nvim / loomai checks erstellen, um features ich damit checken kann
+- claude api ai.nvim / ai-desktop checks erstellen, um features ich damit checken kann
   -> die Checks gibt es (`Final_Checks/ai/claude-account-live-testing-schlachtplan.md`); Ausführung: Task `ALL/claude-account-live-test-session`
 
 - mappings durchchecken

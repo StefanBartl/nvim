@@ -1,4 +1,4 @@
-# Live-Testing-Plan: `ai.nvim` + `loomAI` (2026-09-14)
+# Live-Testing-Plan: `ai.nvim` + `ai-desktop` (2026-09-14)
 
 > **Zweck:** ein abhakbarer Plan, um die meisten Features beider Repos live
 > zu testen — lokal (Ollama) und cloud (Anthropic/OpenAI/Gemini).
@@ -6,7 +6,7 @@
 > geprüft (nicht angenommen), Stand 2026-09-14.
 >
 > **Update 2026-09-23:** seither wurden `providers/gemini.lua` in `ai.nvim`
-> und loomAIs ModelRouter (alle vier Backends per Modellname-Präfix) gebaut.
+> und ai-desktops ModelRouter (alle vier Backends per Modellname-Präfix) gebaut.
 > Abschnitt 9 und die Test-Matrix unten sind entsprechend nachgezogen; der
 > Rest (Env-Vars, `OLLAMA_HOST`-Bug, Schritt-für-Schritt-Anleitungen) ist
 > weiterhin Stand 2026-09-14 und noch nicht erneut gegen die Maschine
@@ -23,10 +23,10 @@
   - [2. Schritt für Schritt: `claude`](#2-schritt-für-schritt-claude)
   - [3. Schritt für Schritt: `openai`](#3-schritt-für-schritt-openai)
   - [4. Schritt für Schritt: `ollama` (lokal, RTX 4070 Super)](#4-schritt-für-schritt-ollama-lokal-rtx-4070-super)
-  - [5. Schritt für Schritt: `loomai`](#5-schritt-für-schritt-loomai)
+  - [5. Schritt für Schritt: `ai-desktop`](#5-schritt-für-schritt-ai-desktop)
   - [6. `auto`-Resolution testen](#6-auto-resolution-testen)
   - [7. Quick-Action-Keymaps (`<leader>ai{a,s,e}`)](#7-quick-action-keymaps-leaderaiase)
-  - [8. loomAI-Dashboard (Browser)](#8-loomai-dashboard-browser)
+  - [8. ai-desktop-Dashboard (Browser)](#8-ai-desktop-dashboard-browser)
   - [9. Cloud-LLM-Breite: was geht heute, was fehlt](#9-cloud-llm-breite-was-geht-heute-was-fehlt)
   - [10. Bekannte, nicht-blockierende Eigenheiten](#10-bekannte-nicht-blockierende-eigenheiten)
   - [11. Inline Completion (Ghost Text) testen](#11-inline-completion-ghost-text-testen)
@@ -39,10 +39,10 @@
 Du hattest von einer "RTX 5070 Super 12GB" gesprochen — `nvidia-smi` auf
 dieser Maschine zeigt tatsächlich eine **RTX 4070 SUPER, 12282 MiB VRAM**
 (Modellname `4070`, nicht `5070`; die "5070"-Serie von Nvidia existiert nicht
-in dieser Bezeichnung). Passt auch zum bereits im loomAI-Dashboard
+in dieser Bezeichnung). Passt auch zum bereits im ai-desktop-Dashboard
 hartkodierten Text `GPU · RTX 4070 Super · CUDA 13` — der ist also **nicht**
 veraltet, wie ich zunächst vermutet hatte, sondern korrekt. 12 GB VRAM sind
-für ein 7-8B-Modell in Q4/Q5-Quantisierung komfortabel (loomAIs eigener
+für ein 7-8B-Modell in Q4/Q5-Quantisierung komfortabel (ai-desktops eigener
 Default `llama3.1:8b-q5_K_M` passt gut); ein größeres Modell (13B+) wird auf
 12 GB eng bis unmöglich, je nach Kontextlänge.
 
@@ -59,10 +59,10 @@ exakt dieselbe Variable, um daraus die **Client**-Ziel-URL zu bauen
 Ergebnis wäre die Client-Request-URL `0.0.0.0:11434/api/chat` **ohne**
 `http://`-Schema, was fehlschlägt.
 
-Das ist exakt dieselbe Verwechslung, die `loomAI`s eigenes README bereits
-bewusst vermieden hat (dort heißt die Variable deshalb `LOOMAI_OLLAMA_HOST`,
+Das ist exakt dieselbe Verwechslung, die `ai-desktop`s eigenes README bereits
+bewusst vermieden hat (dort heißt die Variable deshalb `AI_DESKTOP_OLLAMA_HOST`,
 nicht `OLLAMA_HOST` — siehe Kommentar dort). `ai.nvim`s `ollama.lua` hat den
-gleichen Designfehler, den `loomAI` schon kannte, aber selbst nicht
+gleichen Designfehler, den `ai-desktop` schon kannte, aber selbst nicht
 angewendet. **Live reproduziert** auf dieser Maschine (`ollama list` mit
 `OLLAMA_HOST=0.0.0.0:11434` schlägt exakt so fehl).
 
@@ -72,8 +72,8 @@ angewendet. **Live reproduziert** auf dieser Maschine (`ollama list` mit
   Override, falls vorhanden (aktuell **nicht** vorhanden, s. u.).
 - Sauber (empfohlen, siehe Design-Entscheidungen unten): `ollama.lua` auf
   eine eigene Variable umstellen (z. B. `AI_OLLAMA_HOST`), `OLLAMA_HOST`
-  gar nicht mehr lesen — analog zu `loomai.lua`s bereits korrektem
-  `LOOMAI_HOST`. Das ist ein echter, kleiner Bugfix, kein Testing-Workaround.
+  gar nicht mehr lesen — analog zu `ai-desktop.lua`s bereits korrektem
+  `AI_DESKTOP_HOST`. Das ist ein echter, kleiner Bugfix, kein Testing-Workaround.
 
 ---
 
@@ -88,9 +88,9 @@ angewendet. **Live reproduziert** auf dieser Maschine (`ollama list` mit
 | `GEMINI_API_KEY`/`GOOGLE_API_KEY` | ❌ weiterhin nicht gesetzt (Stand 2026-09-23) — `providers/gemini.lua` existiert seither, aber **nie live gegen die echte API getestet** | Ja — setzen, dann Happy-Path/Streaming/Safety-Block nachholen, siehe [Abschnitt 9](#9-cloud-llm-breite-was-geht-heute-was-fehlt) |
 | `OLLAMA_HOST` | ⚠️ gesetzt auf `0.0.0.0:11434` — **bricht `ollama.lua`**, siehe oben | Ja, s. o. |
 | Ollama-Daemon läuft | ❌ kein Prozess gefunden (`tasklist`) | Ja — `ollama serve` |
-| Ein Ollama-Modell gepullt | ungeprüft (Verbindung schlug fehl, `ollama list` kam nicht durch) | Ja — mind. `llama3.2` (ai.nvim-Default) oder `llama3.1:8b-q5_K_M` (loomAI-Default) |
-| `loomAI` gebaut (`build/loomai(.exe)`) | ungeprüft in dieser Sitzung | Ja, falls nicht vorhanden: `cmake -B build && cmake --build build -j4` |
-| `loomAI` läuft | Nein (kein Dauerprozess) | Ja — `./build/loomai` in eigenem Terminal offen lassen |
+| Ein Ollama-Modell gepullt | ungeprüft (Verbindung schlug fehl, `ollama list` kam nicht durch) | Ja — mind. `llama3.2` (ai.nvim-Default) oder `llama3.1:8b-q5_K_M` (ai-desktop-Default) |
+| `ai-desktop` gebaut (`build/ai-desktop(.exe)`) | ungeprüft in dieser Sitzung | Ja, falls nicht vorhanden: `cmake -B build && cmake --build build -j4` |
+| `ai-desktop` läuft | Nein (kein Dauerprozess) | Ja — `./build/ai-desktop` in eigenem Terminal offen lassen |
 | GPU/VRAM | ✅ RTX 4070 SUPER, 12 GB, aktuell 770 MiB belegt (praktisch frei) | Nein |
 
 ---
@@ -103,7 +103,7 @@ angewendet. **Live reproduziert** auf dieser Maschine (`ollama list` mit
 | `openai` | ☐ | ☐ | ☐ (ungültiger Key) | ☐ | ☐ |
 | `gemini` | ☐ | ☐ | ☐ (ungültiger Key) | ☐ | ☐ (+ Safety-Block-Fehlerpfad) |
 | `ollama` | ☐ | ☐ | ☐ (Daemon aus) | ☐ | ☐ |
-| `loomai` | ☐ | ☐ | ☐ (Server aus) | ☐ | ☐ |
+| `ai-desktop` | ☐ | ☐ | ☐ (Server aus) | ☐ | ☐ |
 | `auto` | ☐ (resolution order) | — | — | — | — |
 
 Jede Zelle: einmal ausführen, Ergebnis beobachten, abhaken. "Fehlerpfad"
@@ -153,7 +153,7 @@ Analog zu `claude`, Key ist bereits gesetzt:
    Dienst läuft).
 3. Modell pullen — **Achtung, zwei verschiedene Defaults im Spiel:**
    - `ai.nvim`s `ollama.lua`-Default: `llama3.2` (kleines Modell, ca. 3B).
-   - `loomAI`s `ollama_client.hpp`-Default: `llama3.1:8b-q5_K_M`.
+   - `ai-desktop`s `ollama_client.hpp`-Default: `llama3.1:8b-q5_K_M`.
    - Für einen vollständigen Test beide pullen: `ollama pull llama3.2` und
      `ollama pull llama3.1:8b-q5_K_M` (Q5, passt komfortabel in 12 GB VRAM).
 4. `:Ai provider ollama`, `:Ai info`.
@@ -166,28 +166,28 @@ Analog zu `claude`, Key ist bereits gesetzt:
 
 ---
 
-## 5. Schritt für Schritt: `loomai`
+## 5. Schritt für Schritt: `ai-desktop`
 
 1. Bauen, falls `build/` fehlt oder veraltet:
    ```bash
    cmake -B build -DCMAKE_BUILD_TYPE=Debug
    cmake --build build -j4
    ```
-2. Starten (eigenes Terminal, offen lassen): `./build/loomai` (bzw.
-   `build/loomai.exe`). Konsole zeigt die Endpoint-Liste + Ollama-Ziel.
+2. Starten (eigenes Terminal, offen lassen): `./build/ai-desktop` (bzw.
+   `build/ai-desktop.exe`). Konsole zeigt die Endpoint-Liste + Ollama-Ziel.
 3. Health-Check von Hand: `curl http://127.0.0.1:8080/health` →
    `{"status":"ready","model_router_ready":true}`.
-4. In Neovim: `:Ai provider loomai`, `:Ai info` → sollte `available` zeigen
+4. In Neovim: `:Ai provider ai-desktop`, `:Ai info` → sollte `available` zeigen
    (nur `curl`-Executable-Check, kein Netzwerk-Roundtrip — auch wenn der
    Server aus wäre, stünde hier trotzdem `available`, s. Scoping-Abschnitt
    im Handover).
-5. `:Ai ask "Reply with exactly the word: PONG"` → geht über loomAI an
+5. `:Ai ask "Reply with exactly the word: PONG"` → geht über ai-desktop an
    Ollama, Antwort im Panel.
 6. `:Ai stream "Count from 1 to 5"`.
-7. **Fehlerpfad:** loomAI-Prozess beenden, `:Ai ask "test"` → lesbarer
+7. **Fehlerpfad:** ai-desktop-Prozess beenden, `:Ai ask "test"` → lesbarer
    Verbindungsfehler (kein Hänger).
-8. **Fehlerpfad 2 (loomAI-intern):** loomAI laufen lassen, aber `ollama
-   serve` beenden → `:Ai ask` sollte den von loomAI durchgereichten
+8. **Fehlerpfad 2 (ai-desktop-intern):** ai-desktop laufen lassen, aber `ollama
+   serve` beenden → `:Ai ask` sollte den von ai-desktop durchgereichten
    Ollama-Fehler zeigen (`"ollama: connection refused"`-artig), nicht
    crashen (das war der `4e2777c`-Fix — hier nochmal live verifizieren).
 
@@ -195,10 +195,10 @@ Analog zu `claude`, Key ist bereits gesetzt:
 
 ## 6. `auto`-Resolution testen
 
-`config.provider_order` ist aktuell `{claude, ollama, openai, loomai}`.
+`config.provider_order` ist aktuell `{claude, ollama, openai, ai-desktop}`.
 
 1. Alle vier Backends gleichzeitig verfügbar machen (Keys gesetzt, Ollama
-   läuft, loomAI läuft) → `:Ai provider auto`, `:Ai ask "..."` → sollte
+   läuft, ai-desktop läuft) → `:Ai provider auto`, `:Ai ask "..."` → sollte
    `claude` benutzen (erstes verfügbares in der Order).
 2. `ANTHROPIC_API_KEY` unsetzen, Neovim neu starten → `auto` sollte jetzt
    auf `ollama` fallen (zweites in der Order, sofern `ollama`-Binary auf
@@ -228,7 +228,7 @@ reinschreiben, damit `nvim-lint`/LSP etwas meldet):
 
 ---
 
-## 8. loomAI-Dashboard (Browser)
+## 8. ai-desktop-Dashboard (Browser)
 
 **Wichtig zu wissen, bevor du testest:** das Dashboard (`http://127.0.0.1:8080/`)
 zeigt aktuell **ausschließlich** den alten Simulations-Agenten
@@ -256,17 +256,17 @@ im Dashboard, um `/ask` visuell zu testen — das geht nur über `curl` oder
 
 ## 9. Cloud-LLM-Breite: was geht heute, was fehlt
 
-**Update 2026-09-23:** loomAIs ModelRouter routet inzwischen alle vier
+**Update 2026-09-23:** ai-desktops ModelRouter routet inzwischen alle vier
 Backends (Ollama/OpenAI/Anthropic/Gemini) per Modellname-Präfix
 (`gpt-`/`o1-`/`o3-`/`claude-`/`gemini-`), und `ai.nvim` hat einen eigenen
 `providers/gemini.lua`. Tabelle entsprechend nachgezogen:
 
-| Anbieter | In `ai.nvim` direkt | Im loomAI-ModelRouter | Heute testbar? |
+| Anbieter | In `ai.nvim` direkt | Im ai-desktop-ModelRouter | Heute testbar? |
 | --- | --- | --- | --- |
 | Anthropic (Claude) | ✅ `providers/claude.lua` | ✅ gebaut (Präfix `claude-`) | ✅ Ja (Key setzen) |
 | OpenAI | ✅ `providers/openai.lua` | ✅ gebaut (Präfix `gpt-`/`o1-`/`o3-`) | ✅ Ja (Key vorhanden) |
 | Ollama (lokal) | ✅ `providers/ollama.lua` | ✅ Default-Backend (kein Präfix-Treffer) | ✅ Ja (nach OLLAMA_HOST-Fix) |
-| **Gemini** | ✅ `providers/gemini.lua` | ✅ gebaut (Präfix `gemini-`) | ⚠️ **Code fertig, aber nie live gegen die echte API getestet** — kein `GEMINI_API_KEY` gesetzt (Stand 2026-09-23). Nur loomAIs `gemini_client.cpp` wurde mit einem bewusst ungültigen Key auf dem Fehlerpfad verifiziert. Happy-Path + Streaming + Safety-Block gegen die echte API noch offen. |
+| **Gemini** | ✅ `providers/gemini.lua` | ✅ gebaut (Präfix `gemini-`) | ⚠️ **Code fertig, aber nie live gegen die echte API getestet** — kein `GEMINI_API_KEY` gesetzt (Stand 2026-09-23). Nur ai-desktops `gemini_client.cpp` wurde mit einem bewusst ungültigen Key auf dem Fehlerpfad verifiziert. Happy-Path + Streaming + Safety-Block gegen die echte API noch offen. |
 | Andere Open-Source (vLLM/llama.cpp-Server/LM Studio) | ❌ existiert nicht | 🔲 geplant (über OpenAI-kompatiblen Client) | ❌ Nein |
 
 Gemini-Tests brauchen also nur noch einen echten `GEMINI_API_KEY` — kein
@@ -282,14 +282,14 @@ verwirren lassen:
 - `ui/panel.lua` macht pro Stream-Chunk ein volles `set_lines()` statt
   inkrementell anzuhängen — bei langen Antworten evtl. spürbares Ruckeln,
   aber kein Korrektheitsproblem (Review-Finding, bewusst zurückgestellt).
-- `loomAI`s `ollama_client.cpp` öffnet pro Request eine neue TCP-Verbindung
+- `ai-desktop`s `ollama_client.cpp` öffnet pro Request eine neue TCP-Verbindung
   zu Ollama statt sie wiederzuverwenden — bei sehr kurzen, aufeinander-
   folgenden Requests minimal langsamer, kein Korrektheitsproblem.
 - Das Dashboard-"GPU"-Badge ist korrekt (RTX 4070 Super, s. o.), das
   "Model"-Badge ("simulation (LLM folgt)") ist veraltet/irreführend (s.
   Abschnitt 8) — beides rein kosmetisch, betrifft nicht `/ask`/`/ask/stream`.
-- `loomai.available()` macht **keinen** Netzwerk-Check (nur `curl` auf
-  PATH) — ein nicht laufendes loomAI zeigt sich beim Test als normaler
+- `ai-desktop.available()` macht **keinen** Netzwerk-Check (nur `curl` auf
+  PATH) — ein nicht laufendes ai-desktop zeigt sich beim Test als normaler
   Verbindungsfehler bei `ask()`/`stream()`, nicht als "nicht verfügbar" in
   `:Ai info`. Bewusste Design-Entscheidung, kein Bug.
 
@@ -364,17 +364,17 @@ Update einmal Neovim neu starten, damit die neue Lazy-Spec zieht.
 - [ ] `ANTHROPIC_API_KEY` gesetzt
 - [ ] `OLLAMA_HOST`-Bug umgangen/gefixt
 - [ ] Ollama-Daemon läuft, mind. ein Modell gepullt
-- [ ] loomAI gebaut und läuft
+- [ ] ai-desktop gebaut und läuft
 - [ ] `claude`: available/ask/stream/Fehlerpfad ✅
 - [ ] `openai`: available/ask/stream/Fehlerpfad ✅
 - [ ] `gemini`: available/ask/stream/Fehlerpfad/Safety-Block ✅ (`GEMINI_API_KEY`
       nötig, bislang nie live getestet)
 - [ ] `ollama`: available/ask/stream/Fehlerpfad ✅
-- [ ] `loomai`: available/ask/stream/Fehlerpfad (inkl. loomAI-intern) ✅
+- [ ] `ai-desktop`: available/ask/stream/Fehlerpfad (inkl. ai-desktop-intern) ✅
 - [ ] `auto`-Resolution mit mind. 2 unterschiedlichen Verfügbarkeits-
       Kombinationen getestet
 - [ ] `<leader>aia`/`<leader>ais`/`<leader>aie` in normal + visual mode
-- [ ] loomAI-Dashboard im Browser geöffnet, SSE + Decision-Flow beobachtet
+- [ ] ai-desktop-Dashboard im Browser geöffnet, SSE + Decision-Flow beobachtet
 - [ ] Notiert, welche der "bekannten Eigenheiten" (Abschnitt 10) in der
       Praxis tatsächlich störend auffallen (Grundlage für Priorisierung
       der Follow-up-Tasks)

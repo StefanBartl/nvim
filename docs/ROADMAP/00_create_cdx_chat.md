@@ -107,7 +107,7 @@ ui.nvim
 ### die nativen
 
 docmap-desktop
-loomAI
+ai-desktop
 
 ---
 

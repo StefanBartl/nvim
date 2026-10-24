@@ -3,12 +3,12 @@
 > Ausnahme-Standort: normalerweise leben Plugin-Roadmaps im Wkdbook
 > (`tasks-vault/<plugin>/ROADMAP/ROADMAP.md`, siehe `NEW-14`). Diese
 > Datei hier ist explizit angefordert als laufende Handover-Akte für
-> `ai.nvim` (+ `loomAI`-Anbindung) und bleibt an diesem Ort
+> `ai.nvim` (+ `ai-desktop`-Anbindung) und bleibt an diesem Ort
 > (`nvim/docs/ROADMAP/handovers/ai/`), nicht im Wkdbook.
 >
 > **Hier stehen nur offene Tasks.** Alles Erledigte (inkl. Session-Logs,
 > Commit-Tabellen, Review-Ergebnisse) liegt im Wkdbook-Backlog:
-> `tasks-vault/ai.nvim/Backlog/FEATURES/FINISHED_ai_loomai.md`
+> `tasks-vault/ai.nvim/Backlog/FEATURES/FINISHED_ai_ai-desktop.md`
 > (zuletzt ergänzt 2026-10-04, Abschnitt „Session 2026-10-04“).
 
 ## Table of content
@@ -48,10 +48,10 @@
 | Konzept | `nvim/docs/ROADMAP/IDEAS/ai.nvim.md` |
 | Öffentliches Repo | `github.com/StefanBartl/ai.nvim` → `$REPOS_DIR/ai.nvim` |
 | Privat (Roadmap/Notes/Backlog, nicht fürs öffentliche Repo) | `$REPOS_DIR/tasks-vault\ai.nvim\{ROADMAP,NOTES,Backlog}` |
-| Erledigt-Archiv | `...\ai.nvim\Backlog\FEATURES\FINISHED_ai_loomai.md` |
-| Diese Handover-Datei | `nvim/docs/ROADMAP/handovers/ai/ai.nvim_loomai.md` |
+| Erledigt-Archiv | `...\ai.nvim\Backlog\FEATURES\FINISHED_ai_ai-desktop.md` |
+| Diese Handover-Datei | `nvim/docs/ROADMAP/handovers/ai/ai.nvim_ai-desktop.md` |
 | Transport-Erweiterung | `$REPOS_DIR/lib.nvim\lua\lib\nvim\net\curl` |
-| loomAI (Server, Router, Dashboard) | `$REPOS_DIR/loomAI` |
+| ai-desktop (Server, Router, Dashboard) | `$REPOS_DIR/ai-desktop` |
 | Regelwerk für neue Projekte | `$RULES_VAULT/rulesets/lua\gates\NEW_PROJECT.md` (+ `PRINCIPLES.md`, `LUA_NVIM.md`) |
 | Release-Gate | `$RULES_VAULT/rulesets/lua\gates\RELEASE.md` |
 | Live-Testing-Plan | `docs/ROADMAP/personal/All/FINISH/Final_Checks/ai/live-testing-plan.md` |
@@ -83,7 +83,7 @@ woanders offen).
 
 ### A1. ai.nvim im Alltag validieren
 
-- `ai.nvim` im Alltag benutzen (`<leader>a{a,s,r,o,O,e}`, dazu `loomai`/`gemini`),
+- `ai.nvim` im Alltag benutzen (`<leader>a{a,s,r,o,O,e}`, dazu `ai-desktop`/`gemini`),
   um v1 vor einem Tag zu validieren.
 - [Live-Testing-Plan](../../Final_Checks/ai/live-testing-plan.md) ist seit
   2026-09-23 auf OpenAI/Anthropic/Gemini im ModelRouter und
@@ -93,7 +93,7 @@ woanders offen).
 ### A2. `gemini.lua` live testen
 
 `gemini.lua` wurde nie gegen die echte Gemini-API getestet (kein
-`GEMINI_API_KEY`, am 2026-10-02 weiterhin nicht gesetzt). Nur die loomAI-Seite
+`GEMINI_API_KEY`, am 2026-10-02 weiterhin nicht gesetzt). Nur die ai-desktop-Seite
 (`gemini_client.cpp`) wurde mit einem bewusst ungültigen Key auf dem Fehlerpfad
 verifiziert. Nachholen: Happy-Path, Streaming, Safety-Block.
 

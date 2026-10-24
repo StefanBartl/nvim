@@ -1,0 +1,1 @@
+E:/repos/WKDBooks/Development/wkdbook-native/ai-desktop/ROADMAP/ai-desktop-und-modelle_HANDOVER.md

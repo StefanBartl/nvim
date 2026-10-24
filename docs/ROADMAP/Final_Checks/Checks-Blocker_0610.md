@@ -436,7 +436,7 @@ geprüft, **nichts** gegen einen echten Provider.
 - [ ] OpenAI-Modell, das nur Temperatur 1 akzeptiert (o-Serie): Fehler mit Hinweis auf
       `bulk.temperature = false`; mit `false` läuft die Anfrage. (Der Hinweis hat keine eigene
       Spec.)
-- [ ] `loomai` und `claude-cli`: nehmen keine Temperatur, `res.bulk.deterministic = false`.
+- [ ] `ai-desktop` und `claude-cli`: nehmen keine Temperatur, `res.bulk.deterministic = false`.
 - [ ] Ollama lokal mit `temperature = 0`: gleiche Eingabe zweimal ergibt gleiche Ausgabe.
 - [ ] Hängender Provider: der Watchdog (`timeout_ms` plus 5 s) beendet die Anfrage mit
       `kind = "timeout"`.
@@ -1941,7 +1941,7 @@ aufhält (N3, N4). N2 bis N4 sind aus dem Task-Vault `tasks-vault` erzeugt (`ROA
 | `terminal.nvim/live-check` | open | 2 | terminal.nvim: Live-Abnahme in WezTerm (Windows) und tmux (WSL) |
 | `testing.nvim/ui-concept-test-explorer` | decision | 2 | UI-Konzept: Test-Explorer als moderne Baum-Ansicht (Stil Neo-tree, eventuell auf ui.nvim) |
 | `ai.nvim/release-demo-assets` | open | 3 | Release-Medien: Demo-GIF, Logo und Social-Preview (REL-09, REL-33) |
-| `ALL/claude-account-live-test-session` | open | 3 | Claude-Account-Testsession - ai.nvim, loomAI, rules.nvim, documentation.nvim, docmap-desktop |
+| `ALL/claude-account-live-test-session` | open | 3 | Claude-Account-Testsession - ai.nvim, ai-desktop, rules.nvim, documentation.nvim, docmap-desktop |
 | `ALL/plugin-roadmaps-testplan-run` | open | 3 | Plugin-Roadmaps-Testplan von Hand durchlaufen (hover, lsp, mdview, images, documentation, ...) |
 | `ALL/release-showcase-umbrella` | parked | 3 | Release und Schaufenster je Repo - Git-Release, Demo, Logo, Social-Preview, Root-README-Highlights |
 | `ALL/ux-backlog-live-checklist-run` | open | 3 | UX-Backlog-Live-Checkliste (T1, T3, T4, T5, T9, Fokus) in der echten Sitzung durchlaufen |
@@ -1984,7 +1984,7 @@ aufhält (N3, N4). N2 bis N4 sind aus dem Task-Vault `tasks-vault` erzeugt (`ROA
 | --- | --- | --- | --- |
 | `testing.nvim/m1-runner` — M1 Runner, der nicht lügt: CLI, Exit-Codes, Discovery, Reporter | doing | 18 | `docmap-desktop/testing-nvim-integration`, `documentation.nvim/testing-nvim-integration`, `testing.nvim/explorer-on-filetree-engine`, `testing.nvim/fleet-plenary-removal-rollout` +14 |
 | `testing.nvim/ui-concept-test-explorer` — UI-Konzept: Test-Explorer als moderne Baum-Ansicht (Stil Neo-tree, eve | decision | 9 | `testing.nvim/explorer-on-filetree-engine`, `testing.nvim/ui-explorer-actions`, `testing.nvim/ui-explorer-docs-tests`, `testing.nvim/ui-explorer-filters` +5 |
-| `rules.nvim/agent-plan-validate` — Agent-Plan und Validierung (engine/agent/plan.lua, validate.lua) | open | 7 | `docmap-desktop/checklist-items-as-agent-input`, `docmap-desktop/rules-agent-job-runner-and-loomai-client`, `docmap-desktop/rules-api-plan-and-validate`, `docmap-desktop/rules-run-chat` +3 |
+| `rules.nvim/agent-plan-validate` — Agent-Plan und Validierung (engine/agent/plan.lua, validate.lua) | open | 7 | `docmap-desktop/checklist-items-as-agent-input`, `docmap-desktop/rules-agent-job-runner-and-ai-desktop-client`, `docmap-desktop/rules-api-plan-and-validate`, `docmap-desktop/rules-run-chat` +3 |
 | `documentation.nvim/i18n-catalog-infrastructure` — Interface languages: catalog infrastructure and the English source cat | open | 7 | `documentation.nvim/i18n-cjk`, `documentation.nvim/i18n-contribution-path`, `documentation.nvim/i18n-editor-and-cli-messages`, `documentation.nvim/i18n-generated-page` +3 |
 | `testing.nvim/m5-fast-affected-cache` — M5 Schnell: Cache, --affected, Worker-Pool, Shard, Watch | open | 7 | `testing.nvim/m6-snapshots-and-tier1`, `testing.nvim/m7-quality`, `testing.nvim/m8-multilang-and-tier25-3`, `testing.nvim/m9-cutting-edge` +3 |
 | `testing.nvim/m3-ui-and-debug` — M3 UI und Debug ohne eigene UI: neotest-Adapter, --debug, :Testing-Com | open | 6 | `testing.nvim/ui-explorer-actions`, `testing.nvim/ui-explorer-docs-tests`, `testing.nvim/ui-explorer-filters`, `testing.nvim/ui-explorer-live-run` +2 |

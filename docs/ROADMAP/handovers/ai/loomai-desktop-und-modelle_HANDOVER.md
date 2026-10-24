@@ -1,1 +1,0 @@
-E:/repos/WKDBooks/Development/wkdbook-native/loomai/ROADMAP/loomai-desktop-und-modelle_HANDOVER.md

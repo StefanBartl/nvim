@@ -10,7 +10,7 @@
 
 ---@type LazyPluginSpec[]
 return {
-  -- Provider-agnostic ask/stream layer (claude/ollama/openai/gemini/loomai),
+  -- Provider-agnostic ask/stream layer (claude/ollama/openai/gemini/ai_desktop),
   -- built on lib.nvim.net.curl. `keys`/`cmd` load it lazily. `ai_prefix` is
   -- shared with opts so the keys table and the plugin's own mappings cannot
   -- drift apart.
@@ -57,12 +57,12 @@ return {
         -- Active provider id, or "auto" to pick the first available one in
         -- `provider_order`.
         -- provider = "auto",
-        -- Order that "auto" walks. "loomai" is last because it needs a local
+        -- Order that "auto" walks. "ai_desktop" is last because it needs a local
         -- server you run yourself. Replaces the list, so give it in full.
-        -- provider_order = { "claude", "ollama", "openai", "gemini", "loomai" },
+        -- provider_order = { "claude", "ollama", "openai", "gemini", "ai_desktop" },
         -- Default model per provider id, e.g. { claude = "claude-opus-4-5" };
         -- empty = each provider's own built-in default.
-        model = { claude = "claude-sonnet-5-5", loomai = "claude-haiku-5-5" },
+        model = { claude = "claude-sonnet-5-5", ai_desktop = "claude-haiku-5-5" },
         -- Request timeout in ms.
         -- timeout_ms = 60000,
 

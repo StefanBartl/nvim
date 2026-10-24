@@ -17,9 +17,9 @@ cd E:\repos\docmap-desktop; cargo install tauri-cli; cargo tauri build
 ```
 Danach den neu gebauten Installer aus `src-tauri\target\release\bundle` starten. Falls du `cargo tauri` schon hast, entfällt der erste Teil. Ob der Build ohne weitere Schritte durchläuft (z. B. das mitgelieferte `docmap.exe`), habe ich nicht geprüft.
 
-**loomAI** (erst nach Prüfung nötig, die 11 Commits sind wohl nur Doku; sonst aus Quellen):
+**ai-desktop** (erst nach Prüfung nötig, die 11 Commits sind wohl nur Doku; sonst aus Quellen):
 ```powershell
-cd E:\repos\loomAI; .\scripts\setup.ps1
+cd E:\repos\ai-desktop; .\scripts\setup.ps1
 ```
 `-InstallDeps -AddToPath` nur anhängen, wenn gcc/OpenSSL über MSYS2 noch fehlen bzw. der Pfad nicht gesetzt ist.
 

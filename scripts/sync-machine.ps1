@@ -40,7 +40,7 @@ if (-not $ReposDir -or -not (Test-Path $ReposDir)) {
 $extra = @(
     'tasks-vault', 'rules-vault', 'WKDBooks', 'WKDBook-Tricentis', 'Configs',
     'my-zsh', 'wkd', 'FightingGame', 'Kurse',
-    'tasks-desktop', 'rules-desktop', 'docmap-desktop', 'loomAI', 'appkit'
+    'tasks-desktop', 'rules-desktop', 'docmap-desktop', 'ai-desktop', 'appkit'
 )
 
 # Native build artifacts: where the artifact lives, which paths feed it, and
@@ -71,8 +71,8 @@ $natives = @{
         Hint     = 'sh scripts/rebuild-changed.sh HEAD~1 HEAD   (or: node scripts/build-go.mjs; npm run build)'
         Command  = 'node scripts/build-go.mjs'
     }
-    'loomAI' = @{
-        Artifact = 'build\loomai.exe'
+    'ai-desktop' = @{
+        Artifact = 'build\ai-desktop.exe'
         Sources  = @('src', 'CMakeLists.txt')
         Hint     = 'cmake --build build --config Release'
         Command  = 'cmake --build build --config Release'
