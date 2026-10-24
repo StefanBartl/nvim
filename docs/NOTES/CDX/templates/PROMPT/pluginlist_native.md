@@ -1,9 +1,9 @@
 # Plugin-Liste `native`
 
-docmap-desktop
-tasks-desktop
-rules-desktop
 ai-desktop
+docmap-desktop
+rules-desktop
+tasks-desktop
 takt
 
 ---

@@ -1,18 +1,23 @@
 # Roadmap
-`:Git dashboard` -> wenbnb man auf eienr zeile ist im dahsboard und `leader lg` ausführt, dann wräre es cool wenn lazygit in den repo aufgeht, dass die zeile gerade st.
 
-tasks new category - muss ausgeweitte werden, zb wnn ich ein neues feature für den user anlege, zb bindings, kann ich odrt nichts ankreuzen
-cursor caret + edit -> beide togglen mit einen usrcmd / mapping)
-cursor caret -> eine breite alterntive imlementieren, die nicht nur ein strich ist, sondern den aktellen char umhüllt und evntuell blinkt
-mdview sync über nvim instazen hinweg
+- E:\repos\Grey -> in wkdbook moven
+- Weiterverarbeiten/Updaten/InsBacklogMoven:
+  $NVIM_CONFIG_DIR/docs/ROADMAP/Plan-Restarbeiten-Ansichten-2026-10-22.md
+  $NVIM_CONFIG_DIR/docs/ROADMAP/tasks-esktop.md
+  $NVIM_CONFIG_DIR/docs/ROADMAP/TUES.md
 
-![ui.nvim tab chips color bei er man den text nicht mehr lesen kann]($NVIM_CONFIG_DIR/docs/ROADMAP/assets/00_ROADMAP-1792142508.png)
+- `:Git dashboard` -> wenn man auf einer zeile ist im dahsboard und `leader lg` ausführt, dann wräre es cool wenn lazygit in den repo aufgeht, dass die zeile gerade st.
 
-`:Git dashboard` -> fetch all dauert bei 50 repos relativ lange und mann kann wenn ausgefphrt, wärhendessen kein pull, push oder sowass machen. hier wäre eine bessere lösung sinnvoll wie ihc meine, zb schon im bulk, aber man kann zumindest jende, die bereits fertig fetched wurden, bererits weiter osuhen/pullen. eine möglichkeit wie man die fetches an sich beschleunigen könnte wäre aber generell super
+- In allen Plugins: Wenn es dazu kommt, dass der user nach etwas gefragt wird, dann immer daen dialog modul verwenen, dass uch bei filetree.nvim `d` verwendet wird, da sind "buttons" drinnen die man per tastatur aber auch per maus anklicken kann, auß´erdem wre es uper, wenn alle das gfleiche design haben usw... daher müsseen walle "user dialoge" gefunden werden und updatet. ddazu brauceh n wir eine ananylse erstmal
 
-- gh stats web ui
+- gh stats web ui/ gh_stats-desktop / cloud version
 
-`:Git dashboard` -> fetch all dauert bei 50 repos relativ lange und mann kann wenn ausgefphrt, wärhendessen kein pull, push oder sowass machen. hier wäre eine bessere lösung sinnvoll wie ihc meine, zb schon im bulk, aber man kann zumindest jende, die bereits fertig fetched wurden, bererits weiter osuhen/pullen. eine möglichkeit wie man die fetches an sich beschleunigen könnte wäre aber generell super
+Schon erledigt/angelegt als task?:
+  - tasks.nvim/-desktop - `:Tasks new` category -> muss ausgeweitte werden, zb wnn ich ein neues feature für den user anlege, zb bindings, kann ich odrt nichts ankreuzen
+  - mdview.nvim:
+    - cursor caret + edit -> beide togglen mit einen usrcmd / mapping)
+    - cursor caret -> eine breite alterntive imlementieren, die nicht nur ein strich ist, sondern den aktellen char umhüllt und evntuell blinkt
+    - mdview sync über nvim instazen hinweg
 
 ## Table of content
 

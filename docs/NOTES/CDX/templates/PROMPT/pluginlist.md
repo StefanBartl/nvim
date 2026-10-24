@@ -5,14 +5,14 @@ Hier die Liste meiner Plugins - du findest sie unter `$REPOS_DIR\repos` - und du
 ai.nvim
 buffer-ctx.nvim
 cascade.nvim
-casedesk.nvim
+casedesk.nvim (privates repo)
 cmdlog.nvim
 color_my_ascii.nvim
 data.nvim
 dap.nvim
 debugging.nvim
 diff.nvim
-documentation.nvim
+docmap.nvim
 emojis.nvim
 fileops.nvim
 filetree.nvim

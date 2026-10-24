@@ -12,7 +12,7 @@ data.nvim
 dap.nvim
 debugging.nvim
 diff.nvim
-documentation.nvim
+docmap.nvim
 emojis.nvim
 fileops.nvim
 filetree.nvim
