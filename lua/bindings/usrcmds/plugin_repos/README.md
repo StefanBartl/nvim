@@ -294,8 +294,9 @@ to do. After a pull, `:checktime` reloads buffers whose file changed.
 Local CI of the private repos `rules-vault`, `casedesk.nvim`, `tasks-vault` and `my.nvim`. GitHub-hosted minutes of
 private repositories are limited (and stop with a spending-limit message), so the checks run here instead. Each repo
 has a `scripts/ci.sh` with exactly the steps of its workflow; the workflow calls the same script, so there is one
-source. (`my.nvim`'s workflow keeps its own jobs on a self-hosted runner; its `ci.sh` runs the same four gates:
-stylua, luacheck, test suite, conformance.)
+source. (`casedesk.nvim` and `my.nvim` ALSO have their GitHub workflow itself run on a self-hosted runner — see
+`:MyPlugins runner` below — independently of this local `ci.sh` path; their `ci.sh` runs the same four gates: stylua,
+luacheck, test suite, conformance.)
 
 - `ci [repo]`: runs `scripts/ci.sh` of one repo, or of all four one after the other (never in parallel), through Git
   Bash on Windows. Each repo runs live in a terminal.nvim split of its own (`ci-<repo>`) that keeps the focus where it
@@ -314,6 +315,26 @@ stylua, luacheck, test suite, conformance.)
 `scripts/ci.sh` also runs from a shell: `scripts/ci.sh` in the repo. It finds `lib.nvim`, `rules.nvim`, `tasks.nvim`
 (and for casedesk.nvim `ui.nvim`, `testing.nvim`) via `$<NAME>_DIR`, `<repo>/.deps/<name>` or a sibling checkout.
 Code: `ci.lua`; spec: `TESTS/plugin_repos/ci_spec.lua`.
+
+### `:MyPlugins runner start|stop|status [repo]`
+
+The GitHub Actions SELF-HOSTED RUNNER of `casedesk.nvim` and `my.nvim` — a different thing from `:MyPlugins ci`
+above. Those two repos' own `.github/workflows/ci.yml` runs on `runs-on: [self-hosted, windows]` rather than
+GitHub-hosted minutes (same billing reason as `ci` above), which means a push only actually triggers CI once a
+runner process is listening; setup (one time, per repo) is `tasks-vault/TOOLS/self-hosted-runner.md`. Nothing starts
+that process automatically — without it, a push to one of these two repos sits "Queued" on GitHub with no red mark.
+
+- `runner start [repo]`: launches `run.cmd` of the runner (`%USERPROFILE%\actions-runners\<repo>\run.cmd`) in a
+  terminal.nvim split of its own (`runner-<repo>`), or all of them with no `repo`. A no-op (warns) if that split is
+  already running — `run.cmd` refuses a second instance of the same runner anyway.
+- `runner stop [repo]`: stops that terminal's job, which kills `run.cmd` and the `Runner.Listener.exe` process it
+  spawned. A no-op (info) if it is not running.
+- `runner status [repo]`: asks GitHub (`gh api repos/<owner>/<repo>/actions/runners`) whether the runner is
+  online/offline, and whether it is currently busy.
+
+No "install as a service" command here: that needs an elevated shell (`setup-runner.ps1 -Service`, see the doc
+above) and is a one-time, manual, admin-rights step — not something a usercmd on an ordinary session should do.
+Code: `runner.lua`; spec: `TESTS/plugin_repos/runner_spec.lua`.
 
 ### `:MyPlugins reclone [dir] [--only=<name>]`
 

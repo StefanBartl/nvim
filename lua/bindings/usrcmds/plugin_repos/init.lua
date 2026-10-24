@@ -1174,6 +1174,14 @@ function M.enable()
     notify.warn(":MyPlugins ci is unavailable: " .. tostring(ci))
   end
 
+  -- `runner` (start/stop/status of a private repo's self-hosted GitHub Actions runner). Guarded like the others.
+  local ok_runner, runner = pcall(require, "bindings.usrcmds.plugin_repos.runner")
+  if ok_runner then
+    runner.register_types()
+  else
+    notify.warn(":MyPlugins runner is unavailable: " .. tostring(runner))
+  end
+
   composer.verb("MyPlugins", {
     desc = "Manage the personal plugin checkouts, their source mode and the wkdbook tasks",
     -- The task routes (tasks / task / open) are declared in tasks_nvim.ui.routes (nested grammar).
@@ -1361,7 +1369,13 @@ function M.enable()
         ok_sync and sync_routes.routes() or {},
         vim.list_extend(
           ok_machine and machine.routes() or {},
-          vim.list_extend(ok_ci and ci.routes() or {}, ok_tasks and tasks_routes.routes() or {})
+          vim.list_extend(
+            ok_ci and ci.routes() or {},
+            vim.list_extend(
+              ok_runner and runner.routes() or {},
+              ok_tasks and tasks_routes.routes() or {}
+            )
+          )
         )
       )
     ),
