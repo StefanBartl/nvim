@@ -43,7 +43,7 @@ Die Übergabe ist aktualisiert und auf `main` im Vault (`f7bd853`). Die Datei be
 
 **Text zum Einfügen im nächsten Chat**
 
-> Mach weiter mit `E:\repos\tasks-vault\wkdbook-tasks.nvim\handovers\tasks-desktop-stand-2026-10-15_HANDOVER.md` (Stand 2026-10-16 Nacht). Lies danach die `CLAUDE.md` in `tasks.nvim` und `tasks-desktop`. Zuerst: `gh run list --branch main` in beiden Repos ansehen und `git log origin/main` (ein zweiter Chat arbeitet am Hub-Umbau und an den Rust-Tests der Routen: nichts doppelt machen), dann Abschnitt A3 und B der Übergabe, zuerst die Erklärungen für Check-Codes, Graph und Vaults. Antworte auf Deutsch, Code und Commit-Bodies auf Englisch, nie mehr als einen Agenten zugleich, Commits direkt auf `main`, keine Co-Autor-Zeile; am Ende jeder Antwort die laufende Commit-Liste mit Review-Markierung. Force-Push für die Co-Autor-Zeile nur auf mein ausdrückliches Wort.
+> Mach weiter mit `E:\repos\tasks-vault\tasks.nvim\handovers\tasks-desktop-stand-2026-10-15_HANDOVER.md` (Stand 2026-10-16 Nacht). Lies danach die `CLAUDE.md` in `tasks.nvim` und `tasks-desktop`. Zuerst: `gh run list --branch main` in beiden Repos ansehen und `git log origin/main` (ein zweiter Chat arbeitet am Hub-Umbau und an den Rust-Tests der Routen: nichts doppelt machen), dann Abschnitt A3 und B der Übergabe, zuerst die Erklärungen für Check-Codes, Graph und Vaults. Antworte auf Deutsch, Code und Commit-Bodies auf Englisch, nie mehr als einen Agenten zugleich, Commits direkt auf `main`, keine Co-Autor-Zeile; am Ende jeder Antwort die laufende Commit-Liste mit Review-Markierung. Force-Push für die Co-Autor-Zeile nur auf mein ausdrückliches Wort.
 
 **Commits dieses Chats**
 

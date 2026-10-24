@@ -31,7 +31,7 @@ Handchecks und Konten:
 Sonst:
 
 - Fremde, nicht committete Änderung in `tasks.nvim/lua/tasks_nvim/links.lua` (seit 16.10., 22:07): doppelter Kommentarblock, `"\0"`-Trenner ersetzt, Bedingung `#names > 1` entfernt. Sieht nach liegengebliebener Sabotage einer anderen Sitzung aus; nicht angefasst.
-- `wkdbook-tasks.nvim/import-from-rules-and-bootstrap` steht auf `blocked`, obwohl der Blocker erledigt ist (fremder Befund, sollte auf `open`).
+- `tasks.nvim/import-from-rules-and-bootstrap` steht auf `blocked`, obwohl der Blocker erledigt ist (fremder Befund, sollte auf `open`).
 - Board-Taste während eines Schreibvorgangs: entschieden und gebaut als "ablehnen mit Meldung" (tasks-desktop `f309087`), bewusst nicht gepuffert. Umstellbar in `App.refusedWhileSaving()`.
 
 ## Offen, aber nicht von diesem Chat abschließbar
@@ -57,7 +57,7 @@ Sonst:
 - `lsp.nvim/conformance-findings`: K3/K11/K14 waren schon behoben (`d93eb22`), K10 als Entscheidungs-Task.
 - `mdview.nvim/linkhover-…`: `-N`-Anker und verschachtelte Überschriften (`7497500`).
 - `testing.nvim/security-model-d8-controls`: `--isolate-home` (`8bcb150`, `2c9c8a4`), Reste als Tasks.
-- `wkdbook-tasks.nvim/board-a-move-key-…`: Taste wird mit Meldung abgelehnt (`f309087`).
+- `tasks.nvim/board-a-move-key-…`: Taste wird mit Meldung abgelehnt (`f309087`).
 - `ALL/interactive-confirm-sweep`: 43 Plugins durchsucht; Fixes in tasks.nvim `5b4c363`, fileops.nvim `cd9c137`, github_stats.nvim `a4f37dc`; 16 Folge-Tasks.
 
 ## Erledigt davor (Auszug)
@@ -72,9 +72,9 @@ Sonst:
 - Fünf Tasks in einer Runde:
   - `lib.nvim/kit-viewer-aus-insert-mode-key-…` done: `4157e37`, `126eb04`, ui.nvim `e23b4cd`; Review-Fix `be73728`, ui.nvim `d14506a` (Insert-Mode auch nach beschreibbarem Umweg).
   - `lib.nvim/review-reste-…`: Kleinkram `2278a98`, Review-Fix `0e45c06`; Rest wartet auf die Entscheidungstask (siehe oben).
-  - `wkdbook-tasks.nvim/obsidian-wikilinks` done: tasks.nvim `9c4701d`, Review-Fix `63db840`.
-  - `wkdbook-tasks.nvim/flackernder-browser-test-the-board-…` done: tasks-desktop `8276444`.
-  - `wkdbook-tasks.nvim/flackernder-browser-test-the-inbox-…` done: tasks-desktop `fd52473`.
+  - `tasks.nvim/obsidian-wikilinks` done: tasks.nvim `9c4701d`, Review-Fix `63db840`.
+  - `tasks.nvim/flackernder-browser-test-the-board-…` done: tasks-desktop `8276444`.
+  - `tasks.nvim/flackernder-browser-test-the-inbox-…` done: tasks-desktop `fd52473`.
 
 ## Commits dieses Chats
 

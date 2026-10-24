@@ -8,7 +8,7 @@ UI-bezogene offene Tasks (Status open, soweit nicht anders angegeben):
 **ALL**
 - `ALL/logo-und-icon-serie-fuer-docmap-desktop-tasks-desktop-und-ru` (neu, `actor=pair`)
 
-**tasks-desktop** (Area `wkdbook-tasks.nvim`)
+**tasks-desktop** (Area `tasks-desktop`)
 - Neu von heute:
   - `tasks-desktop-menueleiste-umbauen-einstellungen-wird-optione`
   - `tasks-desktop-menue-projekt-mit-vault-abschnitt-setzen-neu-a`
