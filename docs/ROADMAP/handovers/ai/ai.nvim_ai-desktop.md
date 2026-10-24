@@ -8,7 +8,7 @@
 >
 > **Hier stehen nur offene Tasks.** Alles Erledigte (inkl. Session-Logs,
 > Commit-Tabellen, Review-Ergebnisse) liegt im Wkdbook-Backlog:
-> `tasks-vault/ai.nvim/Backlog/FEATURES/FINISHED_ai_ai-desktop.md`
+> `tasks-vault/ai.nvim/Backlog/FEATURES/FINISHED_ai_desktop_provider.md`
 > (zuletzt ergänzt 2026-10-04, Abschnitt „Session 2026-10-04“).
 
 ## Table of content
@@ -48,7 +48,7 @@
 | Konzept | `nvim/docs/ROADMAP/IDEAS/ai.nvim.md` |
 | Öffentliches Repo | `github.com/StefanBartl/ai.nvim` → `$REPOS_DIR/ai.nvim` |
 | Privat (Roadmap/Notes/Backlog, nicht fürs öffentliche Repo) | `$REPOS_DIR/tasks-vault\ai.nvim\{ROADMAP,NOTES,Backlog}` |
-| Erledigt-Archiv | `...\ai.nvim\Backlog\FEATURES\FINISHED_ai_ai-desktop.md` |
+| Erledigt-Archiv | `...\ai.nvim\Backlog\FEATURES\FINISHED_ai_desktop_provider.md` |
 | Diese Handover-Datei | `nvim/docs/ROADMAP/handovers/ai/ai.nvim_ai-desktop.md` |
 | Transport-Erweiterung | `$REPOS_DIR/lib.nvim\lua\lib\nvim\net\curl` |
 | ai-desktop (Server, Router, Dashboard) | `$REPOS_DIR/ai-desktop` |
