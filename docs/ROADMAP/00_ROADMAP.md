@@ -1,4 +1,6 @@
 # Roadmap
+`:Git dashboard` -> wenbnb man auf eienr zeile ist im dahsboard und `leader lg` ausführt, dann wräre es cool wenn lazygit in den repo aufgeht, dass die zeile gerade st.
+
 tasks new category - muss ausgeweitte werden, zb wnn ich ein neues feature für den user anlege, zb bindings, kann ich odrt nichts ankreuzen
 cursor caret + edit -> beide togglen mit einen usrcmd / mapping)
 cursor caret -> eine breite alterntive imlementieren, die nicht nur ein strich ist, sondern den aktellen char umhüllt und evntuell blinkt
