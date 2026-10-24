@@ -2020,7 +2020,7 @@ aufhält (N3, N4). N2 bis N4 sind aus dem Task-Vault `tasks-vault` erzeugt (`ROA
 | `testing.nvim/conformance-fleet-triage` — conformance triage of the fleet: fix, waive with a reason, or accept e | open · cdx | 1 | `testing.nvim/conformance-gate-per-repo` |
 | `testing.nvim/tier25-3-prerequisites` — Tier 2.5/3 Voraussetzungen: WSL2, msedgedriver, Container-Engine | open | 1 | `testing.nvim/m8-multilang-and-tier25-3` |
 | `testing.nvim/vhs-osc1337-assumption-check` — VHS-Annahme prüfen: kein OSC 1337 in xterm.js/ttyd | open | 1 | `testing.nvim/m8-multilang-and-tier25-3` |
-| `rules.nvim/work-list-json-contract` — Stabile Arbeitsliste als JSON (Befunde plus manuelle Regeln mit Regelt | open | 1 | `wkdbook-tasks.nvim/import-from-rules-and-bootstrap` |
+| `rules.nvim/work-list-json-contract` — Stabile Arbeitsliste als JSON (Befunde plus manuelle Regeln mit Regelt | open | 1 | `tasks.nvim/import-from-rules-and-bootstrap` |
 
 ---
 
