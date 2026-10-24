@@ -1,5 +1,5 @@
 ---@module 'bindings.usrcmds.plugin_repos.ci'
----@brief `:MyPlugins ci [repo] [--fast]`, `ci status`, `ci hook install|remove [repo]` - local CI for the private repos.
+---@brief `:MyPlugins ci [repo] [--fast] [--quiet]`, `ci status`, `ci hook install|remove [repo]` - local CI for the private repos.
 ---@description
 --- GitHub-hosted minutes of private repositories are limited, so the CI of the private repos
 --- (`rules-vault`, `casedesk.nvim`, `tasks-vault`, `my.nvim`) runs on this machine. Each of them has a
@@ -8,7 +8,10 @@
 --- (commit, time, state) when it is done.
 ---
 ---  - `ci [repo]`            run `scripts/ci.sh` of one repo, or of all of them one after the other
----                           (never in parallel); the output goes to the quickfix list, the verdict to a notification
+---                           (never in parallel); each runs live in a terminal.nvim split `ci-<repo>`, the verdict
+---                           goes to a notification
+---  - `ci --quiet`           no terminal: the output goes to the quickfix list (for prompts and agents; also
+---                           the way when terminal.nvim is not installed)
 ---  - `ci --fast`            pass `--fast` (the cheap gates only, what the pre-push hook runs)
 ---  - `ci status`            per repo: the last result and whether it is for the current commit
 ---  - `ci hook install|remove [repo]`   a `pre-push` hook that runs `scripts/ci.sh --fast` and blocks the push when
@@ -178,11 +181,122 @@ end
 
 local running = false
 
----Longest a single repo may run (casedesk.nvim needs about two minutes).
+---Longest a single repo may run without a terminal (casedesk.nvim needs about two minutes).
 local TIMEOUT_MS = 15 * 60 * 1000
 
----Run the CI of one repo or of all, one after the other.
----@param opts? { repo?: string, fast?: boolean }
+---The results of the last finished run (for the specs).
+---@type MyPlugins.CiResult[]
+M.last_results = {}
+
+---@return boolean
+function M.busy()
+  return running
+end
+
+---Name of the terminal that shows the run of a repo.
+---@param name string
+---@return string
+function M.terminal_name(name)
+  return "ci-" .. name
+end
+
+---Options of terminal.nvim's `run` for the run of one repo: the script is the job itself, in a split
+---that keeps the focus where it is and stays open after the job ends, and that a saved session never
+---starts again.
+---@param name string
+---@param dir string
+---@param on_exit fun(code: integer)
+---@return table # terminal.nvim's `Terminal.RunOpts`
+function M.terminal_opts(name, dir, on_exit)
+  return {
+    name = M.terminal_name(name),
+    direct = true,
+    cwd = dir,
+    layout = "split",
+    focus = false,
+    start_insert = false,
+    close = "never",
+    session = false,
+    on_exit = on_exit,
+  }
+end
+
+---terminal.nvim, when it can show a run: installed, set up, and on its `native` backend. The tmux and
+---WezTerm backends never report the exit of a job, and the next repo waits for that report.
+---@return table|nil term
+---@return string|nil why Why there is none
+function M.terminal_module()
+  local ok, term = pcall(require, "terminal")
+  if not ok or type(term) ~= "table" or type(term.run) ~= "function" then
+    return nil, "terminal.nvim is not available"
+  end
+  local got, status = pcall(term.status)
+  local backend = got and type(status) == "table" and status.ready and status.backend or nil
+  if backend ~= "native" then
+    return nil,
+      ("terminal.nvim runs on the %s backend, which does not report the end of a job"):format(
+        tostring(backend or "unready")
+      )
+  end
+  return term, nil
+end
+
+---Run one repo without a terminal: the output is collected for the quickfix list.
+---@param name string
+---@param dir string
+---@param fast boolean|nil
+---@param done fun(code: integer, lines: string[])
+local function start_quiet(name, dir, fast, done)
+  -- vim.system throws when the executable cannot be started (no Git Bash): a red run, not a crash.
+  local started, err = pcall(
+    vim.system,
+    M.build_cmd(dir, fast),
+    { text = true, cwd = dir, timeout = TIMEOUT_MS },
+    function(res)
+      vim.schedule(function()
+        local text = (res.stdout or "") .. (res.stderr or "")
+        local lines = vim.split(text, "\r?\n", { trimempty = true })
+        if res.code == 124 then
+          lines[#lines + 1] = "timed out after " .. (TIMEOUT_MS / 60000) .. " minutes"
+        end
+        done(res.code, lines)
+      end)
+    end
+  )
+  if not started then
+    done(1, { name .. ": cannot start: " .. tostring(err) })
+  end
+end
+
+---Run one repo in a terminal.nvim buffer: the output is shown live and stays in that buffer.
+---No timeout: the run is in sight, and closing the terminal ends it.
+---@param term table terminal.nvim
+---@param name string
+---@param dir string
+---@param fast boolean|nil
+---@param done fun(code: integer, lines: string[])
+local function start_terminal(term, name, dir, fast, done)
+  local finished = false
+  local function once(code)
+    if finished then
+      return
+    end
+    finished = true
+    vim.schedule(function()
+      done(code, {})
+    end)
+  end
+  local ok, started, err = pcall(term.run, M.build_cmd(dir, fast), M.terminal_opts(name, dir, once))
+  if not ok or not started then
+    once(1)
+    notify.error(("%s: cannot open a terminal: %s"):format(name, tostring(ok and err or started)))
+  end
+end
+
+---Run the CI of one repo or of all, one after the other. By default every repo runs in a terminal.nvim
+---buffer of its own (`ci-<repo>`) where its output is shown live; `quiet` (or a missing terminal.nvim)
+---collects the output for the quickfix list instead.
+---@param opts? { repo?: string, fast?: boolean, quiet?: boolean }
 function M.run(opts)
   opts = opts or {}
   if running then
@@ -194,13 +308,24 @@ function M.run(opts)
     notify.error("REPOS_DIR is not set")
     return
   end
+  local term
+  if not opts.quiet then
+    local why
+    term, why = M.terminal_module()
+    if not term then
+      notify.warn(("%s: the output goes to the quickfix list"):format(why))
+    end
+  end
   local names = opts.repo and { opts.repo } or M.REPOS
   local results = {}
   local index = 0
 
   local function finish()
     running = false
-    to_quickfix(results)
+    M.last_results = results
+    if not term then
+      to_quickfix(results)
+    end
     local failed = {}
     for _, res in ipairs(results) do
       if res.code ~= 0 then
@@ -209,6 +334,14 @@ function M.run(opts)
     end
     if #failed == 0 then
       notify.info(("CI green: %s"):format(table.concat(names, ", ")))
+    elseif term then
+      local where = vim.tbl_map(M.terminal_name, failed)
+      notify.error(
+        ("CI RED: %s (output in the terminal %s)"):format(
+          table.concat(failed, ", "),
+          table.concat(where, ", ")
+        )
+      )
     else
       notify.error(("CI RED: %s (quickfix has the output)"):format(table.concat(failed, ", ")))
       vim.cmd("botright copen")
@@ -230,27 +363,14 @@ function M.run(opts)
       return
     end
     notify.info(("CI %d/%d: %s ..."):format(index, #names, name))
-    -- vim.system throws when the executable cannot be started (no Git Bash): a red run, not a crash.
-    local started, err = pcall(
-      vim.system,
-      M.build_cmd(dir, opts.fast),
-      { text = true, cwd = dir, timeout = TIMEOUT_MS },
-      function(res)
-        vim.schedule(function()
-          local text = (res.stdout or "") .. (res.stderr or "")
-          local lines = vim.split(text, "\r?\n", { trimempty = true })
-          if res.code == 124 then
-            lines[#lines + 1] = "timed out after " .. (TIMEOUT_MS / 60000) .. " minutes"
-          end
-          results[#results + 1] = { repo = name, code = res.code, lines = lines }
-          next_repo()
-        end)
-      end
-    )
-    if not started then
-      results[#results + 1] =
-        { repo = name, code = 1, lines = { "cannot start: " .. tostring(err) } }
+    local function done(code, lines)
+      results[#results + 1] = { repo = name, code = code, lines = lines }
       next_repo()
+    end
+    if term then
+      start_terminal(term, name, dir, opts.fast, done)
+    else
+      start_quiet(name, dir, opts.fast, done)
     end
   end
 
@@ -376,10 +496,19 @@ function M.routes()
       args = repo_arg,
       flags = {
         { name = "fast", bool = true, desc = "Only the cheap gates (what the pre-push hook runs)" },
+        {
+          name = "quiet",
+          bool = true,
+          desc = "No terminal: the output goes to the quickfix list (for prompts and agents)",
+        },
       },
-      desc = "Local CI of the private repos (rules-vault, casedesk.nvim, tasks-vault, my.nvim): runs scripts/ci.sh of one repo or of all one after the other, output to the quickfix list. --fast runs the cheap gates only. Replaces GitHub minutes, which private repos have only a few of",
+      desc = "Local CI of the private repos (rules-vault, casedesk.nvim, tasks-vault, my.nvim): runs scripts/ci.sh of one repo or of all one after the other, each live in a terminal.nvim split ci-<repo>. --quiet sends the output to the quickfix list instead, --fast runs the cheap gates only. Replaces GitHub minutes, which private repos have only a few of",
       run = function(ctx)
-        M.run({ repo = ctx.args.repo, fast = ctx.flags.fast == true })
+        M.run({
+          repo = ctx.args.repo,
+          fast = ctx.flags.fast == true,
+          quiet = ctx.flags.quiet == true,
+        })
       end,
     },
     {

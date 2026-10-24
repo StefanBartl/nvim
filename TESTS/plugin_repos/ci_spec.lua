@@ -85,6 +85,95 @@ return function(H)
   ci.hook("remove", "rules-vault")
   eq(read(), foreign, "a foreign hook is not removed")
 
+  -- Where a run shows its output: a terminal.nvim split per repo by default, the quickfix list with --quiet
+  -- or without a native terminal.nvim. A fake terminal.nvim stands in for the real one.
+  local dir = base .. "/rules-vault"
+  vim.fn.mkdir(dir .. "/scripts", "p")
+  H.write(dir .. "/scripts/ci.sh", "exit 0\n")
+
+  local topts = ci.terminal_opts("rules-vault", dir, function() end)
+  eq(topts.name, "ci-rules-vault", "one terminal per repo")
+  ok(topts.direct == true and topts.cwd == dir, "the script is the job, in the repo")
+  ok(topts.focus == false and topts.start_insert == false, "the run does not take the focus")
+  ok(
+    topts.close == "never" and topts.session == false,
+    "the output stays, a session never reruns it"
+  )
+
+  local saved_term = package.loaded["terminal"]
+  local calls = {}
+  local function fake(backend, behave)
+    calls = {}
+    package.loaded["terminal"] = {
+      status = function()
+        return { ready = true, backend = backend }
+      end,
+      run = function(cmd, o)
+        calls[#calls + 1] = { cmd = cmd, opts = o }
+        return behave(o)
+      end,
+    }
+  end
+  local function run_and_wait(opts)
+    ci.run(opts)
+    ok(
+      vim.wait(10000, function()
+        return not ci.busy()
+      end, 20),
+      "the run ends"
+    )
+    return ci.last_results
+  end
+
+  fake("native", function(o)
+    o.on_exit(3)
+    o.on_exit(3)
+    return true
+  end)
+  local res = run_and_wait({ repo = "rules-vault", fast = true })
+  eq(#calls, 1, "the native terminal runs the script")
+  local argv = calls[1].cmd
+  ok(
+    argv[1] == ci.bash()
+      and argv[2]:sub(-26) == "/rules-vault/scripts/ci.sh"
+      and argv[3] == "--fast",
+    "with the argv of the run"
+  )
+  eq(calls[1].opts.name, "ci-rules-vault", "in the terminal of the repo")
+  eq(#res, 1, "a second exit report is ignored")
+  eq(res[1].code, 3, "the exit code of the terminal is the verdict")
+
+  fake("native", function()
+    return false, "no window"
+  end)
+  res = run_and_wait({ repo = "rules-vault" })
+  eq(res[1] and res[1].code, 1, "a terminal that does not start is a red run, not a hang")
+
+  fake("native", function()
+    error("boom")
+  end)
+  res = run_and_wait({ repo = "rules-vault" })
+  eq(res[1] and res[1].code, 1, "a terminal.nvim that throws is a red run, not a crash")
+
+  fake("native", function(o)
+    o.on_exit(0)
+    return true
+  end)
+  res = run_and_wait({ repo = "rules-vault", quiet = true })
+  eq(#calls, 0, "--quiet opens no terminal")
+  eq(res[1] and res[1].code, 0, "--quiet runs the script itself")
+
+  fake("tmux", function(o)
+    o.on_exit(0)
+    return true
+  end)
+  eq(ci.terminal_module(), nil, "a backend that does not report the end of a job is not used")
+  res = run_and_wait({ repo = "rules-vault" })
+  eq(#calls, 0, "on tmux the run goes to the quickfix list")
+  eq(res[1] and res[1].code, 0, "and still runs")
+
+  package.loaded["terminal"] = saved_term
+
   vim.env.REPOS_DIR = saved
   vim.fn.delete(base, "rf")
 end

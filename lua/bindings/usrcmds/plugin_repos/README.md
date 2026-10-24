@@ -24,7 +24,7 @@ those names no longer exist.
 :MyPlugins sync [dir] [--only=<name>] [--dry-run] [--no-fetch] [--jobs=<n>]
 :MyPlugins sync issues
 :MyPlugins machine [--pull] [--only=a,b]    " report; <CR> pulls the repo, P all, b build cmd, B build in a float terminal, a show current, ? cheat sheet
-:MyPlugins ci [repo] [--fast]                " local CI of the private repos (quickfix)
+:MyPlugins ci [repo] [--fast] [--quiet]      " local CI of the private repos (live terminal; --quiet: quickfix)
 :MyPlugins ci status [repo]                  " last result per repo, current commit or not
 :MyPlugins ci hook install|remove [repo]     " pre-push hook (scripts/ci.sh --fast)
 :MyPlugins reclone [dir] [--only=<name>]
@@ -289,7 +289,7 @@ quitting Neovim waits up to 20 s for a running assist (it must not stop between 
 outside anyway, it may leave a stale `.git/index.lock`; a failure that mentions it says so and what
 to do. After a pull, `:checktime` reloads buffers whose file changed.
 
-### `:MyPlugins ci [repo] [--fast]`, `ci status`, `ci hook install|remove`
+### `:MyPlugins ci [repo] [--fast] [--quiet]`, `ci status`, `ci hook install|remove`
 
 Local CI of the private repos `rules-vault`, `casedesk.nvim`, `tasks-vault` and `my.nvim`. GitHub-hosted minutes of
 private repositories are limited (and stop with a spending-limit message), so the checks run here instead. Each repo
@@ -298,7 +298,11 @@ source. (`my.nvim`'s workflow keeps its own jobs on a self-hosted runner; its `c
 stylua, luacheck, test suite, conformance.)
 
 - `ci [repo]`: runs `scripts/ci.sh` of one repo, or of all four one after the other (never in parallel), through Git
-  Bash on Windows. The output goes to the quickfix list (opened when a repo is red).
+  Bash on Windows. Each repo runs live in a terminal.nvim split of its own (`ci-<repo>`) that keeps the focus where it
+  is and stays open after the run; the verdict comes as a notification. A new run replaces the terminal of a repo.
+- `ci --quiet`: no terminal; the output goes to the quickfix list (opened when a repo is red), for prompts and agents
+  that do not need to see it. The same happens when terminal.nvim is not installed or runs on its tmux or WezTerm
+  backend (those never report the end of a job, which the next repo waits for).
 - `ci --fast`: only the cheap gates (stylua, luacheck for casedesk.nvim; the other two take seconds anyway).
 - `ci status [repo]`: reads `<repo>/.ci-last.json` (commit, time, green/red; gitignored, written by `ci.sh`) and says
   whether the result is for the current commit.
