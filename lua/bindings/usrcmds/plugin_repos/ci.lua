@@ -35,6 +35,7 @@ M.HOOK_MARK = "# MyPlugins ci pre-push hook"
 ---@field repo string
 ---@field code integer
 ---@field lines string[]
+---@field shown boolean The output is in the terminal `ci-<repo>`, not in `lines`
 
 ---@param name string
 ---@return boolean
@@ -181,8 +182,13 @@ end
 
 local running = false
 
----Longest a single repo may run without a terminal (casedesk.nvim needs about two minutes).
-local TIMEOUT_MS = 15 * 60 * 1000
+---What runs now, for the message of a second `ci` (the terminal to look at, or the repo).
+---@type string|nil
+local current
+
+---Longest a single repo may run (casedesk.nvim needs about two minutes); a terminal that is still
+---running then is closed. A field, so the specs can shorten it.
+M.TIMEOUT_MS = 15 * 60 * 1000
 
 ---The results of the last finished run (for the specs).
 ---@type MyPlugins.CiResult[]
@@ -231,66 +237,82 @@ function M.terminal_module()
     return nil, "terminal.nvim is not available"
   end
   local got, status = pcall(term.status)
-  local backend = got and type(status) == "table" and status.ready and status.backend or nil
-  if backend ~= "native" then
+  if not got or type(status) ~= "table" or not status.ready then
+    return nil, "terminal.nvim is not set up"
+  end
+  if status.backend ~= "native" then
     return nil,
       ("terminal.nvim runs on the %s backend, which does not report the end of a job"):format(
-        tostring(backend or "unready")
+        tostring(status.backend)
       )
   end
   return term, nil
+end
+
+---@param minutes number
+---@return string
+local function timed_out(minutes)
+  return ("timed out after %s minutes"):format(minutes)
 end
 
 ---Run one repo without a terminal: the output is collected for the quickfix list.
 ---@param name string
 ---@param dir string
 ---@param fast boolean|nil
----@param done fun(code: integer, lines: string[])
+---@param done fun(code: integer, lines: string[], shown: boolean)
 local function start_quiet(name, dir, fast, done)
   -- vim.system throws when the executable cannot be started (no Git Bash): a red run, not a crash.
   local started, err = pcall(
     vim.system,
     M.build_cmd(dir, fast),
-    { text = true, cwd = dir, timeout = TIMEOUT_MS },
+    { text = true, cwd = dir, timeout = M.TIMEOUT_MS },
     function(res)
       vim.schedule(function()
         local text = (res.stdout or "") .. (res.stderr or "")
         local lines = vim.split(text, "\r?\n", { trimempty = true })
         if res.code == 124 then
-          lines[#lines + 1] = "timed out after " .. (TIMEOUT_MS / 60000) .. " minutes"
+          lines[#lines + 1] = timed_out(M.TIMEOUT_MS / 60000)
         end
-        done(res.code, lines)
+        done(res.code, lines, false)
       end)
     end
   )
   if not started then
-    done(1, { name .. ": cannot start: " .. tostring(err) })
+    done(1, { name .. ": cannot start: " .. tostring(err) }, false)
   end
 end
 
----Run one repo in a terminal.nvim buffer: the output is shown live and stays in that buffer.
----No timeout: the run is in sight, and closing the terminal ends it.
+---Run one repo in a terminal.nvim buffer: the output is shown live and stays in that buffer
+---(`shown`). A run that does not start, or that is still running after `TIMEOUT_MS` (its terminal is
+---then closed; hiding the split does not end the job), reports why in `lines` instead.
 ---@param term table terminal.nvim
 ---@param name string
 ---@param dir string
 ---@param fast boolean|nil
----@param done fun(code: integer, lines: string[])
+---@param done fun(code: integer, lines: string[], shown: boolean)
 local function start_terminal(term, name, dir, fast, done)
   local finished = false
-  local function once(code)
+  local function once(code, lines)
     if finished then
       return
     end
     finished = true
     vim.schedule(function()
-      done(code, {})
+      done(code, lines or {}, lines == nil)
     end)
   end
   local ok, started, err = pcall(term.run, M.build_cmd(dir, fast), M.terminal_opts(name, dir, once))
   if not ok or not started then
-    once(1)
-    notify.error(("%s: cannot open a terminal: %s"):format(name, tostring(ok and err or started)))
+    once(1, { ("%s: cannot open a terminal: %s"):format(name, tostring(ok and err or started)) })
+    return
   end
+  vim.defer_fn(function()
+    if finished then
+      return
+    end
+    once(124, { timed_out(M.TIMEOUT_MS / 60000) .. ", the terminal was closed" })
+    pcall(term.close, { name = M.terminal_name(name) })
+  end, M.TIMEOUT_MS)
 end
 
 ---Run the CI of one repo or of all, one after the other. By default every repo runs in a terminal.nvim
@@ -300,7 +322,7 @@ end
 function M.run(opts)
   opts = opts or {}
   if running then
-    notify.warn("A CI run is already in progress")
+    notify.warn(("A CI run is already in progress (%s)"):format(current or "?"))
     return
   end
   local base = ops.resolve_base_dir(nil)
@@ -322,28 +344,40 @@ function M.run(opts)
 
   local function finish()
     running = false
+    current = nil
     M.last_results = results
-    if not term then
-      to_quickfix(results)
-    end
-    local failed = {}
+    -- What no terminal shows (the quiet way, a missing script, a terminal that did not start or
+    -- timed out) goes to the quickfix list; a red run in a terminal is pointed to by its name.
+    local listed, failed, in_term, in_qf = {}, {}, {}, false
     for _, res in ipairs(results) do
+      if not res.shown then
+        listed[#listed + 1] = res
+      end
       if res.code ~= 0 then
         failed[#failed + 1] = res.repo
+        if res.shown then
+          in_term[#in_term + 1] = M.terminal_name(res.repo)
+        else
+          in_qf = true
+        end
       end
+    end
+    if #listed > 0 then
+      to_quickfix(listed)
     end
     if #failed == 0 then
       notify.info(("CI green: %s"):format(table.concat(names, ", ")))
-    elseif term then
-      local where = vim.tbl_map(M.terminal_name, failed)
-      notify.error(
-        ("CI RED: %s (output in the terminal %s)"):format(
-          table.concat(failed, ", "),
-          table.concat(where, ", ")
-        )
-      )
-    else
-      notify.error(("CI RED: %s (quickfix has the output)"):format(table.concat(failed, ", ")))
+      return
+    end
+    local where = {}
+    if #in_term > 0 then
+      where[#where + 1] = "output in the terminal " .. table.concat(in_term, ", ")
+    end
+    if in_qf then
+      where[#where + 1] = "quickfix has the output"
+    end
+    notify.error(("CI RED: %s (%s)"):format(table.concat(failed, ", "), table.concat(where, "; ")))
+    if in_qf then
       vim.cmd("botright copen")
     end
   end
@@ -358,13 +392,14 @@ function M.run(opts)
     local dir = repo_dir(base, name)
     if not uv.fs_stat(dir .. "/scripts/ci.sh") then
       results[#results + 1] =
-        { repo = name, code = 1, lines = { "scripts/ci.sh not found in " .. dir } }
+        { repo = name, code = 1, lines = { "scripts/ci.sh not found in " .. dir }, shown = false }
       next_repo()
       return
     end
     notify.info(("CI %d/%d: %s ..."):format(index, #names, name))
-    local function done(code, lines)
-      results[#results + 1] = { repo = name, code = code, lines = lines }
+    current = term and ("terminal " .. M.terminal_name(name)) or name
+    local function done(code, lines, shown)
+      results[#results + 1] = { repo = name, code = code, lines = lines, shown = shown }
       next_repo()
     end
     if term then

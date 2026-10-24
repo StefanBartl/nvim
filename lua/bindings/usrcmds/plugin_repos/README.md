@@ -300,6 +300,8 @@ stylua, luacheck, test suite, conformance.)
 - `ci [repo]`: runs `scripts/ci.sh` of one repo, or of all four one after the other (never in parallel), through Git
   Bash on Windows. Each repo runs live in a terminal.nvim split of its own (`ci-<repo>`) that keeps the focus where it
   is and stays open after the run; the verdict comes as a notification. A new run replaces the terminal of a repo.
+  Hiding the split (`:q`) does not end the run; after 15 minutes a run that is still going is closed and red. What no
+  terminal shows (a repo without `scripts/ci.sh`, a terminal that did not open, a timeout) goes to the quickfix list.
 - `ci --quiet`: no terminal; the output goes to the quickfix list (opened when a repo is red), for prompts and agents
   that do not need to see it. The same happens when terminal.nvim is not installed or runs on its tmux or WezTerm
   backend (those never report the end of a job, which the next repo waits for).

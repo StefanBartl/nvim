@@ -101,9 +101,9 @@ return function(H)
   )
 
   local saved_term = package.loaded["terminal"]
-  local calls = {}
+  local calls, closed = {}, {}
   local function fake(backend, behave)
-    calls = {}
+    calls, closed = {}, {}
     package.loaded["terminal"] = {
       status = function()
         return { ready = true, backend = backend }
@@ -112,7 +112,18 @@ return function(H)
         calls[#calls + 1] = { cmd = cmd, opts = o }
         return behave(o)
       end,
+      close = function(target)
+        closed[#closed + 1] = target.name
+      end,
     }
+  end
+  local function qf_text()
+    return table.concat(
+      vim.tbl_map(function(item)
+        return item.text
+      end, vim.fn.getqflist()),
+      "\n"
+    )
   end
   local function run_and_wait(opts)
     ci.run(opts)
@@ -146,8 +157,14 @@ return function(H)
   fake("native", function()
     return false, "no window"
   end)
+  vim.fn.setqflist({}, "r")
   res = run_and_wait({ repo = "rules-vault" })
   eq(res[1] and res[1].code, 1, "a terminal that does not start is a red run, not a hang")
+  eq(res[1].shown, false, "and no terminal holds its output")
+  ok(
+    qf_text():find("cannot open a terminal: no window", 1, true),
+    "the reason is in the quickfix list"
+  )
 
   fake("native", function()
     error("boom")
@@ -171,6 +188,50 @@ return function(H)
   res = run_and_wait({ repo = "rules-vault" })
   eq(#calls, 0, "on tmux the run goes to the quickfix list")
   eq(res[1] and res[1].code, 0, "and still runs")
+
+  -- The real order: the exit comes later (scheduled), and the next repo starts only after it. A repo
+  -- without scripts/ci.sh has no terminal: its reason goes to the quickfix list, the others stay out.
+  local saved_repos = ci.REPOS
+  vim.fn.mkdir(base .. "/tasks-vault/scripts", "p")
+  H.write(base .. "/tasks-vault/scripts/ci.sh", "exit 0\n")
+  ci.REPOS = { "rules-vault", "casedesk.nvim", "tasks-vault" }
+  local exits = 0
+  fake("native", function(o)
+    o.exits_before = exits
+    vim.schedule(function()
+      exits = exits + 1
+      o.on_exit(o.name == "ci-tasks-vault" and 2 or 0)
+    end)
+    return true
+  end)
+  vim.fn.setqflist({}, "r")
+  res = run_and_wait({})
+  eq(#calls, 2, "a terminal for each repo that has a script")
+  eq(calls[2].opts.exits_before, 1, "the next repo starts after the exit of the one before")
+  eq(
+    vim.tbl_map(function(r)
+      return r.repo .. "=" .. r.code
+    end, res),
+    { "rules-vault=0", "casedesk.nvim=1", "tasks-vault=2" },
+    "every repo has its verdict, in order"
+  )
+  local qf = qf_text()
+  ok(qf:find("scripts/ci.sh not found", 1, true), "the missing script is in the quickfix list")
+  ok(not qf:find("tasks-vault", 1, true), "a run with a terminal is not")
+
+  -- A terminal that is still running after the timeout is closed, and the run goes on.
+  local saved_timeout = ci.TIMEOUT_MS
+  ci.TIMEOUT_MS = 50
+  ci.REPOS = saved_repos
+  fake("native", function()
+    return true
+  end)
+  vim.fn.setqflist({}, "r")
+  res = run_and_wait({ repo = "rules-vault" })
+  ci.TIMEOUT_MS = saved_timeout
+  eq(res[1] and res[1].code, 124, "a run that does not end times out")
+  eq(closed, { "ci-rules-vault" }, "its terminal is closed")
+  ok(qf_text():find("timed out", 1, true), "the timeout is in the quickfix list")
 
   package.loaded["terminal"] = saved_term
 
