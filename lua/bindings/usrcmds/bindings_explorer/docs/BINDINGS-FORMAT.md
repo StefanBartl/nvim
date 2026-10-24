@@ -232,7 +232,7 @@ als die anfängliche Compliance-Zählung (§0 oben) nahelegte:
   bekamen eine echte, aus der jeweiligen Plugin-Quelle verifizierte
   `## which-key`-Sektion (`debugging.nvim`, `language.nvim`,
   `markdown.nvim`, `filetree.nvim`, `pickers.nvim`). 5 weitere hatten die
-  Info schon, nur unformatiert (`documentation.nvim`, `insights.nvim`,
+  Info schon, nur unformatiert (`docmap.nvim`, `insights.nvim`,
   `migrate.nvim`, `nvim-cmdlog`, `replacer.nvim`) — in die Überschrift
   gezogen. 6 bekamen eine explizite "geprüft, kein which-key"-Zeile in
   `## Notes` (`diff.nvim`, `reposcope.nvim`, `lib.nvim`, `mdview.nvim`,

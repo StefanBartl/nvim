@@ -1,7 +1,7 @@
 ---@module 'plugins.personal.core.export'
 --- The shared interface `:DocMapAll` (fed through `opts.generate_all` on
---- documentation.nvim's own plugin spec, `plugins/personal/specs/project.lua` —
---- the command itself lives in documentation.nvim now, not here) and
+--- docmap.nvim's own plugin spec, `plugins/personal/specs/project.lua` —
+--- the command itself lives in docmap.nvim now, not here) and
 --- docmap-desktop's own spec-import feature are both meant to be built
 --- against: which personal plugins are enabled right now, and where each
 --- one's local checkout actually is.
@@ -15,7 +15,7 @@
 --- consumer of "where is this repo really" already goes through.
 ---
 --- A remote-mode entry (no local checkout on this machine) has nothing to
---- point documentation.nvim at — there is no tree on disk to scan — so it
+--- point docmap.nvim at — there is no tree on disk to scan — so it
 --- is filtered out here rather than returned with a directory a caller
 --- would have to remember to check for `nil`.
 
@@ -26,7 +26,7 @@ local M = {}
 --- `name` doubles as the runtime-analysis.nvim telemetry namespace already
 --- active for that plugin by default (see `config/telemetry.lua`, which
 --- reads this exact same entry list) — passing it straight through as
---- documentation.nvim's `title` keeps a generated map's Telemetry panel
+--- docmap.nvim's `title` keeps a generated map's Telemetry panel
 --- joined to real, already-collected data with no extra wiring.
 ---@class Plugins.Personal.Project
 ---@field name string Basename, e.g. "markdown.nvim".

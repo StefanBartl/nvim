@@ -110,7 +110,7 @@ local startup = require("startup")
 startup.setup_usercmds()
 require("bindings.usrcmds.plugin_repos").enable()
 require("bindings.usrcmds.native_repos").enable()
--- :DocMapAll and :RATelemetry* live in documentation.nvim / runtime-analysis
+-- :DocMapAll and :RATelemetry* live in docmap.nvim / runtime-analysis
 -- .nvim themselves; see plugins/personal/specs/project.lua's opts.generate_all for the
 -- data this config supplies them.
 

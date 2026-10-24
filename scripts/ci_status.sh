@@ -27,7 +27,7 @@
 #
 #   3. It filters to the CI workflow specifically (name == "CI", every repo's
 #      convention) before picking the newest run for a SHA. Several repos also
-#      have a path-filtered workflow (e.g. documentation.nvim's pages.yml on
+#      have a path-filtered workflow (e.g. docmap.nvim's pages.yml on
 #      docs/map/**, release-engine.yml on standalone/**) that can trigger on
 #      the same push and be CREATED after the CI run -- without this filter,
 #      "newest run for this SHA" picks whichever workflow happened to finish

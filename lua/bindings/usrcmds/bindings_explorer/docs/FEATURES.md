@@ -99,7 +99,7 @@ Suche dieselbe Suche über weniger Pfade.
    wird von dort mitbenutzt, damit `:Bindings search dap` und
    `:Bindings check dap` nicht verschieden auflösen können;
 3. **nur** in der Form `plugin=<präfix>`: Präfix-Auflösung
-   (`plugin=documentat` → `documentation.nvim`). Trifft ein Präfix mehrere
+   (`plugin=documentat` → `docmap.nvim`). Trifft ein Präfix mehrere
    Stämme, ist das ein Fehler mit Kandidatenliste, keine Auswahl auf Verdacht.
 
 Ein Token darf mehrere Sheets benennen, und das ist kein Fehler: `dap` ist
@@ -228,7 +228,7 @@ Nachgemessen am **2026-09-02**: **2333** Datensätze (Keymaps 1230, Usercmds
 also um gut ein Fünftel gewachsen.
 
 **Zwischenzeitlich stimmte die Null nicht:** neun Zeilen wichen ab, alle im
-Personal-Korpus — acht in `Usercmds/documentation.nvim.md` (Z. 99–106) und
+Personal-Korpus — acht in `Usercmds/docmap.nvim.md` (Z. 99–106) und
 eine in `Usercmds/lib.nvim.md` (Z. 15). Alle neun hatten eine dreispaltige
 Kopfzeile und nur zwei Zellen; die dritte war beim Anhängen späterer Zeilen
 schlicht vergessen worden. Für die Prüfung folgenlos — die Achsen greifen

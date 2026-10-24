@@ -23,7 +23,7 @@ Die offene Restarbeit steht als Tasks, nicht als Fließtext. Neu angelegt habe i
 - `lib.nvim/scoring-name-delta-pruefung-nur-an-einer-stelle`
 - `lib.nvim/window-matches-split-kopierte-matches-im-ledger-behandeln`
 - `lib.nvim/ci-verified-publish-race-bei-zwei-schnell-aufeinanderfolgend`
-- `documentation.nvim/lang-registry-auf-lib-nvim-registry-umstellen`
+- `docmap.nvim/lang-registry-auf-lib-nvim-registry-umstellen`
 
 Die fünfte Task, den `messages.status()`-Verbraucher in debugging.nvim, gab es schon als `debugging.nvim/health-recent-popup-requirements`. Sie wartete auf `messages-status`, das längst fertig ist. Ich habe meine Dublette gelöscht und den Blocker bei der bestehenden Task entfernt, sie ist jetzt `open`.
 

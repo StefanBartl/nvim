@@ -1,6 +1,6 @@
 ---@module 'bindings.usrcmds.bindings_explorer.source'
 --- The third drift axis: what this config's **source** actually registers,
---- as extracted by documentation.nvim's `core/bindings.lua` and already
+--- as extracted by docmap.nvim's `core/bindings.lua` and already
 --- baked into `docs/map/module_map.json`.
 ---
 --- `drift.lua` compared two axes: *documented* (the BINDINGS cheatsheets,
@@ -20,7 +20,7 @@
 --- "live, not in the docs" could never be.
 ---
 --- **Reads the artifact, does not scan.** `docs/map/module_map.json` is
---- already generated and committed, and documentation.nvim's whole posture
+--- already generated and committed, and docmap.nvim's whole posture
 --- is that its artifacts are cold-readable without a live session. A scan
 --- here would re-parse ~500 files to re-derive data sitting on disk.
 ---
@@ -31,7 +31,7 @@
 --- from this axis naming the artifact rather than claiming to have read the
 --- source itself.
 ---
---- Nothing here requires documentation.nvim to be loaded, or installed: it
+--- Nothing here requires docmap.nvim to be loaded, or installed: it
 --- reads a JSON file. If the file is absent, or predates the bindings
 --- extractor, that is reported as a reason, never as "no bindings found".
 
@@ -59,7 +59,7 @@ end
 ---concatenating the result throws "attempt to concatenate a userdata value"
 ---wherever the report later renders it.
 ---
----Not hypothetical for this artifact: `documentation.nvim` writes
+---Not hypothetical for this artifact: `docmap.nvim` writes
 ---`"source": null` and `"module": null` for 192 of the 414 nodes in the
 ---current `module_map.json`. None of them happens to carry `bindings` right
 ---now, so nothing is firing today -- but the shape the generator produces is
@@ -73,7 +73,7 @@ local function denil(v)
   return v
 end
 
----Read every binding documentation.nvim recorded for this config.
+---Read every binding docmap.nvim recorded for this config.
 ---
 ---Returns `nil` plus a human-readable reason rather than an empty table for
 ---every failure mode, because "no bindings" and "the map cannot answer
@@ -127,7 +127,7 @@ function M.load()
   -- config instead of regenerating the map.
   if not saw_field then
     return nil,
-      ("%s predates documentation.nvim's bindings extraction — run :DocMap to regenerate"):format(
+      ("%s predates docmap.nvim's bindings extraction — run :DocMap to regenerate"):format(
         path
       ),
       stat.mtime and stat.mtime.sec or nil

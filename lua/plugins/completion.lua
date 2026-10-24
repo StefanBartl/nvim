@@ -36,7 +36,7 @@ return {
       opts.sources = opts.sources or {}
 
       -- Completes this config's personal StefanBartl/*.nvim plugin names
-      -- ("documentation.nvim", not just "documentation") as one atomic
+      -- ("docmap.nvim", not just "documentation") as one atomic
       -- candidate each, ranked by persisted use frequency. See that module's
       -- doc comment for how it composes with cmp's own default sorting.
       --

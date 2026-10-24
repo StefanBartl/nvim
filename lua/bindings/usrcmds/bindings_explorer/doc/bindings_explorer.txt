@@ -299,7 +299,7 @@ A token is matched against the stems in this order:
        lazy.nvim names; it lives in `plugin_scope.normalize` and is shared,
        so `:Bindings search dap` and `:Bindings check dap` cannot disagree;
     3. ONLY in the `plugin={prefix}` form: prefix matching
-       (`plugin=documentat` -> `documentation.nvim`). A prefix naming more
+       (`plugin=documentat` -> `docmap.nvim`). A prefix naming more
        than one stem is an error listing them, never a guess.
 
 One token may name several sheets, and that is not an error: `dap` is

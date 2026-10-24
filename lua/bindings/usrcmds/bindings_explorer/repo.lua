@@ -43,7 +43,7 @@ local read = require("lib.nvim.fs.read")
 local M = {}
 
 --- Extensions read into a tree's haystack. Everything else — docs, images,
---- lockfiles, the generated JSON artifacts documentation.nvim writes — is
+--- lockfiles, the generated JSON artifacts docmap.nvim writes — is
 --- skipped, see the module doc.
 local SOURCE_EXT = { lua = true, vim = true }
 

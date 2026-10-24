@@ -16,7 +16,7 @@
 --- the same name modulo the `.nvim`/`nvim-` decoration everyone spells
 --- differently (`hover` -> `hover.nvim`, `neotree` -> `NeoTree`). Prefix
 --- matching would swallow queries -- `doc` is a word one searches for as well
---- as the head of `documentation.nvim` -- so it is reserved for the explicit
+--- as the head of `docmap.nvim` -- so it is reserved for the explicit
 --- `plugin=` form, where the intent is not in doubt.
 ---
 --- **A token may name more than one sheet, and that is not an error here.**

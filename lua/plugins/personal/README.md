@@ -238,7 +238,7 @@ here reaches:
 | `wkdnvchad.ui.statusline` — `plugin_summary`'s own/external badge | `list.read()` |
 | `config.telemetry` | `list.read()` |
 | `bindings.usrcmds.bindings_explorer.config` — `:Bindings check repo` | `export.projects()` |
-| documentation.nvim (`:DocMapAll`, via `opts.generate_all`), docmap-desktop | `export.projects()` |
+| docmap.nvim (`:DocMapAll`, via `opts.generate_all`), docmap-desktop | `export.projects()` |
 | pickers.nvim's `repos_dir` and its collection paths | `utils.repos_path` |
 
 ---

@@ -164,7 +164,7 @@ end
 --- Same for `browse`, where the slot carries plugin OR corpus half.
 ---
 --- No query here for a token to be confused with, so this slot also
---- prefix-resolves (`doc` → `documentation.nvim`) and reports an unknown token
+--- prefix-resolves (`doc` → `docmap.nvim`) and reports an unknown token
 --- as an error rather than silently reading it another way. Order is free:
 --- `keymaps hover.nvim personal` and `keymaps personal hover.nvim` are the same.
 ---@param ctx table composer ctx

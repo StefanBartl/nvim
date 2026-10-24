@@ -126,7 +126,7 @@ return {
           "StefanBartl/color_my_ascii.nvim",
           "StefanBartl/debugging.nvim",
           "StefanBartl/diff.nvim",
-          "StefanBartl/documentation.nvim",
+          "StefanBartl/docmap.nvim",
           "StefanBartl/emojis.nvim",
           "StefanBartl/fileops.nvim",
           "StefanBartl/filetree.nvim",
@@ -368,13 +368,13 @@ return {
   },
 
   {
-    "StefanBartl/documentation.nvim",
+    "StefanBartl/docmap.nvim",
     cmd = { "DocMap", "DocBrowse", "DocMapAll", "DocMapAllFull" },
     dependencies = { "StefanBartl/lib.nvim" },
     -- No `root`: the commands resolve the repository per invocation from the
     -- current buffer (see `root_markers`), because rows of repos sit side by
     -- side here and a fixed target would be exactly wrong. `source` derives
-    -- documentation.config from the root (lua/<name>, when lua/ contains
+    -- docmap.config from the root (lua/<name>, when lua/ contains
     -- exactly one candidate).
     opts = function(_, opts)
       -- Indicator while a long `:DocMap` runs (`full`'s LuaLS pass, `churn`'s
@@ -414,7 +414,7 @@ return {
         },
       }
 
-      -- `:DocMap all` / `:DocMapAll`: documentation.nvim owns the command, this
+      -- `:DocMap all` / `:DocMapAll`: docmap.nvim owns the command, this
       -- config supplies only the data. `plugins.personal.core.export.projects()`
       -- is the same resolved entry list `config.telemetry.build()` reads, so
       -- nothing here has to be kept in sync with `plugins/personal/init.lua` by
