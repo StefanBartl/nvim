@@ -21,8 +21,20 @@ return function(H)
     ok(entry.hint and entry.hint ~= "", "hint for " .. entry.name)
     ok(not entry.build or entry.artifact, "a build command comes with an artifact: " .. entry.name)
     ok(not entry.artifact or entry.sources, "an artifact comes with sources: " .. entry.name)
+    ok(
+      not entry.install or entry.build,
+      "an install command comes with a build command: " .. entry.name
+    )
   end
-  eq(natives.get("ai-desktop").build[1], "cmake", "ai-desktop builds with cmake")
+  -- setup.ps1 configures build/ itself; a bare `cmake --build build` failed on a checkout without it
+  local ai = natives.get("ai-desktop")
+  eq(vim.tbl_contains(ai.build, "scripts/setup.ps1"), true, "ai-desktop builds with its setup.ps1")
+  eq(vim.tbl_contains(ai.build, "-SkipInstall"), true, "and its build does not install")
+  for _, name in ipairs({ "tasks-desktop", "rules-desktop", "docmap-desktop" }) do
+    local entry = natives.get(name)
+    eq(vim.tbl_contains(entry.build, "-BuildOnly"), true, name .. " builds without installing")
+    eq(vim.tbl_contains(entry.install, "-BuildOnly"), false, name .. " installs")
+  end
   eq(natives.get("nope"), nil, "unknown name")
   eq(vim.tbl_contains(natives.names(), "takt"), true, "takt is listed")
 
@@ -45,6 +57,28 @@ return function(H)
   todo = native.plan_build({ with_build }, { a = "not cloned" }, false)
   eq(#todo, 0, "an app that is not cloned is not built unasked")
 
+  -- what an install run covers: every cloned app with an install command, whatever its build state
+  local installs = { repo = "o/c", name = "c", build = { "x" }, install = { "y" }, hint = "hc" }
+  local builds_only = { repo = "o/d", name = "d", build = { "x" }, hint = "hd" }
+  local lib = { repo = "o/e", name = "e", hint = "a library" }
+  todo, hints = native.plan_install(
+    { installs, builds_only, lib },
+    { c = "current", d = "stale", e = "no artifact" },
+    false
+  )
+  eq(
+    vim.tbl_map(function(n)
+      return n.name
+    end, todo),
+    { "c" },
+    "a current build is installed as well"
+  )
+  eq(hints, { "d: hd" }, "an app with only a build is named, a library is left out")
+  todo = native.plan_install({ installs }, { c = "not cloned" }, false)
+  eq(#todo, 0, "an app that is not cloned is not installed unasked")
+  todo, hints = native.plan_install({ lib }, { e = "no artifact" }, true)
+  eq({ #todo, hints }, { 0, { "e: a library" } }, "by name without a command: only the hint")
+
   -- the routes: `list` takes no name, the others an optional one
   local by_path = {}
   for _, route in ipairs(native.routes()) do
@@ -52,5 +86,6 @@ return function(H)
   end
   eq(by_path.list.args, nil, "list has no argument")
   eq(by_path.build.args[1].optional, true, "build takes an optional name")
+  eq(by_path.install.args[1].optional, true, "install takes an optional name")
   eq(by_path.clone.args[1].type, "MYNATIVE_NAME", "clone completes the app names")
 end

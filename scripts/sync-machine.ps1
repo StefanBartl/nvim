@@ -45,10 +45,11 @@ $extra = @(
 
 # Native build artifacts: where the artifact lives, which paths feed it, and
 # what to do when it is stale. Builds are never started here.
-#   Hint     what to do, for a person to read (may be prose: "run its setup.exe")
+#   Hint     what to do, for a person to read (may be prose)
 #   Command  the one command that builds it, run in the repo folder by
-#            `:MyPlugins machine` (B) and copied by b; empty when there is none
-#            (the desktop apps are built by their setup.exe). ONE native
+#            `:MyPlugins machine` (B) and copied by b; empty when there is none.
+#            The desktop apps build with a script of their repo (the same one
+#            installs without -BuildOnly / -SkipInstall, `:MyNative install`). ONE native
 #            command, no chain: it has to run in Windows PowerShell 5.1 too
 #            (no `&&`), and only the last exit code is reported. It must build
 #            exactly the Artifact below and fail with a non-zero exit code.
@@ -56,14 +57,14 @@ $natives = @{
     'tasks-desktop' = @{
         Artifact = 'target\release\tasks-hub.exe'
         Sources  = @('crates', 'ui', 'Cargo.lock', 'engine.lock')
-        Hint     = 'run its setup.exe'
-        Command  = ''
+        Hint     = 'scripts\build-install.ps1 -BuildOnly   (build and install: without -BuildOnly)'
+        Command  = 'powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build-install.ps1 -BuildOnly'
     }
     'rules-desktop' = @{
         Artifact = 'target\release\rules-hub.exe'
         Sources  = @('crates', 'ui', 'Cargo.lock')
-        Hint     = 'run its setup.exe'
-        Command  = ''
+        Hint     = 'scripts\build-install.ps1 -BuildOnly   (build and install: without -BuildOnly)'
+        Command  = 'powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build-install.ps1 -BuildOnly'
     }
     'mdview.nvim' = @{
         Artifact = 'native\server\mdview-server.exe'
@@ -74,8 +75,14 @@ $natives = @{
     'ai-desktop' = @{
         Artifact = 'build\ai-desktop.exe'
         Sources  = @('src', 'CMakeLists.txt')
-        Hint     = 'cmake --build build --config Release'
-        Command  = 'cmake --build build --config Release'
+        Hint     = 'scripts\setup.ps1 -SkipInstall   (configures build\ when it is not; build and install: without -SkipInstall)'
+        Command  = 'powershell -NoProfile -ExecutionPolicy Bypass -File scripts\setup.ps1 -SkipInstall'
+    }
+    'docmap-desktop' = @{
+        Artifact = 'src-tauri\target\release\docmap-desktop.exe'
+        Sources  = @('src', 'src-tauri', 'engine.lock')
+        Hint     = 'scripts\build-install.ps1 -BuildOnly   (build and install: without -BuildOnly)'
+        Command  = 'powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build-install.ps1 -BuildOnly'
     }
 }
 
