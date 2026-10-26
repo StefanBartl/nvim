@@ -32,6 +32,28 @@ Installiert nach `%LOCALAPPDATA%\rules-desktop\bin`, dieselben Befehle wie tasks
 
 Läuft er: `Get-Process rules-hub`.
 
+## Auf der Workstation (CrowdStrike Falcon)
+
+Auf der Workstation endet `<hub> start` still, ohne Ausgabe, mit Exit `0xE0000027` (-536870873), und es läuft kein
+Hub. `start` startet den Hub über `wscript.exe` und ein Skript `start-hub.vbs`, und diese Kette aus einem
+unsignierten Programm wird dort (vermutlich von Falcon) beendet. Betroffen sind auch der Autostart (der Run-Key ruft
+`start`), der Doppelklick, `install --shortcut` und das Entfernen des Links in `uninstall`. Bug im Vault:
+`appkit/start-ueber-wscript-von-edr-beendet`.
+
+Bis zum Fix einer der beiden Wege, für rules-desktop mit `rules-hub` und `rules-desktop`:
+
+```powershell
+# a) im Vordergrund, das Terminal bleibt offen (Ctrl-C stoppt den Hub); im zweiten Terminal `open --launch`
+& "$env:LOCALAPPDATA\tasks-desktop\bin\tasks-hub.exe" serve
+
+# b) im Hintergrund: start legt das Skript an (und wird beendet), dann das Skript von Hand ausführen
+& "$env:LOCALAPPDATA\tasks-desktop\bin\tasks-hub.exe" start
+wscript.exe "$env:APPDATA\tasks-desktop\start-hub.vbs"
+Get-Process tasks-hub
+```
+
+`stop` und `open --launch` gehen normal. Der Autostart nach der Anmeldung startet hier keinen Hub.
+
 ## docmap-desktop
 
 Das NSIS-Setup (auch still über `install.ps1`) installiert nach `%LOCALAPPDATA%\docmap-desktop`.
