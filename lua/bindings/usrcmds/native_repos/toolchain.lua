@@ -26,13 +26,33 @@ local function exists(path)
   return uv.fs_stat(path) ~= nil
 end
 
+---Runs a short probe; a program that cannot start or hangs (30 s) counts as a failure, never as an error.
 ---@param argv string[]
----@return boolean
+---@return boolean ok, string stdout
 local function runs(argv)
   local ok, res = pcall(function()
     return vim.system(argv, { text = true }):wait(30000)
   end)
-  return ok and res.code == 0
+  if not ok or res.code ~= 0 then
+    return false, ""
+  end
+  return true, res.stdout or ""
+end
+
+---Whether `dir` is an entry of $PATH (Windows: case and slashes do not count).
+---@param dir string
+---@return boolean
+local function on_path(dir)
+  local function norm(p)
+    return (p:gsub("/", "\\"):gsub("\\+$", ""):lower())
+  end
+  local want = norm(dir)
+  for entry in (vim.env.PATH or ""):gmatch("[^;]+") do
+    if norm(entry) == want then
+      return true
+    end
+  end
+  return false
 end
 
 ---@return string
@@ -54,7 +74,8 @@ local mingw_files = {
 ---@field id string
 ---@field desc string
 ---@field check fun(): boolean
----@field install? fun(): string[] argv that installs it for the current user
+---@field install? fun(): string[]|nil argv that installs it for the current user (nil: not possible here)
+---@field requires? string[] Tools its install needs (skipped while one of them is missing)
 ---@field path? fun(): string Folder to put in front of PATH after the install (new tools are not on it yet)
 ---@field hint string What to do by hand
 
@@ -92,18 +113,16 @@ M.list = {
       if not exists(exe) then
         return false
       end
-      local res = vim
-        .system({
-          exe,
-          "-products",
-          "*",
-          "-requires",
-          "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
-          "-property",
-          "installationPath",
-        }, { text = true })
-        :wait(30000)
-      return res.code == 0 and vim.trim(res.stdout or "") ~= ""
+      local ok, out = runs({
+        exe,
+        "-products",
+        "*",
+        "-requires",
+        "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+        "-property",
+        "installationPath",
+      })
+      return ok and vim.trim(out) ~= ""
     end,
     hint = "Visual Studio Build Tools with 'Desktop development with C++' (needs an administrator): "
       .. "winget install -e --id Microsoft.VisualStudio.2022.BuildTools",
@@ -120,8 +139,9 @@ M.list = {
     id = "tauri-cli",
     desc = "Tauri CLI 2 (cargo tauri)",
     check = function()
-      return vim.fn.executable("cargo") == 1 and runs({ "cargo", "tauri", "--version" })
+      return vim.fn.executable("cargo") == 1 and (runs({ "cargo", "tauri", "--version" }))
     end,
+    requires = { "rust" },
     install = function()
       return { "cargo", "install", "tauri-cli", "--version", "^2", "--locked" }
     end,
@@ -169,15 +189,20 @@ M.list = {
   },
 }
 
+---@param tools? NativeRepos.Tool[] Default `M.list`
+---@return table<string, NativeRepos.Tool>
+local function by_id(tools)
+  local out = {}
+  for _, tool in ipairs(tools or M.list) do
+    out[tool.id] = tool
+  end
+  return out
+end
+
 ---@param id string
 ---@return NativeRepos.Tool|nil
 function M.get(id)
-  for _, tool in ipairs(M.list) do
-    if tool.id == id then
-      return tool
-    end
-  end
-  return nil
+  return by_id()[id]
 end
 
 ---The tools a set of apps needs, once each, in the order of `M.list`.
@@ -204,13 +229,10 @@ end
 ---@param tools? NativeRepos.Tool[] Default `M.list`
 ---@return string[] install, string[] hints
 function M.plan(ids, tools)
-  local by_id = {}
-  for _, tool in ipairs(tools or M.list) do
-    by_id[tool.id] = tool
-  end
+  local known = by_id(tools)
   local install, hints = {}, {}
   for _, id in ipairs(ids) do
-    local tool = by_id[id]
+    local tool = known[id]
     if tool and tool.install and tool.install() then
       install[#install + 1] = id
     else
@@ -218,6 +240,17 @@ function M.plan(ids, tools)
     end
   end
   return install, hints
+end
+
+---The by-hand line of every tool in `ids`, also of one that has an install command (it ran and did not help).
+---@param ids string[]
+---@param tools? NativeRepos.Tool[] Default `M.list`
+---@return string[]
+function M.hints(ids, tools)
+  local known = by_id(tools)
+  return vim.tbl_map(function(id)
+    return ("%s: %s"):format(id, known[id] and known[id].hint or "unknown tool")
+  end, ids)
 end
 
 ---The apps whose tools are all there, and a line for each one that is held back.
@@ -242,13 +275,20 @@ function M.split(natives, missing)
   return ready, held
 end
 
+---A check that throws counts as "missing": a broken probe must not stop the run that called it.
 ---@param ids string[]
+---@param tools? NativeRepos.Tool[] Default `M.list`
 ---@return table<string, boolean> missing
-function M.check(ids)
+function M.check(ids, tools)
+  local known = by_id(tools)
   local missing = {}
   for _, id in ipairs(ids) do
-    local tool = M.get(id)
-    if not tool or not tool.check() then
+    local tool = known[id]
+    local ok, there = false, false
+    if tool then
+      ok, there = pcall(tool.check)
+    end
+    if not ok or not there then
       missing[id] = true
     end
   end
@@ -256,35 +296,44 @@ function M.check(ids)
 end
 
 ---Checks the tools and installs the missing ones that can be installed, one after the other. Output lines go
----to `items` (quickfix entries).
+---to `items` (quickfix entries). `on_done` gets what is still missing and the by-hand line of each of those.
 ---@param ids string[]
 ---@param items table[]
 ---@param on_done fun(missing: table<string, boolean>, hints: string[])
-function M.ensure(ids, items, on_done)
-  local missing = M.check(ids)
-  local todo = {}
-  for _, id in ipairs(ids) do
-    if missing[id] then
-      todo[#todo + 1] = id
-    end
-  end
-  local install = M.plan(todo)
+---@param tools? NativeRepos.Tool[] Default `M.list`
+function M.ensure(ids, items, on_done, tools)
+  local known = by_id(tools)
+  local missing = M.check(ids, tools)
+  local todo = vim.tbl_filter(function(id)
+    return missing[id]
+  end, ids)
+  local install = M.plan(todo, tools)
   local index = 0
   local function step()
     index = index + 1
     local id = install[index]
     if not id then
-      -- checked again: a tool that needs another one (tauri-cli after rust) or an install that did nothing
-      local still = M.check(ids)
-      local _, hints = M.plan(vim.tbl_filter(function(t)
-        return still[t]
-      end, ids))
-      on_done(still, hints)
+      -- only what was missing is checked again (the probes start programs); an install that did not help
+      -- keeps its by-hand line
+      local still = M.check(todo, tools)
+      on_done(
+        still,
+        M.hints(
+          vim.tbl_filter(function(t)
+            return still[t]
+          end, todo),
+          tools
+        )
+      )
       return
     end
-    local tool = M.get(id) --[[@as NativeRepos.Tool]]
-    if id == "tauri-cli" and not M.get("rust").check() then
-      items[#items + 1] = { text = "== tool tauri-cli: skipped, rust is missing" }
+    local tool = known[id]
+    local blocked = vim.tbl_filter(function(dep)
+      return M.check({ dep }, tools)[dep] == true
+    end, tool.requires or {})
+    if #blocked > 0 then
+      items[#items + 1] =
+        { text = ("== tool %s: skipped, %s is missing"):format(id, table.concat(blocked, ", ")) }
       step()
       return
     end
@@ -294,15 +343,19 @@ function M.ensure(ids, items, on_done)
       vim.schedule(function()
         items[#items + 1] =
           { text = ("== tool %s: %s"):format(id, res.code == 0 and "ok" or "FAILED") }
+        -- winget and cargo draw progress with a bare CR: every frame would be its own line
         for _, line in
-          ipairs(vim.split((res.stdout or "") .. (res.stderr or ""), "\r?\n", { trimempty = true }))
+          ipairs(vim.split((res.stdout or "") .. (res.stderr or ""), "\n", { trimempty = true }))
         do
-          items[#items + 1] = { text = line }
+          line = vim.trim(line:match("([^\r]*)\r*$") or line)
+          if line ~= "" then
+            items[#items + 1] = { text = line }
+          end
         end
         if res.code == 0 and tool.path then
-          local dir = tool.path()
-          if exists(dir) and not vim.env.PATH:find(dir, 1, true) then
-            vim.env.PATH = dir .. ";" .. vim.env.PATH
+          local dir = tool.path():gsub("/", "\\")
+          if exists(dir) and not on_path(dir) then
+            vim.env.PATH = dir .. ";" .. (vim.env.PATH or "")
           end
         end
         step()
@@ -315,5 +368,7 @@ function M.ensure(ids, items, on_done)
   end
   step()
 end
+
+M._on_path = on_path
 
 return M

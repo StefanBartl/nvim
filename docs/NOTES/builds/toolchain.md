@@ -48,7 +48,10 @@ takt (noch ein Gerüst) und appkit (Bibliothek der Apps) werden nicht gebaut. ap
 `Cargo.toml` und `ui/package.json` der Apps von GitHub.
 
 Alle `build-install.ps1` und `uninstall.ps1` verweigern das Installieren und Entfernen in einer Claude-Sitzung
-(`CLAUDECODE`). Die Hubs verweigern es auch in einer erhöhten Sitzung (`-AllowElevated` für eine Build-Maschine).
+(`CLAUDECODE`). `build-install.ps1` verweigert das Installieren auch in einer erhöhten Sitzung, weil die App sonst
+im Profil des Administrators landen kann (`-AllowElevated` für eine Build-Maschine). `:MyNative uninstall` fragt
+vorher nach. Die Engine von docmap-desktop kommt wie in der CI ohne Prüfsumme über HTTPS aus `standalone-latest`,
+denn dieses Release veröffentlicht keine `SHA256SUMS`.
 
 ## Was es im Release gibt (zum Vergleich)
 

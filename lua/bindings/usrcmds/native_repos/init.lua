@@ -258,7 +258,13 @@ local function run(kind, only)
   end
   local candidates, states = selected(only), {}
   for _, native in ipairs(candidates) do
-    states[native.name] = state_of(native, base .. "/" .. native.name)
+    local dir = base .. "/" .. native.name
+    -- only a build asks git for the staleness; install and uninstall need nothing but "cloned"
+    if kind == "build" then
+      states[native.name] = state_of(native, dir)
+    else
+      states[native.name] = uv.fs_stat(dir) and "cloned" or "not cloned"
+    end
   end
   local todo, hints
   if kind == "build" then
@@ -345,19 +351,39 @@ local function run(kind, only)
     vim.list_extend(hints, held)
   end
 
-  running = true
   if kind == "uninstall" then
-    next_app()
-  elseif kind == "build" then
-    hold_back(toolchain.check(toolchain.needed(todo)))
-    next_app()
-  else
-    notify.info("Install: checking the tools ...")
-    toolchain.ensure(toolchain.needed(todo), items, function(missing, tool_hints)
-      hold_back(missing)
-      vim.list_extend(hints, tool_hints)
+    local names = table.concat(
+      vim.tbl_map(function(n)
+        return n.name
+      end, todo),
+      ", "
+    )
+    if vim.fn.confirm("Uninstall " .. names .. "?", "&Yes\n&No", 2) ~= 1 then
+      notify.info("Uninstall cancelled.")
+      return
+    end
+  end
+
+  running = true
+  -- a throw before the first command (a tool check) must not leave `running` set for the session
+  local ok, err = pcall(function()
+    if kind == "uninstall" then
       next_app()
-    end)
+    elseif kind == "build" then
+      hold_back(toolchain.check(toolchain.needed(todo)))
+      next_app()
+    else
+      notify.info("Install: checking the tools ...")
+      toolchain.ensure(toolchain.needed(todo), items, function(missing, tool_hints)
+        hold_back(missing)
+        vim.list_extend(hints, tool_hints)
+        next_app()
+      end)
+    end
+  end)
+  if not ok then
+    running = false
+    notify.error(label .. " stopped: " .. tostring(err))
   end
 end
 
@@ -398,7 +424,7 @@ function M.deps(only)
   local items = {}
   running = true
   notify.info("Checking the tools: " .. table.concat(ids, ", ") .. " ...")
-  toolchain.ensure(ids, items, function(missing, hints)
+  local ok, err = pcall(toolchain.ensure, ids, items, function(missing, hints)
     running = false
     local lines = {}
     for _, id in ipairs(ids) do
@@ -413,6 +439,10 @@ function M.deps(only)
       notify.info(table.concat(lines, "\n"))
     end
   end)
+  if not ok then
+    running = false
+    notify.error("Deps stopped: " .. tostring(err))
+  end
 end
 
 ---@return table[]

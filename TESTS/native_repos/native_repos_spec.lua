@@ -89,6 +89,67 @@ return function(H)
     true,
     "pacman hint"
   )
+
+  -- ensure: an install that cannot help keeps its by-hand line, a throwing check is "missing", not an error,
+  -- a tool whose prerequisite is missing is skipped (the programs here cannot start: the run stays synchronous)
+  local present = {
+    id = "here",
+    hint = "h0",
+    check = function()
+      error("probe broke")
+    end,
+  }
+  local base_tool = {
+    id = "base",
+    hint = "hb",
+    check = function()
+      return false
+    end,
+    install = function()
+      return { "no-such-program-for-the-spec" }
+    end,
+  }
+  local on_top = {
+    id = "top",
+    hint = "ht",
+    requires = { "base" },
+    check = function()
+      return false
+    end,
+    install = function()
+      return { "no-such-program-either" }
+    end,
+  }
+  local fake_tools = { present, base_tool, on_top }
+  eq(toolchain.check({ "here" }, fake_tools), { here = true }, "a throwing check counts as missing")
+  local ensure_items, got_missing, got_hints = {}, nil, nil
+  toolchain.ensure({ "here", "base", "top" }, ensure_items, function(m, h)
+    got_missing, got_hints = m, h
+  end, fake_tools)
+  eq(got_missing, { here = true, base = true, top = true }, "nothing got installed")
+  eq(
+    got_hints,
+    { "here: h0", "base: hb", "top: ht" },
+    "every tool still missing names its by-hand line"
+  )
+  eq(
+    vim.tbl_contains(
+      vim.tbl_map(function(i)
+        return i.text
+      end, ensure_items),
+      "== tool top: skipped, base is missing"
+    ),
+    true,
+    "a tool whose prerequisite is missing is skipped"
+  )
+
+  -- PATH: case and slashes do not count, a prefix is no match
+  local saved_path = vim.env.PATH
+  vim.env.PATH = [[C:\Windows;C:\Users\Me\.cargo\bin\]]
+  eq(toolchain._on_path("c:/users/me/.cargo/bin"), true, "the same folder, written another way")
+  eq(toolchain._on_path("C:/Users/Me/.cargo"), false, "a parent folder is not on PATH")
+  vim.env.PATH = saved_path
+
   eq(natives.get("nope"), nil, "unknown name")
   eq(vim.tbl_contains(natives.names(), "takt"), true, "takt is listed")
 
@@ -160,4 +221,22 @@ return function(H)
     "uninstall takes the field uninstall"
   )
   eq(by_path.clone.args[1].type, "MYNATIVE_NAME", "clone completes the app names")
+
+  -- a run that throws before its first command (a tool check) must not block every later run of the session
+  local repos = H.tmpdir()
+  vim.fn.mkdir(repos .. "/ai-desktop", "p")
+  local saved_repos, saved_ensure = vim.env.REPOS_DIR, toolchain.ensure
+  vim.env.REPOS_DIR = repos
+  toolchain.ensure = function()
+    error("probe broke")
+  end
+  native.install("ai-desktop")
+  local reached = false
+  toolchain.ensure = function()
+    reached = true
+  end
+  native.install("ai-desktop")
+  toolchain.ensure, vim.env.REPOS_DIR = saved_ensure, saved_repos
+  eq(reached, true, "the next install runs after one that threw")
+  H.cleanup()
 end

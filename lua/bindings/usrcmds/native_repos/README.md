@@ -11,7 +11,7 @@ Sister of `:MyPlugins` for the native apps next to the plugin checkouts. The lis
 :MyNative deps [name]        " check the tools, install the missing ones that need no administrator
 :MyNative build [name]       " build the stale or missing ones, output in the quickfix list
 :MyNative install [name]     " tools, then build and install every cloned app for the current user
-:MyNative uninstall [name]   " remove the installation of every cloned app (scripts/uninstall.ps1)
+:MyNative uninstall [name]   " remove the installation of every cloned app (asks first; scripts/uninstall.ps1)
 ```
 
 - A build is **stale** when the newest commit touching its sources is newer than the artifact (same rule as
