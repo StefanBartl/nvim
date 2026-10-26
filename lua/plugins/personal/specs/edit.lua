@@ -11,7 +11,7 @@
 ---@type LazyPluginSpec[]
 return {
   {
-    "StefanBartl/cascade.nvim",
+    "WKDSteve/cascade.nvim",
     ft = { "markdown", "markdown.mdx", "text", "tex", "norg" },
     event = "VeryLazy",
     -- Only the keymap preset is asked for (cascade ships `preset = false`, so
@@ -238,13 +238,13 @@ return {
   },
 
   {
-    "StefanBartl/replacer.nvim",
+    "WKDSteve/replacer.nvim",
     cmd = { "Replace", "Replacer", "Surround", "Wrap" },
     dependencies = {
       "ibhagwan/fzf-lua",
-      "StefanBartl/lib.nvim",
+      "WKDSteve/lib.nvim",
       -- ui.kit.confirm/select/input (dialogs, root/rename pickers, prompts)
-      "StefanBartl/ui.nvim",
+      "WKDSteve/ui.nvim",
       -- "j-hui/fidget.nvim"
     },
     opts = {
@@ -356,7 +356,7 @@ return {
   },
 
   {
-    "StefanBartl/emojis.nvim",
+    "WKDSteve/emojis.nvim",
     cmd = "Emojis",
     -- "uni": character info under the cursor (the mapping chrisbra/unicode.vim
     -- used to provide), bound straight to `:Emojis unicode name`.
@@ -475,19 +475,19 @@ return {
   },
 
   {
-    "StefanBartl/language.nvim",
+    "WKDSteve/language.nvim",
     event = "VeryLazy",
     dependencies = {
-      "StefanBartl/lib.nvim",
+      "WKDSteve/lib.nvim",
       "folke/trouble.nvim", -- optional: nicer list; pcall-guarded in the plugin
       -- Needed for the feature, not for the plugin: language.nvim registers an
       -- on_request position contribution with hover.nvim, so `:Hover show`
       -- over a word also shows its translation. The plugin `pcall`s hover.nvim
       -- and runs fine without it; it is listed here to fix the load order
       -- instead of borrowing it from hover.nvim's `lazy = false`.
-      "StefanBartl/hover.nvim",
+      "WKDSteve/hover.nvim",
       -- Provides `casedesk.spell_wordlists` (spell.extra_wordlists below).
-      "StefanBartl/casedesk.nvim",
+      "WKDSteve/casedesk.nvim",
     },
     config = function()
       require("language").setup({
@@ -707,13 +707,13 @@ return {
   },
 
   {
-    "StefanBartl/markdown.nvim",
+    "WKDSteve/markdown.nvim",
     ft = { "markdown", "mdx", "md" },
     -- Soft dependency: markdown.nvim's fenced_scope feature consumes
     -- color_my_ascii's fence API when present (falls back to a built-in scanner
     -- otherwise). Listing it here just guarantees load order in this config.
     dependencies = {
-      "StefanBartl/color_my_ascii.nvim",
+      "WKDSteve/color_my_ascii.nvim",
     },
     opts = {
       -- Feature gating; `just_enable` wins over `disable`/`enable`. Gateable
@@ -1002,9 +1002,9 @@ return {
     -- only loads the plugin (and defines a command) for a verb it was told
     -- to trigger on, so a trimmed list leaves e.g. :YAML unavailable until
     -- :JSON has run at least once.
-    "StefanBartl/data.nvim",
+    "WKDSteve/data.nvim",
     cmd = { "JSON", "YAML", "XML", "Data" },
-    dependencies = { "StefanBartl/lib.nvim" },
+    dependencies = { "WKDSteve/lib.nvim" },
     opts = {
       -- json / yaml / xml: default indent width for `pretty`/`sort`, and path
       -- separator for `lines`/`keys`.

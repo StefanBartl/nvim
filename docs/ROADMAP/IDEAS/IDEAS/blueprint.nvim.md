@@ -118,8 +118,8 @@ Config-seitig bleibt nur die Spec:
 
 ```lua
 {
-  "StefanBartl/blueprint.nvim",
-  dependencies = { "StefanBartl/lib.nvim" },
+  "WKDSteve/blueprint.nvim",
+  dependencies = { "WKDSteve/lib.nvim" },
   cmd = { "Blueprint" },
   opts = {
     sources  = { vim.env.NOTES_DIR .. "/MyNotes/Templates" },
@@ -728,12 +728,12 @@ Komposition · Export/PDF · Kontext-Vorschlag.
   [`Checklist.md`]($RULES_VAULT/rulesets/lua/archiv/Checklist.md) ·
   [`NEW_PROJECT.md`]($RULES_VAULT/rulesets/lua/gates/NEW_PROJECT.md) · `REVIEW.md` · `PERFORMANCE.md`
   (`$RULES_VAULT/rulesets/lua\`)
-- Eigene Plugins: [`lib.nvim`](https://github.com/StefanBartl/lib.nvim) ·
-  [`pickers.nvim`](https://github.com/StefanBartl/pickers.nvim) ·
-  [`documentation.nvim`](https://github.com/StefanBartl/documentation.nvim) ·
-  [`sandbox.nvim`](https://github.com/StefanBartl/sandbox.nvim) ·
-  [`runtime-analysis.nvim`](https://github.com/StefanBartl/runtime-analysis.nvim) ·
-  [`recommender.nvim`](https://github.com/StefanBartl/recommender.nvim)
+- Eigene Plugins: [`lib.nvim`](https://github.com/WKDSteve/lib.nvim) ·
+  [`pickers.nvim`](https://github.com/WKDSteve/pickers.nvim) ·
+  [`documentation.nvim`](https://github.com/WKDSteve/documentation.nvim) ·
+  [`sandbox.nvim`](https://github.com/WKDSteve/sandbox.nvim) ·
+  [`runtime-analysis.nvim`](https://github.com/WKDSteve/runtime-analysis.nvim) ·
+  [`recommender.nvim`](https://github.com/WKDSteve/recommender.nvim)
 - Verwandtes eigenes Konzept: [`polyglot-cmd.nvim`](../polyglot-cmd.nvim.md)
   (Intent-zu-Syntax-Baukasten; gleiche Denkfigur, andere Domäne)
 - Neovim: `:h vim.snippet` · `:h vim.uv` · `:h nvim_buf_set_text` ·

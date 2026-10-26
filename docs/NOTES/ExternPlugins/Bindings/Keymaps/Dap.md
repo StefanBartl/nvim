@@ -1,18 +1,18 @@
-# nvim-dap (via StefanBartl/dap.nvim) — Keymaps
+# nvim-dap (via WKDSteve/dap.nvim) — Keymaps
 
-**Repo:** `StefanBartl/dap.nvim` — gelesen von `:Bindings check`, weil `Dap` sonst mehrdeutig zwischen `dap.nvim` und `nvim-dap` wäre.
+**Repo:** `WKDSteve/dap.nvim` — gelesen von `:Bindings check`, weil `Dap` sonst mehrdeutig zwischen `dap.nvim` und `nvim-dap` wäre.
 
 `nvim-dap` selbst bringt **keine einzige Default-Keymap** mit (Design-
 Entscheidung des Plugins, siehe dessen README: "The arrow keys are good
 candidates for keymaps…" — bewusst dem Nutzer überlassen). Alles, was hier
-dokumentiert ist, stammt daher von `StefanBartl/dap.nvim` — einem
+dokumentiert ist, stammt daher von `WKDSteve/dap.nvim` — einem
 Wrapper-Plugin (eigenes Repo, `$REPOS_DIR/dap.nvim`), das über
 `mfussenegger/nvim-dap` und die UI-Provider (`nvim-dap-view` /
 `rcarriga/nvim-dap-ui`) sitzt und dessen rohe Lua-API bindet.
 
 Deklariert in
 [lua/plugins/personal/init.lua](../../../../../lua/plugins/personal/init.lua)
-(`"StefanBartl/dap.nvim"`-Block), gesetzt via
+(`"WKDSteve/dap.nvim"`-Block), gesetzt via
 `opts.keymaps.prefix = "<leader>da"` — überschreibt den Wrapper-Default
 `<leader>d` bewusst, weil `<leader>d` allein bereits mit git-/fzf-Mappings
 kollidiert (`dc` = `:Git ui diffview close`, `di` = `:Git hunk inline`, `do`

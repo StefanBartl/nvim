@@ -49,7 +49,7 @@ Nur wenn eine der beiden Bedingungen zutrifft:
 Aktuell: `system`, `ui_open`, `my`, `autocmds`, `lsp`.
 
 (`options` und `wkdoptions` sind zu `my` zusammengefallen, als beide nach
-StefanBartl/my.nvim gewandert sind — `init.lua` benennt die Schalter dort
+WKDSteve/my.nvim gewandert sind — `init.lua` benennt die Schalter dort
 explizit, damit der Aufruf dokumentiert, was die Phase tut.)
 
 ### `startup.on("UIReady", label, fn)` — nach dem ersten Frame

@@ -15,7 +15,7 @@ Hintergrund: Plan und Entscheidungen in
 
 ## Wie starte ich das?
 
-Installer: <https://github.com/StefanBartl/docmap-desktop/releases/latest>
+Installer: <https://github.com/WKDSteve/docmap-desktop/releases/latest>
 → `docmap-desktop_0.6.0_x64-setup.exe`. **`v0.6.0` wurde am 2026-10-02 neu geschnitten.** Hast du
 die erste Fassung schon installiert, jetzt neu installieren; die richtige erkennst du in
 *Help → About* am Engine-Commit **`440bfb7`** (die alte hatte `4bd684e`).

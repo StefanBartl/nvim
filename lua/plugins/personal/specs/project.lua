@@ -30,7 +30,7 @@ end
 ---@type LazyPluginSpec[]
 return {
   {
-    "StefanBartl/sandbox.nvim",
+    "WKDSteve/sandbox.nvim",
     -- Its own triggers instead of VeryLazy, where it cost every start ~110 ms
     -- (six engine adapters, a PATH search per engine) for a plugin that
     -- registers no global key or autocmd: outside its own buffers it is the
@@ -50,7 +50,7 @@ return {
     ft = "dockerfile",
     event = compose_file_events(),
     -- ui.nvim: ui.contextmenu (right-click menu) and ui.kit (kit.input() prompts).
-    dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
+    dependencies = { "WKDSteve/lib.nvim", "WKDSteve/ui.nvim" },
     opts = {
       -- Container engine: "podman" | "docker" | "nerdctl". nil detects the first
       -- one on PATH that answers; naming one here skips detection entirely.
@@ -104,12 +104,12 @@ return {
   },
 
   {
-    "StefanBartl/github_stats.nvim",
+    "WKDSteve/github_stats.nvim",
     event = "VimEnter",
     -- ui.nvim: init.lua's own require("github_stats.dashboard") pulls in
     -- ui.contextmenu at module load, before setup() runs. ui.nvim is already
     -- loaded eagerly; the entry documents the dependency.
-    dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
+    dependencies = { "WKDSteve/lib.nvim", "WKDSteve/ui.nvim" },
     config = function()
       require("github_stats").setup({
         -- Notify at startup whether a fetch was performed or not.
@@ -121,32 +121,32 @@ return {
         -- synchronous loop: the list length bounds the spawn burst on machines
         -- where process creation is slow (AV/EDR scanning each spawn).
         repos = {
-          "StefanBartl/buffer-ctx.nvim",
-          "StefanBartl/cascade.nvim",
-          "StefanBartl/color_my_ascii.nvim",
-          "StefanBartl/debugging.nvim",
-          "StefanBartl/diff.nvim",
-          "StefanBartl/docmap.nvim",
-          "StefanBartl/emojis.nvim",
-          "StefanBartl/fileops.nvim",
-          "StefanBartl/filetree.nvim",
-          "StefanBartl/github_stats.nvim",
-          "StefanBartl/gopath.nvim",
-          "StefanBartl/hover.nvim",
-          "StefanBartl/language.nvim",
-          "StefanBartl/lib.nvim",
-          "StefanBartl/lsp.nvim",
-          "StefanBartl/markdown.nvim",
-          "StefanBartl/mdview.nvim",
-          "StefanBartl/cmdlog.nvim",
-          "StefanBartl/sandbox.nvim",
-          "StefanBartl/open.nvim",
-          "StefanBartl/pdfport.nvim",
-          "StefanBartl/pickers.nvim",
-          "StefanBartl/insights.nvim",
-          "StefanBartl/recommender.nvim",
-          "StefanBartl/replacer.nvim",
-          "StefanBartl/reposcope.nvim",
+          "WKDSteve/buffer-ctx.nvim",
+          "WKDSteve/cascade.nvim",
+          "WKDSteve/color_my_ascii.nvim",
+          "WKDSteve/debugging.nvim",
+          "WKDSteve/diff.nvim",
+          "WKDSteve/docmap.nvim",
+          "WKDSteve/emojis.nvim",
+          "WKDSteve/fileops.nvim",
+          "WKDSteve/filetree.nvim",
+          "WKDSteve/github_stats.nvim",
+          "WKDSteve/gopath.nvim",
+          "WKDSteve/hover.nvim",
+          "WKDSteve/language.nvim",
+          "WKDSteve/lib.nvim",
+          "WKDSteve/lsp.nvim",
+          "WKDSteve/markdown.nvim",
+          "WKDSteve/mdview.nvim",
+          "WKDSteve/cmdlog.nvim",
+          "WKDSteve/sandbox.nvim",
+          "WKDSteve/open.nvim",
+          "WKDSteve/pdfport.nvim",
+          "WKDSteve/pickers.nvim",
+          "WKDSteve/insights.nvim",
+          "WKDSteve/recommender.nvim",
+          "WKDSteve/replacer.nvim",
+          "WKDSteve/reposcope.nvim",
         },
         -- Where the GitHub token comes from: "env" | "file". Equals the default,
         -- set explicitly so the choice is visible here.
@@ -269,7 +269,7 @@ return {
   },
 
   {
-    "StefanBartl/reposcope.nvim",
+    "WKDSteve/reposcope.nvim",
     name = "reposcope",
     -- Loaded on first use, not in the VeryLazy wave: require("reposcope") pulls
     -- in ~180 modules and setup() runs on top, 60-110 ms of blocking work in
@@ -286,7 +286,7 @@ return {
     },
     -- ui.kit backs the filter/sort prompts and the favorites/help/status views,
     -- required from init.lua's own top level.
-    dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
+    dependencies = { "WKDSteve/lib.nvim", "WKDSteve/ui.nvim" },
     -- `opts` must exist (even empty): it makes lazy.nvim call
     -- require("reposcope").setup(opts) on load, and without that call neither
     -- the plugin's own <leader>rs / <leader>rc keymaps (set in setup()) nor
@@ -368,9 +368,9 @@ return {
   },
 
   {
-    "StefanBartl/docmap.nvim",
+    "WKDSteve/docmap.nvim",
     cmd = { "DocMap", "DocBrowse", "DocMapAll", "DocMapAllFull" },
-    dependencies = { "StefanBartl/lib.nvim" },
+    dependencies = { "WKDSteve/lib.nvim" },
     -- No `root`: the commands resolve the repository per invocation from the
     -- current buffer (see `root_markers`), because rows of repos sit side by
     -- side here and a fixed target would be exactly wrong. `source` derives
@@ -606,7 +606,7 @@ return {
     -- the real `lazygit` binary. Do not install vim-fugitive (defines its own
     -- :Git command) or git-conflict.nvim (sets the same buffer-local keys)
     -- alongside it.
-    "StefanBartl/gitsuite.nvim",
+    "WKDSteve/gitsuite.nvim",
     cmd = "Git",
     -- Conflict markers live in a buffer's text, so there is nothing to detect
     -- before one is read: gitsuite.nvim's conflict scan/highlight/keymap setup
@@ -629,7 +629,7 @@ return {
     -- diff.nvim's own commands first.
     -- ui.nvim: the multi-repo `:Git dashboard` uses `ui.kit` for its
     -- popup/confirm dialogs, and `:Git plugins log` for its picker.
-    dependencies = { "StefanBartl/lib.nvim", "StefanBartl/diff.nvim", "StefanBartl/ui.nvim" },
+    dependencies = { "WKDSteve/lib.nvim", "WKDSteve/diff.nvim", "WKDSteve/ui.nvim" },
     keys = {
       -- Full-file blame (native `git blame --porcelain`).
       { "<leader>gb", "<cmd>Git blame full<cr>", desc = "[gitsuite.nvim] Blame (full)" },
@@ -792,12 +792,12 @@ return {
     -- lives (`repo_root`); see the plugin's docs/configuration.md. The block
     -- below lists every option with its default. Lists replace the default,
     -- name-keyed tables (`sla`, `state_verbs`, `keymaps`, ...) merge key by key.
-    "StefanBartl/casedesk.nvim",
+    "WKDSteve/casedesk.nvim",
     lazy = false,
     -- ui.nvim: casedesk.ui requires ui.kit at module load -- setup() fails
     -- without it, no fallback. ui.nvim is already loaded eagerly; the entry
     -- documents the dependency.
-    dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
+    dependencies = { "WKDSteve/lib.nvim", "WKDSteve/ui.nvim" },
     opts = {
       -- Tabline: group the buffers of one case next to each other and colour
       -- each case (docs/tabline-groups.md in casedesk.nvim). Off by default.
@@ -1090,11 +1090,11 @@ return {
   -- by the `:MyPlugins tasks|task|open` routes (lua/bindings/usrcmds/plugin_repos/init.lua mounts the
   -- plugin's route tree). No built-in vault path: it is set here.
   {
-    "StefanBartl/tasks.nvim",
+    "WKDSteve/tasks.nvim",
     main = "tasks_nvim",
     -- `:TasksVault` is the second command of the plugin (the vault itself: open/copy/search the Backlog, create).
     cmd = { "Tasks", "TasksVault" },
-    dependencies = { "StefanBartl/lib.nvim" },
+    dependencies = { "WKDSteve/lib.nvim" },
     opts = {
       -- The vault folder (one folder per area). Without it $TASKS_VAULT is read.
       -- Default: nil.
@@ -1206,10 +1206,10 @@ return {
   -- Debugging: `:checkhealth terminal`, `:lua =require("terminal").status()`,
   -- `:lua =require("terminal").list(true)` (alle Projekte).
   {
-    "StefanBartl/terminal.nvim",
+    "WKDSteve/terminal.nvim",
     event = "VeryLazy",
     cmd = { "Terminal" },
-    dependencies = { "StefanBartl/lib.nvim" },
+    dependencies = { "WKDSteve/lib.nvim" },
     opts = {
       -- Welches Backend die Terminals stellt: "auto" | "native" | "wezterm" | "tmux".
       -- "wezterm" oeffnet Terminals als WezTerm-Panes (`wezterm cli`) und "tmux" als tmux-Panes
@@ -1420,7 +1420,7 @@ return {
   },
 
   -- {
-  -- "StefanBartl/learn-cli.nvim",
+  -- "WKDSteve/learn-cli.nvim",
   -- lazy = false,
   -- config = function()
   -- require("learn_cli").setup({

@@ -46,14 +46,14 @@ end
 ---@type Plugins.Personal.Native[]
 M.list = {
   desktop({
-    repo = "StefanBartl/tasks-desktop",
+    repo = "WKDSteve/tasks-desktop",
     name = "tasks-desktop",
     artifact = "target/release/tasks-hub.exe",
     sources = { "crates", "ui", "Cargo.lock", "engine.lock" },
     needs = { "rust", "msvc", "node" },
   }),
   desktop({
-    repo = "StefanBartl/rules-desktop",
+    repo = "WKDSteve/rules-desktop",
     name = "rules-desktop",
     artifact = "target/release/rules-hub.exe",
     sources = { "crates", "ui", "Cargo.lock" },
@@ -61,26 +61,26 @@ M.list = {
   }),
   -- build-install.ps1 hands over to scripts/setup.ps1, which configures build/ when it is not there
   desktop({
-    repo = "StefanBartl/ai-desktop",
+    repo = "WKDSteve/ai-desktop",
     name = "ai-desktop",
     artifact = "build/ai-desktop.exe",
     sources = { "src", "CMakeLists.txt" },
     needs = { "cmake", "mingw64" },
   }),
   {
-    repo = "StefanBartl/takt",
+    repo = "WKDSteve/takt",
     name = "takt",
     hint = "nothing to build yet (the repo is still a skeleton)",
   },
   desktop({
-    repo = "StefanBartl/docmap-desktop",
+    repo = "WKDSteve/docmap-desktop",
     name = "docmap-desktop",
     artifact = "src-tauri/target/release/docmap-desktop.exe",
     sources = { "src", "src-tauri", "engine.lock" },
     needs = { "rust", "msvc", "tauri-cli" },
   }),
   {
-    repo = "StefanBartl/appkit",
+    repo = "WKDSteve/appkit",
     name = "appkit",
     hint = "a library for the desktop apps, nothing to build on its own",
   },

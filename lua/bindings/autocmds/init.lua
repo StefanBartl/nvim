@@ -9,7 +9,7 @@ require("bindings.autocmds.auto-center-fexplorer").setup()
 require("bindings.autocmds.explorer-singleton").setup()
 
 -- Formerly in lua/options.lua; stayed here when that file moved into
--- StefanBartl/my.nvim, because it is a markdown.nvim integration rather than
+-- WKDSteve/my.nvim, because it is a markdown.nvim integration rather than
 -- a generic editor option. See the module header.
 require("bindings.autocmds.markdown_folds").setup()
 

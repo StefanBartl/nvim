@@ -48,13 +48,13 @@ return {
     dap_keys[#dap_keys + 1] = { dap_prefix .. "e", mode = "v", desc = "[DAP] Evaluate selection" }
 
     return {
-      "StefanBartl/dap.nvim",
+      "WKDSteve/dap.nvim",
       cmd = "Dap",
       keys = dap_keys,
       dependencies = {
-        "StefanBartl/lib.nvim",
+        "WKDSteve/lib.nvim",
         -- ui.kit backs breakpoint/validation prompts.
-        "StefanBartl/ui.nvim",
+        "WKDSteve/ui.nvim",
         "mfussenegger/nvim-dap",
         "rcarriga/nvim-dap-ui",
         "nvim-neotest/nvim-nio",
@@ -165,10 +165,10 @@ return {
   end)(),
 
   {
-    "StefanBartl/debugging.nvim",
+    "WKDSteve/debugging.nvim",
     -- cmd = "Debug",
     event = "VeryLazy",
-    dependencies = { "StefanBartl/lib.nvim" },
+    dependencies = { "WKDSteve/lib.nvim" },
     opts = {
       -- Shorthand: enable every feature category at once (overrides `features`).
       -- all = nil, -- boolean
@@ -281,7 +281,7 @@ return {
   },
 
   {
-    "StefanBartl/diff.nvim",
+    "WKDSteve/diff.nvim",
     cmd = { "Diff", "DiffClear", "DiffOrig", "DiffExit" },
     -- `<leader>gd` diffs the current file against HEAD (diff.nvim resolves
     -- `git:HEAD` itself). A lazy `keys` entry rather than diff.nvim's own
@@ -401,10 +401,10 @@ return {
     -- The block below lists every option lsp.nvim knows, in the order of its
     -- DEFAULTS.lua. It is a comment only: change values in init.lua. Options
     -- set there show that value and say so.
-    "StefanBartl/lsp.nvim",
+    "WKDSteve/lsp.nvim",
     lazy = false,
     priority = 900,
-    dependencies = { "StefanBartl/lib.nvim" },
+    dependencies = { "WKDSteve/lib.nvim" },
     -- opts = {
     --   -- Option profile the rest starts from: "default" (the values below) |
     --   -- "lean" (continuous per-keystroke/per-attach work turned down) | "full"
@@ -750,14 +750,14 @@ return {
   },
 
   {
-    "StefanBartl/insights.nvim",
+    "WKDSteve/insights.nvim",
     -- Not `cmd = "Insights"`: the conflicts / unimported / devserver
     -- autocmds are registered by setup(), so lazy-loading on the command would
     -- mean they never fire. Set their `enable = false` to opt out instead.
     lazy = false,
     -- ui.nvim: devserver.prompt (default true) has no fallback if ui.kit is
     -- missing -- see insights.nvim's docs/installation.md.
-    dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
+    dependencies = { "WKDSteve/lib.nvim", "WKDSteve/ui.nvim" },
     opts = {
       -- Symbol index (ripgrep + optional Tree-sitter): the `<leader>ps` /
       -- `<leader>pS` pickers and the symbols commands.
@@ -1041,9 +1041,9 @@ return {
   },
 
   {
-    "StefanBartl/runtime-analysis.nvim",
+    "WKDSteve/runtime-analysis.nvim",
     lazy = false,
-    dependencies = { "StefanBartl/lib.nvim" },
+    dependencies = { "WKDSteve/lib.nvim" },
     -- Telemetry auto-instrumentation (which of Stefan's plugins, with what
     -- settings) lives here, on this plugin's own spec, not a separate
     -- config file or a call before lazy.setup() -- see lua/config/
@@ -1066,7 +1066,7 @@ return {
       -- instrument". Here it is built from this config's policy (see
       -- lua/config/telemetry.lua) and has this shape:
       --   opts.telemetry = {
-      --     -- Keyed by repo ("StefanBartl/markdown.nvim"), for plugins lazy.nvim resolves.
+      --     -- Keyed by repo ("WKDSteve/markdown.nvim"), for plugins lazy.nvim resolves.
       --     plugins = {
       --       ["StefanBartl/<name>.nvim"] = {
       --         namespace = "<name>.nvim", -- string
@@ -1099,13 +1099,13 @@ return {
   },
 
   {
-    "StefanBartl/recommender.nvim",
+    "WKDSteve/recommender.nvim",
     ft = { "lua" },
     cmd = { "Recommender" },
     -- ui.nvim: bindings/usrcmds.lua requires ui.kit at module load (the
     -- suggestion float's picker) -- setup() fails without it, no fallback.
     -- Already loaded lazy=false above, listed here for documentation.
-    dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
+    dependencies = { "WKDSteve/lib.nvim", "WKDSteve/ui.nvim" },
     opts = {
       -- Analyzer backend: "regex" | "treesitter" | "javascript" | "python" | "perf".
       -- analyzer = "regex",
@@ -1185,10 +1185,10 @@ return {
   },
 
   {
-    "StefanBartl/spotlight.nvim",
+    "WKDSteve/spotlight.nvim",
     -- ui.nvim: the spotlight list itself is built on ui.kit.select with no
     -- fallback -- see spotlight.nvim's docs/installation.md.
-    dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
+    dependencies = { "WKDSteve/lib.nvim", "WKDSteve/ui.nvim" },
     event = "VeryLazy",
     opts = {
       -- Register a hover.nvim position preview, so resting the cursor on a
@@ -1342,7 +1342,7 @@ return {
     -- every `:` command -- that recording *is* the plugin. Loading on `:Cmdlog`
     -- would start the tracker at the moment you first ask for the history, so
     -- the history would always be empty. Opt out with `track_commands = false`.
-    "StefanBartl/cmdlog.nvim",
+    "WKDSteve/cmdlog.nvim",
     lazy = false,
     opts = {
       -- Picker engine: "telescope" | "fzf" | "fzf-lua".
@@ -1441,9 +1441,9 @@ return {
   },
 
   {
-    "StefanBartl/rules.nvim",
+    "WKDSteve/rules.nvim",
     cmd = { "Rules" },
-    dependencies = { "StefanBartl/lib.nvim" },
+    dependencies = { "WKDSteve/lib.nvim" },
     opts = {
       -- Files or directories to load fenced ```rule blocks from; rules.nvim
       -- ships no rules of its own. Points at the whole Checklists tree, not
@@ -1473,9 +1473,9 @@ return {
     -- `:Testing terminal` repeats the last run (otherwise the project) as a job in the
     -- terminal.nvim terminal `testing`, showing the reporter output (to scroll and copy,
     -- no quickfix list). Needs terminal.nvim, no option here.
-    "StefanBartl/testing.nvim",
+    "WKDSteve/testing.nvim",
     cmd = "Testing",
-    dependencies = { "StefanBartl/lib.nvim" },
+    dependencies = { "WKDSteve/lib.nvim" },
     opts = {
       -- Prefix of every message the plugin shows.
       -- notify_prefix = "[testing]",

@@ -1,6 +1,6 @@
 # Claude-Code-Setup (Multi-Machine: PC / Heim-PC / Workstation)
 
-Dieser Ordner ist Teil des nvim-Config-Repos (`StefanBartl/nvim` auf GitHub)
+Dieser Ordner ist Teil des nvim-Config-Repos (`WKDSteve/nvim` auf GitHub)
 und damit auf allen drei Maschinen per `git pull` synchron. Er enthaelt die
 Vorlagen fuer die globale Claude-Code-Konfiguration - die eigentlich in
 `~/.claude/` (also pro Maschine, nicht versioniert) liegt - plus ein Skript,

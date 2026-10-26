@@ -10,13 +10,13 @@ Many of the features started here and were later extracted into standalone
 plugins under [github.com/StefanBartl](https://github.com/StefanBartl), for
 example:
 
-- [lib.nvim](https://github.com/StefanBartl/lib.nvim) - shared utilities the
+- [lib.nvim](https://github.com/WKDSteve/lib.nvim) - shared utilities the
   other plugins build on
-- [filetree.nvim](https://github.com/StefanBartl/filetree.nvim) - file tree
-- [pickers.nvim](https://github.com/StefanBartl/pickers.nvim) - pickers
-- [markdown.nvim](https://github.com/StefanBartl/markdown.nvim) - Markdown
+- [filetree.nvim](https://github.com/WKDSteve/filetree.nvim) - file tree
+- [pickers.nvim](https://github.com/WKDSteve/pickers.nvim) - pickers
+- [markdown.nvim](https://github.com/WKDSteve/markdown.nvim) - Markdown
   editing helpers
-- [sandbox.nvim](https://github.com/StefanBartl/sandbox.nvim) - container
+- [sandbox.nvim](https://github.com/WKDSteve/sandbox.nvim) - container
   and compose helpers
 
 ## Layout

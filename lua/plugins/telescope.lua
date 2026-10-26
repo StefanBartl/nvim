@@ -1,6 +1,6 @@
 ---@module 'plugins.telescope'
 ---@brief Telescope plugin configuration.
----@description History is owned by pickers.nvim (StefanBartl/pickers.nvim,
+---@description History is owned by pickers.nvim (WKDSteve/pickers.nvim,
 ---history.fzf_scope = "patch"), which patches telescope's defaults.history itself.
 
 return {

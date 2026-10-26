@@ -511,7 +511,7 @@ bekommt einen Schritt, der lokale Helfer **mit identischem Body** durch Kit-Aufr
 **aber nicht die des Templates**: das Template pinnt Neovim `v0.12.2` und legt `actions/cache` an — **keine** Flotten-CI hat das (Neovim `stable`
 in 36, ohne Angabe in 5, `actions/cache` nur bei `mdview`). Das ist die Folge von E-03: Es gibt keinen Rückweg vom Template in die Repos.
 
-**Vorschlag.** `StefanBartl/testing.nvim/.github/workflows/plugin-ci.yml` (`on: workflow_call`) mit Eingaben `deps`, `tools` (z. B.
+**Vorschlag.** `WKDSteve/testing.nvim/.github/workflows/plugin-ci.yml` (`on: workflow_call`) mit Eingaben `deps`, `tools` (z. B.
 `ripgrep`), `nvim`, `os`, `lint`, `cache`; die Repo-`ci.yml` besteht aus ca. 15 Zeilen (`uses: …@ci-verified`). Die ci-verified-Logik (Checkout je
 Dependency mit `ref: ci-verified`, Veröffentlichung der Branch) und die IR-/Log-Artefakte wandern in den gemeinsamen Teil. **Zwei Einschränkungen,
 beide gemessen:** (1) Die zwei privaten Repos (`casedesk`, `my`) starten derzeit gar keine Jobs (Billing) — ein Reusable Workflow ändert daran nichts;
@@ -749,7 +749,7 @@ Reihenfolge nach „offene Zeilen × Kernlogik-Anteil", nicht nach Prozent: zehn
 - **Private Repos in der CI** (`casedesk`, `my`): wegen des Billing-Stopps ohne Aussage.
 - **Die `nvim-config` selbst** (Konfig-Spec für die `keys`-Listen von `plugins/personal/init.lua`; der WKDBook-Task nennt ihn als fehlend) — kein `*.nvim`-Repo.
 - **Die vier auskommentierten bzw. archivierten Plugins** (`learn-cli`, `mygrep`, `filetreepicker`, `neotree-fs-refactor`) und `sessions.nvim` taucht in den
-  Installations-Specs nicht unter `StefanBartl/sessions.nvim` auf (wird aber als Repo vermessen).
+  Installations-Specs nicht unter `WKDSteve/sessions.nvim` auf (wird aber als Repo vermessen).
 - **Code in `tests/` lokal anders benannter Verzeichnisse** (NEW-48-Prüfung): die Konformitäts-Suite meldet dazu je Repo (K15), nicht dieser Bericht.
 - **Konformität mit gesetztem `setup`**: ohne `setup` in `.testing.lua` sind K3, K4, K12 und K13 in 22 Repos `n/a`; mit voll eingeschaltetem
   `setup` wären es andere Zahlen.

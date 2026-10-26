@@ -89,7 +89,7 @@ wenn der Plugin-Verb keine Range-Unterstützung hat (dann zweispaltig).
 
 **Autocmds** — `| Event(s) | Augroup | Pattern | Action |`, identisch zum
 Format, das jedes Plugin inzwischen in seiner eigenen `docs/BINDINGS.md`
-führt (z.B. [lsp.nvim](https://github.com/StefanBartl/lsp.nvim/blob/main/docs/autocmds.md)).
+führt (z.B. [lsp.nvim](https://github.com/WKDSteve/lsp.nvim/blob/main/docs/autocmds.md)).
 Hier gibt es nichts Neues zu erfinden — nur sicherstellen, dass jede
 einzelne `Autocmds/<plugin>.md` dieselbe Spaltenform benutzt wie die
 Sammel-Datei, die daraus gespeist wird.
@@ -161,7 +161,7 @@ Drei Fälle im heutigen Korpus, und alle drei brauchen sie wirklich:
 | Blatt | Repo | Warum |
 | --- | --- | --- |
 | `Blink` | `Saghen/blink.cmp` | keine Normalisierung führt von `Blink` auf `blink.cmp` |
-| `Dap` | `StefanBartl/dap.nvim` | `dap.nvim` und `nvim-dap` normalisieren beide auf `dap` — mehrdeutig |
+| `Dap` | `WKDSteve/dap.nvim` | `dap.nvim` und `nvim-dap` normalisieren beide auf `dap` — mehrdeutig |
 | `NvChadUI` | `NvChad/ui` | das Repo heißt schlicht `ui` |
 
 Eine neue Zeile ist nur nötig, wenn `:Bindings check` das Blatt als

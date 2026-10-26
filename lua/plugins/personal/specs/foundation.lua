@@ -11,7 +11,7 @@
 ---@type LazyPluginSpec[]
 return {
   {
-    "StefanBartl/lib.nvim",
+    "WKDSteve/lib.nvim",
     lazy = false,
     priority = 1000,
     config = function()
@@ -151,10 +151,10 @@ return {
     -- first paint and vim.diagnostic.config() before the first LSP attach. A
     -- lazy opts block would hand that ordering to the plugin manager.
     -- `lazy = false` only guarantees the module is on the runtimepath by then.
-    "StefanBartl/my.nvim",
+    "WKDSteve/my.nvim",
     lazy = false,
     priority = 900,
-    dependencies = { "StefanBartl/lib.nvim" },
+    dependencies = { "WKDSteve/lib.nvim" },
     --
     -- OPTION REFERENCE (comment only, nothing here is executed).
     -- The options go to `require("my").setup({...})` in init.lua (phase

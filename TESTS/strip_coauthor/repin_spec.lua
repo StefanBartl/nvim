@@ -54,9 +54,9 @@ return function(H)
 
   local lock = table.concat({
     "# pinned",
-    "repo       = https://github.com/StefanBartl/tasks.nvim",
+    "repo       = https://github.com/WKDSteve/tasks.nvim",
     "commit     = " .. old_tasks,
-    "lib_repo   = https://github.com/StefanBartl/lib.nvim",
+    "lib_repo   = https://github.com/WKDSteve/lib.nvim",
     "lib_commit = " .. old_lib,
     "",
   }, "\n")
@@ -66,9 +66,9 @@ return function(H)
     lock_out,
     table.concat({
       "# pinned",
-      "repo       = https://github.com/StefanBartl/tasks.nvim",
+      "repo       = https://github.com/WKDSteve/tasks.nvim",
       "commit     = " .. new_tasks,
-      "lib_repo   = https://github.com/StefanBartl/lib.nvim",
+      "lib_repo   = https://github.com/WKDSteve/lib.nvim",
       "lib_commit = " .. new_lib,
       "",
     }, "\n"),

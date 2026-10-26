@@ -6,7 +6,7 @@ Zuordnung damit ohne Nachrechnen lesbar ist.
 
 Alle elf Commands sind **[default]**, registriert in `plugin/dap-view.lua`
 des Plugins. Diese Config registriert keinen eigenen — sie erreicht dieselben
-Funktionen über den Wrapper `StefanBartl/dap.nvim`, siehe
+Funktionen über den Wrapper `WKDSteve/dap.nvim`, siehe
 [Usercmds/Dap.md](./Dap.md) und [Keymaps/Dap.md](../Keymaps/Dap.md).
 
 nvim-dap-view ist der **UI-Provider** dieser Config für Debugging: das

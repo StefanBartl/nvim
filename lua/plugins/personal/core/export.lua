@@ -30,7 +30,7 @@ local M = {}
 --- joined to real, already-collected data with no extra wiring.
 ---@class Plugins.Personal.Project
 ---@field name string Basename, e.g. "markdown.nvim".
----@field repo string Full "owner/repo", e.g. "StefanBartl/markdown.nvim".
+---@field repo string Full "owner/repo", e.g. "WKDSteve/markdown.nvim".
 ---@field dir string Absolute local checkout path.
 
 ---Every enabled personal plugin that has a local checkout on this machine.

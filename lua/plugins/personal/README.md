@@ -60,7 +60,7 @@ functions are lazy.nvim's business and do not run.
 ```lua
 local specs = require("plugins.personal")
 #specs                --> 33   (every declared repo, disabled ones included)
-specs[1][1]           --> "StefanBartl/lib.nvim"
+specs[1][1]           --> "WKDSteve/lib.nvim"
 specs[1].dir          --> "$REPOS_DIR/lib.nvim"   (mode "dir", checkout present)
                       --> nil                   (mode "remote", or not cloned)
 specs[n].enabled      --> false                 (mode "disabled")
@@ -75,7 +75,7 @@ without making the caller re-derive it.
 
 ```lua
 local entries, err = require("plugins.personal.core.list").read()
--- entries[i] = { repo = "StefanBartl/markdown.nvim", name = "markdown.nvim" }
+-- entries[i] = { repo = "WKDSteve/markdown.nvim", name = "markdown.nvim" }
 ```
 
 Every repo that is **meant to be on disk**: one entry per repo, deduplicated,
@@ -97,7 +97,7 @@ no enabled repos. Never returns an empty list with no error.
 local projects, err = require("plugins.personal.core.export").projects()
 -- projects[i] = {
 --   name = "markdown.nvim",
---   repo = "StefanBartl/markdown.nvim",
+--   repo = "WKDSteve/markdown.nvim",
 --   dir  = "$REPOS_DIR/markdown.nvim",
 -- }
 ```

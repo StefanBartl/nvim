@@ -733,7 +733,7 @@ deinen Wunsch keine Runde 3). **Noch nie gegen dein echtes Confluence gelaufen.*
       Confluence den PDF-Export mit Token liefert:
       `curl.exe -sS -o NUL -w "%{http_code} %{content_type}\n" -u "MAIL:$env:CONFLUENCE_TOKEN" "https://tricentis.atlassian.net/wiki/spaces/flyingpdf/pdfpageexport.action?pageId=ID"`.
       `200 application/pdf` heißt: Auth funktioniert für Exporte. Sonst bleiben nur Pins.
-- [ ] **Config eintragen.** Ich habe `navigate.lua` (Spec `StefanBartl/hover.nvim`, ab
+- [ ] **Config eintragen.** Ich habe `navigate.lua` (Spec `WKDSteve/hover.nvim`, ab
       Zeile ~234) **nicht** geändert. Fertiger `links`-Block steht in der Notiz.
 - [ ] **Neovim neu starten**, damit der neue Plugin-Code geladen wird (Plugin liegt lokal in
       `E:/repos/hover.nvim`, `package.loaded` hält den alten Stand).
@@ -958,7 +958,7 @@ Neovim noch nicht ausprobiert.
 ### J2. `:MyPlugins jumpTo <name>`
 
 - [ ] `:MyPlugins jumpTo sessions.nvim`: öffnet `specs/navigate.lua` und setzt den Cursor auf die
-      Zeile `"stefanbartl/sessions.nvim"`, Zeile mittig.
+      Zeile `"WKDSteve/sessions.nvim"`, Zeile mittig.
 - [ ] Mit `<Tab>` vervollständigen: `:MyPlugins jumpTo ` zeigt alle Plugins mit Spec (41), ohne
       spürbare Verzögerung; `:MyPlugins jumpTo ai<Tab>` ergänzt `ai.nvim`.
 - [ ] Die zwei, die zuerst nicht gingen: `jumpTo ai.nvim` und `jumpTo dap.nvim` landen auf der Zeile
@@ -1898,7 +1898,7 @@ _Seit dem 2026-10-07 neu oder geändert, Details in K: `:Case new --form|--steps
 ### Nach dem Durchlauf
 
 - [ ] Gefundene Fehler als `RM-nn` in die Roadmap oder als GitHub-Issue
-      (`StefanBartl/casedesk.nvim`) — nicht nur hier.
+      (`WKDSteve/casedesk.nvim`) — nicht nur hier.
 - [ ] Alle **Testnotizen** aus `Cases/Important.jsonl` entfernt, alle
       Wegwerf-Cases (`999001`) gelöscht, `git status` in `WKDBook-Tricentis` sauber.
 - [ ] Diese Datei committen (`docs(casedesk): live-test results …`), damit der
@@ -2036,7 +2036,7 @@ Status `blocked`, aber der Blocker ist erledigt, fehlt oder es gibt keinen Task 
 
 ## L. terminal.nvim: Terminals, WezTerm/tmux, Status, Navigation (Stand 2026-10-07)
 
-Neues Plugin `StefanBartl/terminal.nvim` (öffentlich, `E:\repos\terminal.nvim`), Plan `terminal-build` im Wkdbook (`tasks-vault/terminal.nvim/ROADMAP/`, Handover `docs/ROADMAP/handovers/terminal.nvim.md`). Es hat `bindings/mappings/terminal.lua` und `bindings/autocmds/terminals/` der Config **ersetzt** (Snacks-Terminal-Toggle entfällt). Vor dem Testen **`terminal.nvim`, `Configs` und die nvim-Config auf `main` pullen**, Neovim **0.11+** (die `termopen()`-Rückfallebene ist raus), Config neu starten. Die Gegenstücke liegen in `Configs/terminals/wezterm` (Status, Tasten) und `Configs/terminals/tmux/tmux.conf`; WezTerm-Config neu laden (`<C-S-r>` bzw. WezTerm neu starten), tmux mit `tmux source ~/.config/tmux/tmux.conf`.
+Neues Plugin `WKDSteve/terminal.nvim` (öffentlich, `E:\repos\terminal.nvim`), Plan `terminal-build` im Wkdbook (`tasks-vault/terminal.nvim/ROADMAP/`, Handover `docs/ROADMAP/handovers/terminal.nvim.md`). Es hat `bindings/mappings/terminal.lua` und `bindings/autocmds/terminals/` der Config **ersetzt** (Snacks-Terminal-Toggle entfällt). Vor dem Testen **`terminal.nvim`, `Configs` und die nvim-Config auf `main` pullen**, Neovim **0.11+** (die `termopen()`-Rückfallebene ist raus), Config neu starten. Die Gegenstücke liegen in `Configs/terminals/wezterm` (Status, Tasten) und `Configs/terminals/tmux/tmux.conf`; WezTerm-Config neu laden (`<C-S-r>` bzw. WezTerm neu starten), tmux mit `tmux source ~/.config/tmux/tmux.conf`.
 
 Commits, `terminal.nvim` (`main`): `696570c`, `8096526`, `4c592c4` (Grundstock, im ersten Review geprüft), `7c16ef6` (18 Review-Fixes), `f219097` (`<C-l>`, `run --direct`-Optionen), `6c3698d` (Status-Export), `773cfb7` (WezTerm-Pane-Backend), `a46d133` (Navigation), `164685c` (Health, Property-Specs), `f30b4a3` (tmux), `15f5790` (Konformitäts-Suite), `d418a34` (Pin/Adopt), `9551aca` (Branch-Cache), `17104ac` (Kitty als argv), `ea5c908` (Neovim 0.11), `383380a` (Review-Runde 2: 42 bestätigte Befunde, Code/Specs/Live-Skripte), `311a05b` (Doku dazu), `f51df0f` (Nachbesserungen aus dem Verifikations-Review), `e3056e4` (dritter Durchgang, klein), `de58d89` (Review-Schleife geschlossen), `b6102ef` (vierter Durchgang), `9d01f13` (Doku), `696e631` (fünfter Durchgang). `Configs` (`main`): `e84ba47`, `6e069c7` (WezTerm), `223ddc2`, `d4a25ac` (tmux), `d620fc1` (Review-Runde 2: Tab-Titel, `^V`-Modus, tmux-Statuszeile, TPM), `8322761` (Nachbesserungen), `39fae23`, `a4a196f` (Check-Skripte für `tmux.conf`/Tasten, theme-feste Statuszeile), `009d20d` (Doku), `e599545` (fünfter Durchgang). nvim-Config: `f9e63552` (Ersatz von `terminal.lua`) und die Spec-/Doku-Commits dazu.
 

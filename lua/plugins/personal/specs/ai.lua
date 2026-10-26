@@ -39,7 +39,7 @@ return {
     end
 
     return {
-      "StefanBartl/ai.nvim",
+      "WKDSteve/ai.nvim",
       cmd = "Ai",
       keys = ai_keys,
       -- Inline completion's keymaps (trigger/accept/dismiss, insert mode) are
@@ -52,7 +52,7 @@ return {
       -- through ui.kit, with no fallback. Completion itself does not need it
       -- (the ghost text uses raw extmarks), so this dependency only matters
       -- for the other features.
-      dependencies = { "StefanBartl/lib.nvim", "StefanBartl/ui.nvim" },
+      dependencies = { "WKDSteve/lib.nvim", "WKDSteve/ui.nvim" },
       opts = {
         -- Active provider id, or "auto" to pick the first available one in
         -- `provider_order`.
@@ -155,7 +155,7 @@ return {
   end)(),
 
   {
-    "StefanBartl/buffer-ctx.nvim",
+    "WKDSteve/buffer-ctx.nvim",
     cmd = {
       "Insert",
       "Copy",

@@ -14,7 +14,7 @@
 --- statusline -- two independent implementations of the same idea, not one
 --- feeding the other. The winbar's own is the one that stays.
 ---
---- Copied from StefanBartl/ui.nvim's own
+--- Copied from WKDSteve/ui.nvim's own
 --- `docs/examples/personal-statusline-example.lua` -- that file is the
 --- upstream template for exactly this case (a statusline that assumes
 --- plugins, casedesk.nvim and filetree.nvim, only this config has), kept in

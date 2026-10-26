@@ -19,7 +19,7 @@
 local M = {}
 
 ---@class Plugins.Personal.Entry
----@field repo string Full "owner/repo" exactly as declared in the spec, e.g. "StefanBartl/lib.nvim".
+---@field repo string Full "owner/repo" exactly as declared in the spec, e.g. "WKDSteve/lib.nvim".
 ---@field name string Basename used as both the local folder name and source.lua's mode-table key, e.g. "lib.nvim" — derived the same way `plugins.control.mode` itself derives it, so a lookup here always agrees with what the spec loader decided.
 
 ---Every repo the personal spec declares, filtered to what's actually meant
@@ -70,8 +70,8 @@ end
 ---count, `remove`, `sync` and the picker. Only `:MyPlugins clone` adds them (`read_for_clone`).
 ---@type Plugins.Personal.Entry[]
 M.VAULTS = {
-  { repo = "StefanBartl/rules-vault", name = "rules-vault" },
-  { repo = "StefanBartl/tasks-vault", name = "tasks-vault" },
+  { repo = "WKDSteve/rules-vault", name = "rules-vault" },
+  { repo = "WKDSteve/tasks-vault", name = "tasks-vault" },
 }
 
 ---`read()` plus the vaults, for `:MyPlugins clone`.

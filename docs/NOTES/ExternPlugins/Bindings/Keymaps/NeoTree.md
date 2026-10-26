@@ -144,7 +144,7 @@ Markdown-Links).
 `require("window-picker")` auf (fest verdrahtet in seinem eigenen
 `use_window_picker`) — ui.nvim liefert dafür seit demselben Tag einen
 `require("window-picker")`-Kompatibilitäts-Shim
-([`ui.nvim/lua/window-picker/init.lua`](https://github.com/StefanBartl/ui.nvim)),
+([`ui.nvim/lua/window-picker/init.lua`](https://github.com/WKDSteve/ui.nvim)),
 der an `ui.windowpicker` delegiert. An `lua/plugins/ui.lua` und den beiden
 Aufrufstellen unten musste nichts geändert werden:
 

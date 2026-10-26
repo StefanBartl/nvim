@@ -1,7 +1,7 @@
 ---@module 'config.telescope'
 --- Modularized Telescope setup.
 --- History is owned by pickers.nvim (history.fzf_scope = "patch" in its setup()),
---- which patches telescope's defaults.history itself — see StefanBartl/pickers.nvim.
+--- which patches telescope's defaults.history itself — see WKDSteve/pickers.nvim.
 --- Preview-scroll (<PageUp>/<PageDown>) and history-nav (<C-p>/<C-n>) keys are
 --- also owned by pickers.nvim (lua/pickers/keys/), patched globally into
 --- telescope's defaults.mappings — do not rebind them here, see

@@ -28,7 +28,7 @@ siehe [Keymaps/Blink.md](Keymaps/Blink.md).
 - [x] `smjonas/inc-rename.nvim`
 - [x] `stevearc/conform.nvim`
 - [x] `artemave/workspace-diagnostics.nvim`
-- [x] `mfussenegger/nvim-dap` (via `StefanBartl/dap.nvim`)
+- [x] `mfussenegger/nvim-dap` (via `WKDSteve/dap.nvim`)
 - [x] `nvim-treesitter/nvim-treesitter`
 - [x] `folke/noice.nvim`
 - [x] ~~`folke/todo-comments.nvim`~~ — deinstalliert 2026-09-19, ersetzt durch

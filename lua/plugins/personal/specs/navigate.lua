@@ -13,7 +13,7 @@ local personal_utils = require("plugins.personal.core.utils")
 ---@type LazyPluginSpec[]
 return {
   {
-    "StefanBartl/gopath.nvim",
+    "WKDSteve/gopath.nvim",
     event = "VeryLazy",
     -- Optional, not required: every nvim-treesitter call in gopath.nvim
     -- (health.lua's parser check, providers/treesitter.lua's Neovim-0.9
@@ -231,10 +231,10 @@ return {
     -- (browser start, page render, LibreOffice conversion) are documented in
     -- hover.nvim/docs/configuration.md and docs/FEATURES/*.md; `:Hover why`
     -- / `:Hover status` explain a given switch at runtime.
-    "StefanBartl/hover.nvim",
+    "WKDSteve/hover.nvim",
     lazy = false,
     priority = 900,
-    dependencies = { "StefanBartl/lib.nvim" },
+    dependencies = { "WKDSteve/lib.nvim" },
     config = function()
       -- Every option hover.nvim has, current value active and everything
       -- else commented out with its own default -- see docs/configuration.md
@@ -457,13 +457,13 @@ return {
   },
 
   {
-    "StefanBartl/open.nvim",
+    "WKDSteve/open.nvim",
     -- All three names are needed: the viewer commands are registered by
     -- open.nvim's setup(), so lazy-loading on "Open" alone would leave
     -- :UrlView / :MDLinksView undefined until something else pulled the
     -- plugin in.
     cmd = { "Open", "UrlView", "MDLinksView" },
-    dependencies = { "StefanBartl/lib.nvim" },
+    dependencies = { "WKDSteve/lib.nvim" },
     opts = {
       -- User command name.
       -- command = "Open",
@@ -535,9 +535,9 @@ return {
     -- would mean listing every one of those lhs in the spec as well, kept in
     -- step with the table by hand -- two sources for the same bindings, and
     -- the drift only shows up as a key that silently does nothing.
-    "StefanBartl/pickers.nvim",
+    "WKDSteve/pickers.nvim",
     lazy = false,
-    dependencies = { "StefanBartl/lib.nvim" },
+    dependencies = { "WKDSteve/lib.nvim" },
     config = function()
       local repos = personal_utils.repos_path
       require("pickers").setup({
@@ -904,7 +904,7 @@ return {
   },
 
   -- {
-  --   "StefanBartl/neotree-fs-refactor",
+  --   "WKDSteve/neotree-fs-refactor",
   --   lazy = false,
   --   config = function()
   --     require("neotree-fs-refactor").setup({
@@ -927,12 +927,12 @@ return {
   -- },
 
   {
-    "StefanBartl/filetree.nvim",
+    "WKDSteve/filetree.nvim",
     event = "VeryLazy", -- must load AFTER the tree plugin's config function runs
     dependencies = {
-      "StefanBartl/lib.nvim", -- shared helpers (neo-tree node utils, etc.)
+      "WKDSteve/lib.nvim", -- shared helpers (neo-tree node utils, etc.)
       -- ui.kit / ui.contextmenu: the right-click menu (on by default).
-      "StefanBartl/ui.nvim",
+      "WKDSteve/ui.nvim",
       -- only ONE tree plugin is needed:
       "nvim-neo-tree/neo-tree.nvim",
       -- or: "nvim-tree/nvim-tree.lua",
@@ -1637,7 +1637,7 @@ return {
   },
 
   -- {
-  --   "StefanBartl/filetreepicker.nvim",
+  --   "WKDSteve/filetreepicker.nvim",
   --   event = "VeryLazy",
   --   dependencies = { "nvim-neo-tree/neo-tree.nvim" },
   --   config = function()
@@ -1646,7 +1646,7 @@ return {
   -- },
 
   -- {
-  --   "StefanBartl/mygrep.nvim",
+  --   "WKDSteve/mygrep.nvim",
   --   name = "mygrep",
   --   lazy = false,
   --   config = function()
@@ -1657,7 +1657,7 @@ return {
   -- },
 
   {
-    "StefanBartl/fileops.nvim",
+    "WKDSteve/fileops.nvim",
     event = "VeryLazy",
     opts = {
       -- `:File next` / `:File prev` (file cycling in the buffer's directory).
@@ -1802,9 +1802,9 @@ return {
     -- autosave. Both are startup/shutdown events, so a lazy trigger would have
     -- to fire before VimEnter to be of any use -- which is what `lazy = false`
     -- means.
-    "stefanbartl/sessions.nvim",
+    "WKDSteve/sessions.nvim",
     lazy = false,
-    dependencies = { "stefanbartl/lib.nvim" },
+    dependencies = { "WKDSteve/lib.nvim" },
     -- A function: `config.marks.defaults` asks the machine module, and a
     -- table literal would do that at spec-import time for every start.
     opts = function()

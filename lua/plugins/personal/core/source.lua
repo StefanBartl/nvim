@@ -25,7 +25,7 @@ local control = require("plugins.control.mode")
 ---@alias PersonalRepoMode "disabled"|"dir"|"remote"
 ---  - "disabled" → don't load the repo at all (enabled = false)
 ---  - "dir"      → local, out of the repos directory (dir), falls back to remote if the folder is missing
----  - "remote"   → from GitHub (StefanBartl/...)
+---  - "remote"   → from GitHub (WKDSteve/...)
 
 -- ── MANUAL SWITCH ──────────────────────────────────────────────────────────
 -- Forces ONE source for ALL personal plugins, overriding both machine
@@ -101,7 +101,7 @@ plugins.modes({
   -- foundation
   ["lib.nvim"] = "dir",
   -- The one PRIVATE repo in this list: "remote" would have lazy clone
-  -- https://github.com/StefanBartl/my.nvim, which fails without credentials.
+  -- https://github.com/WKDSteve/my.nvim, which fails without credentials.
   -- Gated on the *effective* SOURCE, not the raw machine role, so a local
   -- checkout is still used whenever OVERRIDE forces anything but "remote".
   ["my.nvim"] = (SOURCE == "remote") and "disabled" or "dir",

@@ -40,20 +40,20 @@ jobs:
           path: deps/tasks-vault
       - uses: actions/checkout@v5
         with:
-          repository: StefanBartl/nvim
+          repository: WKDSteve/nvim
           path: deps/nvim
       - uses: actions/checkout@v5
         with:
-          repository: StefanBartl/tasks.nvim
+          repository: WKDSteve/tasks.nvim
           path: deps/tasks.nvim
       - uses: actions/checkout@v5
         with:
-          repository: StefanBartl/lib.nvim
+          repository: WKDSteve/lib.nvim
           path: deps/lib.nvim
           ref: ci-verified
       - uses: actions/checkout@v5
         with:
-          repository: StefanBartl/lsp.nvim
+          repository: WKDSteve/lsp.nvim
           path: deps/lsp.nvim
       - uses: rhysd/action-setup-vim@v1
         with:

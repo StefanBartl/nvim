@@ -28,10 +28,10 @@ return {
     -- docs/BINDINGS.md) remaps or drops single actions. Set to `true`
     -- explicitly so this line documents that the keymaps are wanted; the
     -- value equals the fallback.
-    "StefanBartl/ui.nvim",
+    "WKDSteve/ui.nvim",
     lazy = false,
     priority = 900,
-    dependencies = { "StefanBartl/lib.nvim" },
+    dependencies = { "WKDSteve/lib.nvim" },
     keymaps = true,
     --
     -- OPTION REFERENCE (comment only, nothing here is executed).
@@ -245,9 +245,9 @@ return {
   },
 
   {
-    "StefanBartl/color_my_ascii.nvim",
+    "WKDSteve/color_my_ascii.nvim",
     ft = "markdown",
-    dependencies = { "StefanBartl/lib.nvim" }, -- optional, enables graceful keymap/notify integration
+    dependencies = { "WKDSteve/lib.nvim" }, -- optional, enables graceful keymap/notify integration
     -- Typing `opts` as ColorMyAscii.Config makes lua_ls offer value completion
     -- inside the config (e.g. `preset = "…"` suggests the fence-line presets).
     -- Requires the plugin's types on the LSP path (lazydev/neodev or workspace lib).
@@ -467,7 +467,7 @@ return {
   },
 
   {
-    "StefanBartl/images.nvim",
+    "WKDSteve/images.nvim",
     -- Replaces snacks.image, which cannot work here in principle: it only
     -- sends Kitty APC, and WezTerm never draws that when Neovim is the
     -- sender. images.nvim uses OSC 1337 instead.
@@ -477,7 +477,7 @@ return {
     -- even without a prior command call.
     cmd = { "Image" },
     ft = { "markdown", "vimwiki", "norg", "text" },
-    dependencies = { "StefanBartl/lib.nvim" },
+    dependencies = { "WKDSteve/lib.nvim" },
     opts = {
       -- Every option of setup(). Set here: display.cell_aspect, ocr.lang.
       -- Tables merge key by key over the defaults (and over the stored
@@ -650,8 +650,8 @@ return {
   },
 
   {
-    "StefanBartl/mdview.nvim",
-    dependencies = { "StefanBartl/lib.nvim" },
+    "WKDSteve/mdview.nvim",
+    dependencies = { "WKDSteve/lib.nvim" },
     build = "npm ci && npm run build:go && npm run build",
     ft = { "markdown" },
     cmd = { "MDView" },
@@ -798,7 +798,7 @@ return {
         -- Where the relay release is downloaded from; pin another release by
         -- changing `version`.
         -- install = {
-        --   repo = "StefanBartl/mdview.nvim", -- owner/repo; override for a fork
+        --   repo = "WKDSteve/mdview.nvim", -- owner/repo; override for a fork
         --   version = "v0.3.0",
         -- },
 
@@ -838,7 +838,7 @@ return {
   },
 
   {
-    "StefanBartl/media.nvim",
+    "WKDSteve/media.nvim",
     -- `VeryLazy` rather than `cmd = "Media"`: the four `<leader>M` keys have to
     -- exist before one is pressed, and a cmd trigger cannot bind them. The
     -- plugin file itself registers nothing at startup, so the cost is one
@@ -848,7 +848,7 @@ return {
     -- video previews; it is listed as a dependency there rather than here, and
     -- neither plugin needs the other to load first.
     event = "VeryLazy",
-    dependencies = { "StefanBartl/lib.nvim" },
+    dependencies = { "WKDSteve/lib.nvim" },
     opts = {
       -- Every option of setup(). Set here: frame, sheet, player,
       -- keymaps.preset. Tables merge key by key over the defaults; lists
@@ -1026,7 +1026,7 @@ return {
   },
 
   {
-    "StefanBartl/pdfport.nvim",
+    "WKDSteve/pdfport.nvim",
     -- Only ":PdfPort <sub>" is ever registered (composer.verb, see
     -- lua/pdfport/bindings/usrcmds.lua); the plugin has no separate
     -- PdfPortText/Float/System/Terminal/Health commands.

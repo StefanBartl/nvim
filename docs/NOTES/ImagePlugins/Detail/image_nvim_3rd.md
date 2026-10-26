@@ -8,7 +8,7 @@ Was ich nicht selbst nachpruefen konnte, ist als **UNVERIFIED** markiert.
 
 ## 0. Kurzfazit (TL;DR)
 
-1. **3rd/image.nvim ist in der Config des Users gar nicht konfiguriert.** Kein Treffer fuer `image.nvim` / `3rd/image` in `$NVIM_CONFIG_DIR/init.lua`, `lua/**`, `after/**`, `lazy-lock.json`. Der Plugin-Spec fuer Bilder ist `StefanBartl/images.nvim` (`lua/plugins/personal/init.lua:526-552`). `snacks.image` ist explizit **deaktiviert**: `lua/plugins/snacks.lua:48-56` (`image = { enabled = false }`, Kommentar dort begruendet es mit "Kitty sequences from native Windows Neovim in WezTerm are never drawn"). Die Beobachtung "war alles gruen und hat nie etwas angezeigt" stammt also aus einem frueheren Versuch / anderer Config-Zeit.
+1. **3rd/image.nvim ist in der Config des Users gar nicht konfiguriert.** Kein Treffer fuer `image.nvim` / `3rd/image` in `$NVIM_CONFIG_DIR/init.lua`, `lua/**`, `after/**`, `lazy-lock.json`. Der Plugin-Spec fuer Bilder ist `WKDSteve/images.nvim` (`lua/plugins/personal/init.lua:526-552`). `snacks.image` ist explizit **deaktiviert**: `lua/plugins/snacks.lua:48-56` (`image = { enabled = false }`, Kommentar dort begruendet es mit "Kitty sequences from native Windows Neovim in WezTerm are never drawn"). Die Beobachtung "war alles gruen und hat nie etwas angezeigt" stammt also aus einem frueheren Versuch / anderer Config-Zeit.
 2. **image.nvim ist auf nativem Windows strukturell nicht lauffaehig**, unabhaengig vom Terminal:
    - `lua/image/utils/term.lua:18-32`: die Zellgroesse kommt nur aus `ioctl(TIOCGWINSZ)`, und die Konstante wird nur fuer `linux`/`mac`/`bsd` gesetzt. Auf Windows ist `TIOCGWINSZ == nil` -> einmaliges `vim.notify(..., WARN)` "unsupported OS" -> `cached_size` bleibt `nil`.
    - `lua/image/renderer.lua:271-272`: `local term_size = utils.term.get_size(); if not term_size then return end` -> **stiller Abbruch** jedes Renderings, ohne Fehler, ohne Log.
@@ -242,6 +242,6 @@ Nach Wahrscheinlichkeit fuer Windows/WezTerm sortiert; jeweils file:line.
 
 - `$NVIM_CONFIG_DIR/lazy-lock.json`: Eintraege `snacks.nvim` (Zeile 50), **kein** `image.nvim`.
 - `lua/plugins/snacks.lua:48-56`: `image = { enabled = false }`, Kommentar erklaert Kitty-Problem unter Windows/WezTerm.
-- `lua/plugins/personal/init.lua:526-552`: `StefanBartl/images.nvim` mit `cmd = { "Image" }`, `opts = { display = { cell_aspect = 0.46 } }` (OSC-1337-Plugin als Ersatz).
+- `lua/plugins/personal/init.lua:526-552`: `WKDSteve/images.nvim` mit `cmd = { "Image" }`, `opts = { display = { cell_aspect = 0.46 } }` (OSC-1337-Plugin als Ersatz).
 - `lua/plugins/personal/init.lua:83,115`: `hover.nvim` mit `inline_images`-Option (auskommentiert `-- inline_images = true`).
 - Terminal: WezTerm (`C:\Program Files\WezTerm` im PATH; Config-Loader `C:\Users\bartl\.config\wezterm\wezterm.lua` -> `$REPOS_DIR/Configs\Terminals\wezterm`; `enable_kitty_graphics` nirgends gesetzt). `magick` via Scoop im PATH (`.../scoop/apps/imagemagick/current`). Aktuelle Session `TERM=xterm-256color` (Git-Bash-Umgebung des Agenten, nicht zwingend die des Users).

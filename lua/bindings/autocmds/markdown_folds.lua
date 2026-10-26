@@ -3,7 +3,7 @@
 --- only.
 ---
 --- Came out of `lua/options.lua` when that file moved into
---- StefanBartl/my.nvim. It did not go with it: my.nvim owns generic editor
+--- WKDSteve/my.nvim. It did not go with it: my.nvim owns generic editor
 --- options, and this is a markdown.nvim integration that happens to be
 --- expressed as an option.
 ---

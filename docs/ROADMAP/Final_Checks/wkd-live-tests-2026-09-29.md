@@ -7,7 +7,7 @@ möglich (`requestAnimationFrame` läuft bei ausgeblendetem Browser-Pane nicht/k
 verifiziert. Bei jedem Punkt eine Zeile `Notiz:` zum Eintragen von Beobachtungen.
 
 **Wichtig für den Fight-Tab:** unbedingt auch auf der echten deployten Seite
-(`https://stefanbartl.github.io/wkd/`) testen, nicht nur lokal per `pnpm dev` — der
+(`https://wkdsteve.github.io/wkd/`) testen, nicht nur lokal per `pnpm dev` — der
 CSP-Fix für die Charakterauswahl-Vorschau war in `pnpm dev` unsichtbar, weil der
 Astro-Dev-Server die strikte CSP nicht durchsetzt wie das echte GitHub-Pages-Deployment.
 
@@ -16,10 +16,10 @@ Astro-Dev-Server die strikte CSP nicht durchsetzt wie das echte GitHub-Pages-Dep
 ## Wie starte ich das?
 
 **Deployte Seite (empfohlen für die meisten Punkte, Pflicht für den CSP-Hinweis oben):**
-einfach `https://stefanbartl.github.io/wkd/` im Browser öffnen. Alle Commits aus diesem
+einfach `https://wkdsteve.github.io/wkd/` im Browser öffnen. Alle Commits aus diesem
 Chat sind bereits auf `main` gemergt und `.github/workflows/deploy.yml` deployt bei jedem
 Push nach `main` automatisch — sollte also schon live sein (im Zweifel unter
-`github.com/StefanBartl/wkd/actions` den letzten „deploy"-Run prüfen, falls die Seite
+`github.com/WKDSteve/wkd/actions` den letzten „deploy"-Run prüfen, falls die Seite
 noch alt aussieht: GitHub Pages cached teils ein paar Minuten).
 
 **Lokal per `pnpm dev`:** dein Haupt-Checkout unter `$REPOS_DIR/wkd` (nicht diese
@@ -141,7 +141,7 @@ Build-Check, nicht zum interaktiven Durchklicken.
   - Notiz:
 - [ ] Gesamteindruck Performance: läuft spürbar flüssig, keine Ruckler/Hänger.
   - Notiz:
-- [ ] **Auf der echten deployten Seite** (`stefanbartl.github.io/wkd`) wiederholen,
+- [ ] **Auf der echten deployten Seite** (`wkdsteve.github.io/wkd`) wiederholen,
       mindestens die Charakterauswahl-Vorschau (CSP-Fix) und einen kompletten Kampf.
   - Notiz:
 

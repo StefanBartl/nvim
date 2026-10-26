@@ -4,7 +4,7 @@ Manages the repo checkouts for `plugins.personal` (the ~28 `StefanBartl/*.nvim`
 plugins declared in [`lua/plugins/personal/init.lua`](../../../plugins/personal/init.lua))
 and the source-mode switch that decides whether they load from disk or from
 GitHub. Everything lives under one command, built with
-[`lib.nvim.bindings.usercmd.composer`](https://github.com/StefanBartl/lib.nvim/tree/main/lua/lib/nvim/bindings/usercmd/composer)
+[`lib.nvim.bindings.usercmd.composer`](https://github.com/WKDSteve/lib.nvim/tree/main/lua/lib/nvim/bindings/usercmd/composer)
 — the same composer every other personal plugin here uses for its own
 `:Verb <subcommand>` (see `reposcope.nvim`, `replacer.nvim`, `lib.nvim`'s own
 `:Lib`, ...). Registered eagerly at startup, see `init.lua` in this config's
@@ -389,7 +389,7 @@ every repo in the directory either way — the flags only affect the prefetch.
 
 The nvim config itself (this checkout) is not under `$REPOS_DIR`, so it
 never shows up here on its own — see
-[`gitsuite.nvim`'s `dashboard.extra_paths`](https://github.com/StefanBartl/gitsuite.nvim/blob/main/docs/configuration.md)
+[`gitsuite.nvim`'s `dashboard.extra_paths`](https://github.com/WKDSteve/gitsuite.nvim/blob/main/docs/configuration.md)
 (configured in this repo's own `plugins/personal/specs/project.lua`) for how it's
 made visible anyway.
 
@@ -523,7 +523,7 @@ only to display the result).
 
 That distinction matters concretely: `$REPOS_DIR` also holds `Notes`,
 `WKDBooks` and other non-plugin checkouts. Compare with
-[`gitsuite.nvim`](https://github.com/StefanBartl/gitsuite.nvim)'s own
+[`gitsuite.nvim`](https://github.com/WKDSteve/gitsuite.nvim)'s own
 `:Git dashboard update`/`dashboard`, which *do* scan every immediate subdirectory of
 a given path — the right behavior there (it manages an arbitrary clone
 folder, not a fixed plugin list), but exactly the behavior that would make
@@ -619,4 +619,4 @@ uncommitted work permanently. Sticking to the named list is what makes
 - [`docs/BINDINGS.md`](../../../../docs/BINDINGS.md#myplugins--config-internal-plugin-repo-management) — the user-facing cheatsheet
 - [`lua/plugins/personal/core/source.lua`](../../../plugins/personal/core/source.lua) — the `OVERRIDE` switch and per-repo mode table
 - [`lua/plugins/personal/core/list.lua`](../../../plugins/personal/core/list.lua) — where the repo list actually comes from
-- `lib.nvim`'s [`usercmd/composer/README.md`](https://github.com/StefanBartl/lib.nvim/blob/main/lua/lib/nvim/bindings/usercmd/composer/README.md) — the composer API itself
+- `lib.nvim`'s [`usercmd/composer/README.md`](https://github.com/WKDSteve/lib.nvim/blob/main/lua/lib/nvim/bindings/usercmd/composer/README.md) — the composer API itself

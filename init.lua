@@ -36,7 +36,7 @@ vim.opt.rtp:prepend(lazypath)
 -- availability.
 --
 -- Must resolve to the same dir plugins/personal/core/source.lua's resolve() will
--- later assign to the "StefanBartl/lib.nvim" spec (local repos checkout when
+-- later assign to the "WKDSteve/lib.nvim" spec (local repos checkout when
 -- present, else lazy's managed dir). Otherwise lazy sees the plugin's `dir`
 -- change after it's already on the runtimepath and errors ("changed dir ...
 -- already partially loaded") on every startup.
@@ -51,7 +51,7 @@ if not vim.uv.fs_stat(libpath) then
     "git",
     "clone",
     "--filter=blob:none",
-    "https://github.com/StefanBartl/lib.nvim.git",
+    "https://github.com/WKDSteve/lib.nvim.git",
     libpath,
   })
 end
@@ -73,19 +73,19 @@ require("lazy").setup({
   -- Pin lib.nvim's `dir` as the very first spec fragment lazy.nvim sees for
   -- this plugin. Some imported files run a top-level `require("lib.*")`
   -- during the spec-import phase, and others reference
-  -- "StefanBartl/lib.nvim" as a bare dependency string; either one
+  -- "WKDSteve/lib.nvim" as a bare dependency string; either one
   -- can register a dir-less fragment (defaulting to lazy's managed dir)
   -- before plugins/personal/init.lua's dir-overriding fragment is merged in,
   -- which trips lazy's "changed dir ... already partially loaded" error.
   -- plugins/personal/specs/foundation.lua still owns the full spec (lazy=false,
   -- priority, config); this only pins `dir` early enough to avoid the race.
-  { "StefanBartl/lib.nvim", dir = libpath },
+  { "WKDSteve/lib.nvim", dir = libpath },
   -- Same reason as lib.nvim above, one step further: `import` makes lazy
   -- `require("lsp.pack")` while it is still collecting specs, so the plugin's
   -- `dir` has to be known by then. plugins/personal/specs/inspect.lua still owns the
   -- full spec (lazy = false, priority); this pins `dir` early enough and adds
   -- the import that installs the LSP ecosystem.
-  { "StefanBartl/lsp.nvim", dir = lsppath, import = "lsp.pack" },
+  { "WKDSteve/lsp.nvim", dir = lsppath, import = "lsp.pack" },
   { import = "plugins" },
   { import = "plugins.colorscheme" },
 }, lazy_config)
@@ -292,7 +292,7 @@ end)
 -- `:RATelemetry setup|full nvim-config` re-wraps on demand.
 
 -- DAP setup (adapters, launch configs, UI, keymaps) lives in
--- StefanBartl/dap.nvim, loaded via lua/plugins/personal/specs/inspect.lua (event =
+-- WKDSteve/dap.nvim, loaded via lua/plugins/personal/specs/inspect.lua (event =
 -- "VeryLazy").
 
 -- Show startup time

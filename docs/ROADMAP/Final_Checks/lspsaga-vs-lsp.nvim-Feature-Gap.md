@@ -22,7 +22,7 @@ rust-analyzer, `.d.ts`/`node_modules`-Ausnahme, Call Hierarchy) liegen archivier
 Alle auf `main` und `origin/main` der jeweiligen Repos. WKDBooks-Commits (Archiv, Backlog, Tool-Rezepte)
 stehen absichtlich nicht hier; sie sind per `git log --grep=lsp.nvim` in `WKDBooks` zu finden.
 
-**`StefanBartl/lsp.nvim`** — der Code
+**`WKDSteve/lsp.nvim`** — der Code
 
 | SHA | Zeit | Inhalt |
 |---|---|---|
@@ -49,7 +49,7 @@ CI zu `3c1d5fe`: grün auf allen drei Plattformen, lint und smoke, `ci-verified`
 CI zu `cfd6e92`: grün auf allen drei Plattformen, lint und smoke, `ci-verified` veröffentlicht.
 CI zu `88ba62f`: grün auf allen drei Plattformen, lint und smoke, `ci-verified` veröffentlicht.
 
-**`StefanBartl/ui.nvim`** — die Statuszeile
+**`WKDSteve/ui.nvim`** — die Statuszeile
 
 | SHA | Zeit | Inhalt |
 |---|---|---|
@@ -57,7 +57,7 @@ CI zu `88ba62f`: grün auf allen drei Plattformen, lint und smoke, `ci-verified`
 
 CI zu `d96fe16`: grün (1m12s).
 
-**`StefanBartl/nvim`** — diese Config (Doku, Bindings, Schalter)
+**`WKDSteve/nvim`** — diese Config (Doku, Bindings, Schalter)
 
 | SHA | Zeit | Inhalt |
 |---|---|---|

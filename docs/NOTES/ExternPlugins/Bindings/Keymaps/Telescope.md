@@ -24,7 +24,7 @@ Die wenigen Leader-Keymaps, die überhaupt existieren, sind dagegen zwangsläufi
 **eigene**, denn `telescope.nvim` selbst liefert von Haus aus **keine**
 Leader-Keymaps (nur `:Telescope ...`-Commands).
 
-Zusätzliche Komplikation: **`pickers.nvim`** (StefanBartl/pickers.nvim, separates
+Zusätzliche Komplikation: **`pickers.nvim`** (WKDSteve/pickers.nvim, separates
 Plugin, lokal aus `$REPOS_DIR/pickers.nvim`) patcht global einen Teil von
 Telescopes `defaults.mappings` nach — unabhängig davon, ob der Picker über
 `config.telescope` oder direkt über `:Telescope ...`/`pickers.nvim` selbst
@@ -33,7 +33,7 @@ in `pickers.nvim`s eigenem `lua/pickers/keys/adapters/telescope.lua`
 (`M.patch()`, per `vim.schedule`), konfiguriert über `pickers.setup({ keys =
 {...} })` in [lua/plugins/personal/init.lua](../../../../../lua/plugins/personal/init.lua).
 Siehe auch die ausführliche Doku dort: pickers.nvim's eigene
-[docs/BINDINGS.md](https://github.com/StefanBartl/pickers.nvim/blob/main/docs/BINDINGS.md)
+[docs/BINDINGS.md](https://github.com/WKDSteve/pickers.nvim/blob/main/docs/BINDINGS.md)
 (§4 "Unified `keys`-Namespace"). Dieses Dokument fasst nur zusammen, **wie sich
 das auf Telescope-Picker konkret auswirkt** — für alle anderen `pickers.nvim`-
 Details siehe dort.

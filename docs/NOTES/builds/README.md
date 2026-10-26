@@ -40,5 +40,5 @@ In jedem App-Repo, in einem nicht erhöhten PowerShell:
 Ohne Toolchain gibt es die Install-Zeile des Rolling-Builds der CI (`latest`, aus der README der App):
 
 ```powershell
-powershell -ExecutionPolicy Bypass -c "irm https://github.com/StefanBartl/<app>/releases/download/latest/install.ps1 | iex"
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/WKDSteve/<app>/releases/download/latest/install.ps1 | iex"
 ```

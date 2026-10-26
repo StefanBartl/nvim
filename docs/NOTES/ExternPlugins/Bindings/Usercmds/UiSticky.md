@@ -1,6 +1,6 @@
 # ui.nvim Sticky-Context — User-Commands
 
-**Repo:** `StefanBartl/ui.nvim` (`ui.context`) — der Stamm `UiSticky` steht für
+**Repo:** `WKDSteve/ui.nvim` (`ui.context`) — der Stamm `UiSticky` steht für
 den Sticky-Teil des `:UI`-Dispatchers; die Theme-/Transparenz-Subcommands von
 `:UI` stehen inzwischen komplett in ui.nvim (nicht mehr in chadrc/base46 --
 das NvChadUI-Blatt dazu wurde entfernt), siehe `ui.nvim/docs/BINDINGS.md`.

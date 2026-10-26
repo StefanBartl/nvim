@@ -3,12 +3,12 @@
 | Was | Wo |
 |---|---|
 | Konzept (Quelle dieses Plans) | `nvim/docs/ROADMAP/IDEAS/ai.nvim.md` |
-| Öffentliches Repo | `github.com/StefanBartl/ai.nvim` → `$REPOS_DIR/ai.nvim` |
+| Öffentliches Repo | `github.com/WKDSteve/ai.nvim` → `$REPOS_DIR/ai.nvim` |
 | Privat (Roadmap/Notes, nicht fürs öffentliche Repo) | `$REPOS_DIR/tasks-vault\ai.nvim\{ROADMAP,NOTES}` |
 | Diese Handover-Datei | `nvim/docs/ROADMAP/handovers/terminal.nvim.md` anlegen alss aymlionk aus den wkdbook |
 | Regelwerk für neue Projekte | `$RULES_VAULT/rulesets/lua\gates\NEW_PROJECT.md` (+ `PRINCIPLES.md`, `LUA_NVIM.md`) |
 
-wir implementieren jetzt terminal.nvim - dazu musst du ein öffentlich gh repo stefanbartl/terminal.nvim anlegen und in $REPOS_DIR/ anlegen
+wir implementieren jetzt terminal.nvim - dazu musst du ein öffentlich gh repo WKDSteve/terminal.nvim anlegen und in $REPOS_DIR/ anlegen
 
 Hier die konzept:
 $NVIM_CONFIG_DIR/docs\ROADMAP\LONG_RUN\IDEAS\terminal.nvim.md

@@ -44,7 +44,7 @@ local M = {}
 
 --- Plugin lists accept either the short name (`"markdown.nvim"` — what the
 --- namespace and `:RATelemetry` show) or the full repo
---- (`"StefanBartl/markdown.nvim"`). Both resolve to the same plugin, so a
+--- (`"WKDSteve/markdown.nvim"`). Both resolve to the same plugin, so a
 --- reasonable guess cannot silently match nothing.
 ---@class Config.Telemetry.Opts
 ---@field deep? boolean|string[]           wrap the whole loaded subtree (default true)
@@ -103,13 +103,13 @@ local SELF_PREFIXES = {
 ---`true` / `false` / a list of plugin names -> does it apply?
 ---
 ---A list entry matches either the short name (`"markdown.nvim"`) or the full
----repo (`"StefanBartl/markdown.nvim"`). The short name is what the namespace
+---repo (`"WKDSteve/markdown.nvim"`). The short name is what the namespace
 ---and every `:RATelemetry` report show, so it is the natural thing to write;
 ---accepting the repo too means copying a line out of the plugin spec also
 ---works instead of silently matching nothing.
 ---@param spec boolean|string[]|nil
 ---@param name string   # short name, e.g. "markdown.nvim"
----@param repo string   # full repo, e.g. "StefanBartl/markdown.nvim"
+---@param repo string   # full repo, e.g. "WKDSteve/markdown.nvim"
 ---@return boolean
 local function applies(spec, name, repo)
   if spec == nil or spec == false then
@@ -131,11 +131,11 @@ end
 
 ---Build the `opts.telemetry` table for `runtime-analysis.nvim`'s own spec.
 ---
----Keyed by the FULL repo ("StefanBartl/dap.nvim"), not by a normalized name.
+---Keyed by the FULL repo ("WKDSteve/dap.nvim"), not by a normalized name.
 ---The obvious-looking alternative -- `lazy.core.util.normname`, which strips
 ---"nvim-"/"vim-"/".nvim" and non-letters -- is actively wrong here, and
 ---silently so. It maps the *external* `mfussenegger/nvim-dap` and the
----*personal* `StefanBartl/dap.nvim` to the same key "dap", so nvim-dap's
+---*personal* `WKDSteve/dap.nvim` to the same key "dap", so nvim-dap's
 ---modules would be wrapped and reported under the "dap.nvim" namespace. With
 ---both loaded that is two instances writing one cache file: merged, wrong
 ---numbers, and nothing on screen saying so. (Verified, not hypothetical --

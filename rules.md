@@ -11,7 +11,7 @@ Es steht unter `rules.nvim/handovers/rules-authoring-stand-2026-10-14_HANDOVER.m
 - **Konfiguration und Sicherheit:** `.rules.json` mit Rangfolge, Vault-Auflösung (`vault`, `$RULES_VAULT`, `@vault/<name>`) und das Vertrauens-Gate. Lua-Prädikate laufen nur aus `setup()`, dem Aufruf und dem Vault.
 - **Neovim:** `:Rules new/set/retire/reinstate/move/list/waive/renew/unwaive`, das Formular mit konfigurierbaren Tasten und `:RulesVault` mit allen Verben samt `create`.
 - **Vault:** Die Prüfung `check` erkennt stillgelegte IDs, leere Regeldateien und Merge-Konflikt-Marker, dazu optional ID-Lücken (`--gaps`). Die CI-Vorlage prüft den Checkout auf `eol=lf`.
-- **rules-vault:** Das Repo `StefanBartl/rules-vault` (privat) ist angelegt. `main` enthält den Import beider Regelwerke (652 Dateien, byte-identisch belegt), `draft/go` die 53 Go-Entwurfsregeln. In den WKDBooks sind die alten Ordner entfernt und 166 Verweise in 6 Repos umgeschrieben.
+- **rules-vault:** Das Repo `WKDSteve/rules-vault` (privat) ist angelegt. `main` enthält den Import beider Regelwerke (652 Dateien, byte-identisch belegt), `draft/go` die 53 Go-Entwurfsregeln. In den WKDBooks sind die alten Ordner entfernt und 166 Verweise in 6 Repos umgeschrieben.
 - **Reviews:** Zwei unabhängige Review-Runden mit Reasoning `high`, zusammen 38 reproduzierte Funde, alle behoben. Die Runde zu den ersten 21 Commits ergab 29 Funde (2 hoch: Sicherheit, `create` in bestehenden Vault), die Runde zu den Feature-Commits davor 9. Die Round-Trip-Abweichungen der Layouts gingen von 21 auf 0.
 - **Regelableitung aus den WKDBooks:** Verfahren festgelegt, Go-Pilot erfolgreich. Die Stichprobe ergab 13 gut, 5 ändern, 1 verworfen, das sind 5 % Ausschuss bei 25 % Grenze.
 

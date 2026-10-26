@@ -3,7 +3,7 @@
 local usercmd = require("lib.nvim.bindings.usercmd")
 local notify = require("lib.nvim.notify").create("[bindings.usrcmds]")
 
--- casedesk (`:Case` / `:Cases` / `:Tricentis`) is a plugin: StefanBartl/casedesk.nvim,
+-- casedesk (`:Case` / `:Cases` / `:Tricentis`) is a plugin: WKDSteve/casedesk.nvim,
 -- spec in plugins/personal/specs/project.lua. The frozen copy that used to live under
 -- usrcmds/case/ was removed on 2026-09-25.
 require("bindings.usrcmds.bindings_explorer").enable()

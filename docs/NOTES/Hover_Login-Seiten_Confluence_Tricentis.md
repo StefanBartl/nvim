@@ -85,7 +85,7 @@ curl.exe -sS -o NUL -w "%{http_code} %{content_type}\n" -u "DEINE-ATLASSIAN-MAIL
 ### 3. Config
 
 Gehört in den bestehenden `require("hover").setup({ ... })`-Aufruf in
-`lua/plugins/personal/specs/navigate.lua` (Spec `StefanBartl/hover.nvim`, ab
+`lua/plugins/personal/specs/navigate.lua` (Spec `WKDSteve/hover.nvim`, ab
 Zeile ~234). Nur den `links`-Block ergänzen/erweitern:
 
 ```lua

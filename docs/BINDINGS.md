@@ -181,8 +181,8 @@ nothing, rather than binding keys that would complain when pressed);
 The terminal keys (`<A-h>` toggle in n/t, `<Esc>`/`<C-c>` leave terminal mode, `<C-h/j/k/l>`
 window navigation, `<A-l>` clear) used to live in `bindings/mappings/terminal.lua` and toggled
 snacks.nvim's floating terminal. Since 2026-10-07 they are registered by
-[terminal.nvim](https://github.com/StefanBartl/terminal.nvim) (its own
-[`docs/BINDINGS.md`](https://github.com/StefanBartl/terminal.nvim/blob/main/docs/BINDINGS.md)),
+[terminal.nvim](https://github.com/WKDSteve/terminal.nvim) (its own
+[`docs/BINDINGS.md`](https://github.com/WKDSteve/terminal.nvim/blob/main/docs/BINDINGS.md)),
 configured in `plugins/personal/specs/project.lua`; `bindings.mappings.terminal` and the snacks
 toggle are gone. A count picks the terminal: `3<A-h>` opens terminal "3".
 
@@ -318,8 +318,8 @@ pointers below in this file.)
 ### Options
 
 Everything that used to live in `lua/wkdoptions/**` and `lua/options.lua` is
-now [my.nvim](https://github.com/StefanBartl/my.nvim). Its bindings are in
-the plugin's own [`docs/BINDINGS.md`](https://github.com/StefanBartl/my.nvim/blob/main/docs/BINDINGS.md),
+now [my.nvim](https://github.com/WKDSteve/my.nvim). Its bindings are in
+the plugin's own [`docs/BINDINGS.md`](https://github.com/WKDSteve/my.nvim/blob/main/docs/BINDINGS.md),
 which `:Bindings` reads directly out of the installed plugin directory — a
 second copy here is exactly the duplication `BND-01`…`03` removed.
 
@@ -462,7 +462,7 @@ behind, config-local:
 
 **`scripts/docmap_projects.lua`** prints the personal-plugin project list as
 JSON, for callers outside this Neovim process —
-[`docmap-desktop`](https://github.com/StefanBartl/docmap-desktop)'s own
+[`docmap-desktop`](https://github.com/WKDSteve/docmap-desktop)'s own
 "Import from Neovim…" button is the reason it exists:
 
 ```
@@ -501,7 +501,7 @@ Sources: `lua/bindings/autocmds/**`, `lua/bindings/**`,
 `lua/plugins/**`, `lua/startup/init.lua`, `lua/wkdnvchad/ui/**`.
 
 **Counted are call sites, not event registrations** — the same rule
-[`lsp.nvim` uses for its own autocmds](https://github.com/StefanBartl/lsp.nvim/blob/main/docs/autocmds.md):
+[`lsp.nvim` uses for its own autocmds](https://github.com/WKDSteve/lsp.nvim/blob/main/docs/autocmds.md):
 a handler on three events is one row; `nvim_get_autocmds` would count it
 three times. Measured 2026-09-02: **58 call sites**, of which **43 sit in 28
 augroups** and **15 have no augroup at all** (see
@@ -609,8 +609,8 @@ only to contain the ~600 ms that loading resty cost (see the former
 ### Highlights and options — moved out
 
 Everything that used to live in `lua/wkdoptions/**` and `lua/options.lua` is
-now [my.nvim](https://github.com/StefanBartl/my.nvim). Its bindings are in
-the plugin's own [`docs/BINDINGS.md`](https://github.com/StefanBartl/my.nvim/blob/main/docs/BINDINGS.md),
+now [my.nvim](https://github.com/WKDSteve/my.nvim). Its bindings are in
+the plugin's own [`docs/BINDINGS.md`](https://github.com/WKDSteve/my.nvim/blob/main/docs/BINDINGS.md),
 which `:Bindings` reads directly out of the installed plugin directory — a
 second copy here is exactly the duplication `BND-01`…`03` removed.
 
