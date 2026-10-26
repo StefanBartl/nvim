@@ -7,6 +7,7 @@ Windows-Rechner aus dem Checkout zu bauen und für den eigenen Benutzer zu insta
 | Datei | Inhalt |
 |---|---|
 | [toolchain.md](toolchain.md) | Werkzeuge (Rust, MSVC, Node, Tauri CLI, CMake, MSYS2/MinGW-w64), erwartete Pfade, Umgebungsvariablen, Build-Ergebnis und Installationsort je App |
+| [start.md](start.md) | Installierte Apps starten, stoppen und prüfen (Befehle je App) |
 | [maintenance.md](maintenance.md) | Was hier und in der nvim-Config nachzuziehen ist, wenn sich in einem der nativen Repos etwas ändert |
 
 ## Der eine Befehl
