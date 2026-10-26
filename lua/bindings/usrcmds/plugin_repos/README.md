@@ -319,7 +319,7 @@ Code: `ci.lua`; spec: `TESTS/plugin_repos/ci_spec.lua`.
 ### `:MyPlugins runner start|stop|status [repo]`
 
 The GitHub Actions SELF-HOSTED RUNNERS of the private repos (`casedesk.nvim`, `my.nvim`, `tasks.nvim`, `rules.nvim`,
-`tasks-vault`, `rules-vault`) — a different thing from `:MyPlugins ci` above. Those repos' own `.github/workflows/ci.yml` runs on `runs-on: [self-hosted, windows]` rather than
+`tasks-vault`, `rules-vault`, `appkit`, `tasks-desktop`, `rules-desktop`) — a different thing from `:MyPlugins ci` above. Those repos' own `.github/workflows/ci.yml` runs on `runs-on: [self-hosted, windows]` rather than
 GitHub-hosted minutes (same billing reason as `ci` above), which means a push only actually triggers CI once a
 runner process is listening; setup (one time, per repo) is `tasks-vault/TOOLS/self-hosted-runner.md`. Nothing starts
 that process automatically — without it, a push to one of these repos sits "Queued" on GitHub with no red mark.

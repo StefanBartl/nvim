@@ -13,6 +13,9 @@ return function(H)
     "rules.nvim",
     "tasks-vault",
     "rules-vault",
+    "appkit",
+    "tasks-desktop",
+    "rules-desktop",
   }) do
     ok(runner.is_known(name), name .. " has a self-hosted runner")
   end
