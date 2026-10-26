@@ -871,6 +871,8 @@ return {
       --   -- openai-whisper's CLI (pip install openai-whisper), the other one; also
       --   -- found in Python's Scripts dirs when PATH does not reach them.
       --   whisper = nil, -- string
+      --   -- faster-whisper's CLI (pip install whisper-ctranslate2), the faster Python engine.
+      --   ["whisper-ctranslate2"] = nil, -- string
       -- },
 
       -- Hard ceiling on one ffmpeg/ffprobe run, in ms: the backstop for a
@@ -923,7 +925,7 @@ return {
       -- transcribe = {
       --   -- "whisper_cpp" | "openai_whisper" | "auto" (first engine installed AND with a usable model)
       --   engine = "auto",
-      --   auto = { "whisper_cpp", "openai_whisper" }, -- the order "auto" tries
+      --   auto = { "whisper_cpp", "faster_whisper", "openai_whisper" }, -- the order "auto" tries
       --   fallback = {}, -- engines tried in order when `engine` is unavailable
       --   lang = nil, -- string; "de", "de-AT", "german", "deutsch"; nil lets the engine detect it
       --   -- Engine-neutral model: "tiny"|"base"|"small"|"medium"|"large-v3"|"turbo" or a file path.
@@ -940,6 +942,12 @@ return {
       --     -- plugin never guesses or downloads one.
       --     model = nil, -- string
       --     model_dir = nil, -- string; where model = "<name>" finds ggml-<name>.bin
+      --   },
+      --   faster_whisper = {
+      --     model = nil, -- string; nil = "small"; also "distil-large-v3" or a CTranslate2 model dir
+      --     model_dir = nil, -- string; nil = ~/.cache/huggingface/hub
+      --     device = nil, -- "cpu" | "cuda" | "auto"
+      --     allow_download = false, -- false also passes --local_files_only True
       --   },
       --   openai_whisper = {
       --     model = nil, -- string; nil = "turbo"
