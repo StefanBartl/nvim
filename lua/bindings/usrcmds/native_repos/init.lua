@@ -1,5 +1,5 @@
 ---@module 'bindings.usrcmds.native_repos'
----@brief `:MyNative {list|clone|pull|build|install} [name]` - the native apps next to the plugin checkouts.
+---@brief `:MyNative {list|clone|pull|deps|build|install|uninstall} [name]` - the native apps next to the plugin checkouts.
 ---@description
 --- Sister of `:MyPlugins` for the native apps (tasks-desktop, rules-desktop, ai-desktop, takt, docmap-desktop, appkit;
 --- the list is `plugins.personal.core.natives`). They are no lazy specs, so `:MyPlugins` never sees them.
@@ -8,18 +8,22 @@
 ---                     newest commit of its sources = stale, same rule as `scripts/sync-machine.ps1`)
 ---  - `clone [name]`   clone what is missing (additive, never overwrites)
 ---  - `pull [name]`    fast-forward the clean ones (`--ff-only`; dirty or ahead is left alone and said so)
----  - `build [name]`   run the build command of an app (its scripts/build-install.ps1 -BuildOnly, ai-desktop's
----                     scripts/setup.ps1 -SkipInstall); without a name, every STALE or missing build one after the
----                     other. Apps without a command only show their hint. Output goes to the quickfix list. Never
----                     installs or starts anything.
----  - `install [name]` build and install for the current user from the terminal, no downloaded setup.exe (which
----                     SmartScreen stops on a managed workstation); without a name, every cloned app. Output goes
----                     to the quickfix list.
+---  - `deps [name]`    check the tools the apps build with (`toolchain.lua`) and install the missing ones that need
+---                     no administrator (rustup, tauri-cli, the MSYS2 packages); the others are named
+---  - `build [name]`   run the build command of an app (its scripts/build-install.ps1 -BuildOnly); without a name,
+---                     every STALE or missing build one after the other. Apps without a command only show their
+---                     hint, apps with a missing tool are skipped. Output goes to the quickfix list. Never installs
+---                     or starts anything.
+---  - `install [name]` `deps`, then build and install for the current user from the terminal, no downloaded
+---                     setup.exe (which SmartScreen stops on a managed workstation); without a name, every cloned
+---                     app. Output goes to the quickfix list.
+---  - `uninstall [name]` scripts/uninstall.ps1 of the app; without a name, every cloned app.
 
 local notify = require("lib.nvim.notify").create("[usrcmds.native_repos]")
 local composer = require("lib.nvim.bindings.usercmd.composer")
 local ops = require("bindings.usrcmds.plugin_repos.ops")
 local natives = require("plugins.personal.core.natives")
+local toolchain = require("bindings.usrcmds.native_repos.toolchain")
 
 local M = {}
 
@@ -215,17 +219,19 @@ function M.plan_build(list, states, named)
   return todo, hints
 end
 
----Which apps an install run covers. Without a name every cloned one with an install command (an install
+---Which apps an install (or uninstall) run covers. Without a name every cloned one with that command (an install
 ---is not stale or current: the artifact says nothing about what is installed); with a name that one.
 ---@param list Plugins.Personal.Native[]
 ---@param states table<string, string>  # app name -> state (see state_of)
 ---@param named boolean  # the run was asked for by name
+---@param field? "install"|"uninstall"  # default "install"
 ---@return Plugins.Personal.Native[] todo, string[] hints
-function M.plan_install(list, states, named)
+function M.plan_install(list, states, named, field)
+  field = field or "install"
   local todo, hints = {}, {}
   for _, native in ipairs(list) do
     if named or states[native.name] ~= "not cloned" then
-      if native.install then
+      if native[field] then
         todo[#todo + 1] = native
       elseif named or native.build then
         hints[#hints + 1] = ("%s: %s"):format(native.name, native.hint)
@@ -235,8 +241,11 @@ function M.plan_install(list, states, named)
   return todo, hints
 end
 
----Runs the build or install command of the apps one after the other, output to the quickfix list.
----@param kind "build"|"install"
+local labels = { build = "Build", install = "Install", uninstall = "Uninstall" }
+
+---Runs the build, install or uninstall command of the apps one after the other, output to the quickfix list.
+---A build skips the apps whose tools are missing; an install first installs the tools it can (toolchain.ensure).
+---@param kind "build"|"install"|"uninstall"
 ---@param only? string
 local function run(kind, only)
   local base = base_dir()
@@ -251,26 +260,37 @@ local function run(kind, only)
   for _, native in ipairs(candidates) do
     states[native.name] = state_of(native, base .. "/" .. native.name)
   end
-  local plan = kind == "install" and M.plan_install or M.plan_build
-  local todo, hints = plan(candidates, states, only ~= nil)
+  local todo, hints
+  if kind == "build" then
+    todo, hints = M.plan_build(candidates, states, only ~= nil)
+  else
+    todo, hints = M.plan_install(candidates, states, only ~= nil, kind)
+  end
   if #todo == 0 then
     if #hints > 0 then
       notify.info("Nothing to " .. kind .. " from here:\n" .. table.concat(hints, "\n"))
-    elseif kind == "install" then
-      notify.info("Nothing to install (no cloned app has an install command).")
-    else
+    elseif kind == "build" then
       notify.info("All builds are current.")
+    else
+      notify.info(("Nothing to %s (no cloned app has that command)."):format(kind))
     end
     return
   end
 
-  local label = kind == "install" and "Install" or "Build"
+  local label = labels[kind]
   local items, failed = {}, {}
   local index = 0
   local function finish()
     running = false
     vim.fn.setqflist({}, " ", { title = "MyNative " .. kind, items = items })
-    if #failed == 0 then
+    if #failed > 0 then
+      notify.error(
+        label .. " FAILED: " .. table.concat(failed, ", ") .. " (quickfix has the output)"
+      )
+      vim.cmd("botright copen")
+    elseif #todo == 0 then
+      notify.warn(label .. ": nothing could run:\n" .. table.concat(hints, "\n"))
+    else
       local names = vim.tbl_map(function(n)
         return n.name
       end, todo)
@@ -279,11 +299,6 @@ local function run(kind, only)
         text = text .. "\nNot handled from here:\n" .. table.concat(hints, "\n")
       end
       notify.info(text)
-    else
-      notify.error(
-        label .. " FAILED: " .. table.concat(failed, ", ") .. " (quickfix has the output)"
-      )
-      vim.cmd("botright copen")
     end
   end
   local function next_app()
@@ -301,7 +316,7 @@ local function run(kind, only)
       return
     end
     notify.info(("%s %d/%d: %s ..."):format(label, index, #todo, native.name))
-    local argv = kind == "install" and native.install or native.build
+    local argv = native[kind]
     local started, err = pcall(vim.system, argv, { text = true, cwd = dir }, function(res)
       vim.schedule(function()
         items[#items + 1] =
@@ -323,8 +338,27 @@ local function run(kind, only)
       next_app()
     end
   end
+  ---@param missing table<string, boolean>
+  local function hold_back(missing)
+    local held
+    todo, held = toolchain.split(todo, missing)
+    vim.list_extend(hints, held)
+  end
+
   running = true
-  next_app()
+  if kind == "uninstall" then
+    next_app()
+  elseif kind == "build" then
+    hold_back(toolchain.check(toolchain.needed(todo)))
+    next_app()
+  else
+    notify.info("Install: checking the tools ...")
+    toolchain.ensure(toolchain.needed(todo), items, function(missing, tool_hints)
+      hold_back(missing)
+      vim.list_extend(hints, tool_hints)
+      next_app()
+    end)
+  end
 end
 
 ---@param only? string
@@ -335,6 +369,50 @@ end
 ---@param only? string
 function M.install(only)
   run("install", only)
+end
+
+---@param only? string
+function M.uninstall(only)
+  run("uninstall", only)
+end
+
+---Checks the tools of the cloned apps (or of the named one) and installs the missing ones it can.
+---@param only? string
+function M.deps(only)
+  local base = base_dir()
+  if not base then
+    return
+  end
+  if running then
+    notify.warn("A build or install is already running")
+    return
+  end
+  local apps = vim.tbl_filter(function(native)
+    return only ~= nil or uv.fs_stat(base .. "/" .. native.name) ~= nil
+  end, selected(only))
+  local ids = toolchain.needed(apps)
+  if #ids == 0 then
+    notify.info("No tools to check.")
+    return
+  end
+  local items = {}
+  running = true
+  notify.info("Checking the tools: " .. table.concat(ids, ", ") .. " ...")
+  toolchain.ensure(ids, items, function(missing, hints)
+    running = false
+    local lines = {}
+    for _, id in ipairs(ids) do
+      lines[#lines + 1] = ("%-10s %s"):format(id, missing[id] and "MISSING" or "ok")
+    end
+    if #items > 0 then
+      vim.fn.setqflist({}, " ", { title = "MyNative deps", items = items })
+    end
+    if #hints > 0 then
+      notify.warn(table.concat(lines, "\n") .. "\n\nBy hand:\n" .. table.concat(hints, "\n"))
+    else
+      notify.info(table.concat(lines, "\n"))
+    end
+  end)
 end
 
 ---@return table[]
@@ -379,8 +457,18 @@ function M.routes()
     ),
     route(
       "install",
-      "Build and install every cloned native app for the current user, without a downloaded setup.exe (output to the quickfix list); with a name, that app",
+      "Install the missing tools, then build and install every cloned native app for the current user, without a downloaded setup.exe (output to the quickfix list); with a name, that app",
       M.install
+    ),
+    route(
+      "uninstall",
+      "Remove the installation of every cloned native app for the current user (scripts/uninstall.ps1); with a name, that app",
+      M.uninstall
+    ),
+    route(
+      "deps",
+      "Check the tools the cloned native apps build with and install the missing ones that need no administrator (rustup, tauri-cli, MSYS2 packages)",
+      M.deps
     ),
   }
 end
@@ -402,7 +490,7 @@ function M.enable()
     end,
   })
   composer.verb("MyNative", {
-    desc = "Manage the native app checkouts (clone, pull, build state, build and install)",
+    desc = "Manage the native app checkouts (clone, pull, build state, tools, build, install, uninstall)",
     routes = M.routes(),
   })
 end

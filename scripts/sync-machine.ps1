@@ -57,13 +57,13 @@ $natives = @{
     'tasks-desktop' = @{
         Artifact = 'target\release\tasks-hub.exe'
         Sources  = @('crates', 'ui', 'Cargo.lock', 'engine.lock')
-        Hint     = 'scripts\build-install.ps1 -BuildOnly   (build and install: without -BuildOnly)'
+        Hint     = 'scripts\build-install.ps1 -BuildOnly   (build and install: without -BuildOnly; tools: :MyNative deps)'
         Command  = 'powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build-install.ps1 -BuildOnly'
     }
     'rules-desktop' = @{
         Artifact = 'target\release\rules-hub.exe'
         Sources  = @('crates', 'ui', 'Cargo.lock')
-        Hint     = 'scripts\build-install.ps1 -BuildOnly   (build and install: without -BuildOnly)'
+        Hint     = 'scripts\build-install.ps1 -BuildOnly   (build and install: without -BuildOnly; tools: :MyNative deps)'
         Command  = 'powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build-install.ps1 -BuildOnly'
     }
     'mdview.nvim' = @{
@@ -75,13 +75,13 @@ $natives = @{
     'ai-desktop' = @{
         Artifact = 'build\ai-desktop.exe'
         Sources  = @('src', 'CMakeLists.txt')
-        Hint     = 'scripts\setup.ps1 -SkipInstall   (configures build\ when it is not; build and install: without -SkipInstall)'
-        Command  = 'powershell -NoProfile -ExecutionPolicy Bypass -File scripts\setup.ps1 -SkipInstall'
+        Hint     = 'scripts\build-install.ps1 -BuildOnly   (build and install: without -BuildOnly; tools: :MyNative deps)'
+        Command  = 'powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build-install.ps1 -BuildOnly'
     }
     'docmap-desktop' = @{
         Artifact = 'src-tauri\target\release\docmap-desktop.exe'
         Sources  = @('src', 'src-tauri', 'engine.lock')
-        Hint     = 'scripts\build-install.ps1 -BuildOnly   (build and install: without -BuildOnly)'
+        Hint     = 'scripts\build-install.ps1 -BuildOnly   (build and install: without -BuildOnly; tools: :MyNative deps)'
         Command  = 'powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build-install.ps1 -BuildOnly'
     }
 }

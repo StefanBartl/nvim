@@ -5,27 +5,35 @@ Sister of `:MyPlugins` for the native apps next to the plugin checkouts. The lis
 `ai-desktop`, `takt`, `docmap-desktop`, `appkit`. They are no lazy specs (built, not loaded), so `:MyPlugins` never sees them.
 
 ```vim
-:MyNative list              " per app: git state, build current / stale / missing
-:MyNative clone [name]      " clone what is missing (additive)
-:MyNative pull [name]       " git pull --ff-only, only clean repos; dirty or ahead ones are left alone
-:MyNative build [name]      " build the stale or missing ones, output in the quickfix list
-:MyNative install [name]    " build and install every cloned app for the current user, no downloaded setup.exe
+:MyNative list               " per app: git state, build current / stale / missing
+:MyNative clone [name]       " clone what is missing (additive)
+:MyNative pull [name]        " git pull --ff-only, only clean repos; dirty or ahead ones are left alone
+:MyNative deps [name]        " check the tools, install the missing ones that need no administrator
+:MyNative build [name]       " build the stale or missing ones, output in the quickfix list
+:MyNative install [name]     " tools, then build and install every cloned app for the current user
+:MyNative uninstall [name]   " remove the installation of every cloned app (scripts/uninstall.ps1)
 ```
 
 - A build is **stale** when the newest commit touching its sources is newer than the artifact (same rule as
   `scripts/sync-machine.ps1`, which keeps its own copy of the table: keep both in step).
-- `build` runs the build script of each repo: `scripts/build-install.ps1 -BuildOnly` (`tasks-desktop`,
-  `rules-desktop`, `docmap-desktop`) and `scripts/setup.ps1 -SkipInstall` (`ai-desktop`; it configures `build/`
-  when it is not there, which a bare `cmake --build build` cannot). It never installs or starts anything. `takt`
-  (a skeleton) and `appkit` (a library) have no command and only print their hint.
-- `install` runs the same scripts without `-BuildOnly` / `-SkipInstall`: build, then install for the current user.
-  No setup.exe is downloaded, which is what SmartScreen stops on a managed workstation. The hubs install themselves
-  (`<hub>.exe install`), `ai-desktop` copies into `%LOCALAPPDATA%\ai-desktop`, `docmap-desktop` runs the NSIS setup it
-  just built with `/S` (a file built on the machine has no Mark-of-the-Web). Without a name every cloned app, since
-  the build state says nothing about what is installed. The scripts refuse to install inside a Claude session.
-- One build or install at a time.
+- Every desktop app has the same three scripts: `scripts/build-install.ps1 -BuildOnly` is the build,
+  `scripts/build-install.ps1` builds and installs, `scripts/uninstall.ps1` removes. ai-desktop's `build-install.ps1`
+  hands over to `scripts/setup.ps1`, which configures `build/` when it is not there (a bare `cmake --build build`
+  cannot). `takt` (a skeleton) and `appkit` (a library) have no command and only print their hint.
+- `deps`: the tools are in [`toolchain.lua`](toolchain.lua), each app names its own (`needs`). Installed for the
+  current user: rustup (winget), the Tauri CLI (cargo), the MinGW-w64 packages of MSYS2 (pacman). Only named, since
+  they need an administrator: Node.js, CMake, the MSVC build tools, MSYS2 itself.
+- `install` runs `deps` first and skips an app whose tools are still missing (named in the message). No setup.exe
+  is downloaded, which is what SmartScreen stops on a managed workstation. The hubs install themselves
+  (`<hub>.exe install`), `ai-desktop` copies into `%LOCALAPPDATA%\ai-desktop` and puts its launcher on the user PATH,
+  `docmap-desktop` runs the NSIS setup it just built with `/S` (a file built on the machine has no Mark-of-the-Web).
+  Without a name every cloned app, since the build state says nothing about what is installed. `build` skips an app
+  with missing tools as well, but installs none.
+- The scripts refuse to install or uninstall inside a Claude session (it redirects AppData and HKCU).
+- One build, install or deps run at a time.
 - Without nvim: `pwsh -File scripts\build-install.ps1` in the repo (or the `irm .../releases/download/latest/install.ps1 | iex`
   line of its README, which installs the rolling build of the CI instead of a local one).
-- Add an app: one entry in `natives.lua` (`repo`, `name`, optional `artifact` + `sources` + `build` + `install`, `hint`).
+- Tools, paths and install folders: `docs/NOTES/builds/toolchain.md`; what to keep in step when a repo changes or an
+  app is added: `docs/NOTES/builds/maintenance.md`.
 
-Code: `init.lua`; spec: `TESTS/native_repos/native_repos_spec.lua`.
+Code: `init.lua`, `toolchain.lua`; spec: `TESTS/native_repos/native_repos_spec.lua`.

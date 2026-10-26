@@ -4,6 +4,7 @@ return function(H)
   local eq, ok = H.eq, H.ok
   local native = require("bindings.usrcmds.native_repos")
   local natives = require("plugins.personal.core.natives")
+  local toolchain = require("bindings.usrcmds.native_repos.toolchain")
 
   eq(native.build_state(nil, 100), "missing", "no artifact is missing")
   eq(native.build_state(100, 200), "stale", "a newer source commit makes it stale")
@@ -25,16 +26,69 @@ return function(H)
       not entry.install or entry.build,
       "an install command comes with a build command: " .. entry.name
     )
+    for _, id in ipairs(entry.needs or {}) do
+      ok(toolchain.get(id), ("%s needs a known tool: %s"):format(entry.name, id))
+    end
   end
-  -- setup.ps1 configures build/ itself; a bare `cmake --build build` failed on a checkout without it
-  local ai = natives.get("ai-desktop")
-  eq(vim.tbl_contains(ai.build, "scripts/setup.ps1"), true, "ai-desktop builds with its setup.ps1")
-  eq(vim.tbl_contains(ai.build, "-SkipInstall"), true, "and its build does not install")
-  for _, name in ipairs({ "tasks-desktop", "rules-desktop", "docmap-desktop" }) do
+  -- every desktop app: the same three scripts (ai-desktop's build-install.ps1 hands over to setup.ps1, which
+  -- configures build/ itself; a bare `cmake --build build` failed on a checkout without it)
+  for _, name in ipairs({ "tasks-desktop", "rules-desktop", "docmap-desktop", "ai-desktop" }) do
     local entry = natives.get(name)
+    eq(
+      vim.tbl_contains(entry.build, "scripts/build-install.ps1"),
+      true,
+      name .. " builds with its script"
+    )
     eq(vim.tbl_contains(entry.build, "-BuildOnly"), true, name .. " builds without installing")
     eq(vim.tbl_contains(entry.install, "-BuildOnly"), false, name .. " installs")
+    eq(vim.tbl_contains(entry.uninstall, "scripts/uninstall.ps1"), true, name .. " uninstalls")
+    ok(entry.needs and #entry.needs > 0, name .. " names its tools")
   end
+  eq(natives.get("ai-desktop").needs, { "cmake", "mingw64" }, "ai-desktop builds with MSYS2")
+
+  -- the tools: once each, in the order of the list (rust before tauri-cli)
+  eq(
+    toolchain.needed({ { needs = { "tauri-cli", "rust" } }, { needs = { "rust", "node" } } }),
+    { "rust", "node", "tauri-cli" },
+    "needed tools are unique and ordered"
+  )
+  local fake = {
+    {
+      id = "a",
+      hint = "ha",
+      install = function()
+        return { "x" }
+      end,
+    },
+    { id = "b", hint = "hb" },
+    {
+      id = "c",
+      hint = "hc",
+      install = function()
+        return nil
+      end,
+    },
+  }
+  local install, tool_hints = toolchain.plan({ "a", "b", "c", "zz" }, fake)
+  eq(install, { "a" }, "only a tool with a command is installed")
+  eq(tool_hints, { "b: hb", "c: hc", "zz: unknown tool" }, "the others are named (no pacman: hint)")
+  local ready, held = toolchain.split(
+    { { name = "p", needs = { "a" } }, { name = "q", needs = { "a", "b" } }, { name = "r" } },
+    { b = true }
+  )
+  eq(
+    vim.tbl_map(function(n)
+      return n.name
+    end, ready),
+    { "p", "r" },
+    "apps with all their tools go on"
+  )
+  eq(held, { "q: missing b (:MyNative deps)" }, "an app with a missing tool is held back and named")
+  eq(
+    toolchain.get("mingw64").hint:find("mingw-w64-x86_64-openssl", 1, true) ~= nil,
+    true,
+    "pacman hint"
+  )
   eq(natives.get("nope"), nil, "unknown name")
   eq(vim.tbl_contains(natives.names(), "takt"), true, "takt is listed")
 
@@ -87,5 +141,23 @@ return function(H)
   eq(by_path.list.args, nil, "list has no argument")
   eq(by_path.build.args[1].optional, true, "build takes an optional name")
   eq(by_path.install.args[1].optional, true, "install takes an optional name")
+  eq(by_path.uninstall.args[1].optional, true, "uninstall takes an optional name")
+  eq(by_path.deps.args[1].optional, true, "deps takes an optional name")
+
+  -- an uninstall run covers the cloned apps with an uninstall command, like an install run
+  local removable = { repo = "o/f", name = "f", build = { "x" }, uninstall = { "u" }, hint = "hf" }
+  todo = native.plan_install(
+    { removable, builds_only },
+    { f = "current", d = "current" },
+    false,
+    "uninstall"
+  )
+  eq(
+    vim.tbl_map(function(n)
+      return n.name
+    end, todo),
+    { "f" },
+    "uninstall takes the field uninstall"
+  )
   eq(by_path.clone.args[1].type, "MYNATIVE_NAME", "clone completes the app names")
 end

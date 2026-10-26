@@ -4,7 +4,8 @@
 --- Native apps are no lazy specs: they are built, not loaded. This is their list: where the repo is, which
 --- artifact a build produces, which paths feed it, the command that builds it and the one that builds and
 --- installs it for the current user from the terminal (no downloaded setup.exe, which SmartScreen stops on a
---- managed workstation). `hint` is what to do by hand when there is no command.
+--- managed workstation), the one that uninstalls it, and the tools the build needs. `hint` is what to do by hand
+--- when there is no command. What to keep in step when a repo changes: docs/NOTES/builds/maintenance.md.
 --- The same facts live in `scripts/sync-machine.ps1` (`$natives`) for the machine-switch check; keep both in step.
 
 local M = {}
@@ -25,54 +26,59 @@ end
 ---@field name string Folder below $REPOS_DIR
 ---@field artifact? string Path of the build result, relative to the repo (nil: a library or no known artifact)
 ---@field sources? string[] Paths whose newest commit decides whether the artifact is stale
+---@field needs? string[] Tools of `bindings.usrcmds.native_repos.toolchain` the build needs
 ---@field build? string[] argv of a build (no install), run in the repo folder
 ---@field install? string[] argv of a build plus install for the current user, run in the repo folder
+---@field uninstall? string[] argv that removes the installation of the current user, run in the repo folder
 ---@field hint string What to run by hand (shown when there is no command)
+
+---A desktop app: every one has scripts/build-install.ps1 [-BuildOnly] and scripts/uninstall.ps1.
+---@param entry Plugins.Personal.Native
+---@return Plugins.Personal.Native
+local function desktop(entry)
+  entry.build = ps("scripts/build-install.ps1", "-BuildOnly")
+  entry.install = ps("scripts/build-install.ps1")
+  entry.uninstall = ps("scripts/uninstall.ps1")
+  entry.hint = "scripts/build-install.ps1 [-BuildOnly], scripts/uninstall.ps1"
+  return entry
+end
 
 ---@type Plugins.Personal.Native[]
 M.list = {
-  {
+  desktop({
     repo = "StefanBartl/tasks-desktop",
     name = "tasks-desktop",
     artifact = "target/release/tasks-hub.exe",
     sources = { "crates", "ui", "Cargo.lock", "engine.lock" },
-    build = ps("scripts/build-install.ps1", "-BuildOnly"),
-    install = ps("scripts/build-install.ps1"),
-    hint = "scripts/build-install.ps1 [-BuildOnly]",
-  },
-  {
+    needs = { "rust", "msvc", "node" },
+  }),
+  desktop({
     repo = "StefanBartl/rules-desktop",
     name = "rules-desktop",
     artifact = "target/release/rules-hub.exe",
     sources = { "crates", "ui", "Cargo.lock" },
-    build = ps("scripts/build-install.ps1", "-BuildOnly"),
-    install = ps("scripts/build-install.ps1"),
-    hint = "scripts/build-install.ps1 [-BuildOnly]",
-  },
-  {
+    needs = { "rust", "msvc", "node" },
+  }),
+  -- build-install.ps1 hands over to scripts/setup.ps1, which configures build/ when it is not there
+  desktop({
     repo = "StefanBartl/ai-desktop",
     name = "ai-desktop",
     artifact = "build/ai-desktop.exe",
     sources = { "src", "CMakeLists.txt" },
-    -- setup.ps1 configures build/ when it is not (a bare `cmake --build build` cannot) and vendors third_party/
-    build = ps("scripts/setup.ps1", "-SkipInstall"),
-    install = ps("scripts/setup.ps1"),
-    hint = "scripts/setup.ps1 [-SkipInstall]",
-  },
+    needs = { "cmake", "mingw64" },
+  }),
   {
     repo = "StefanBartl/takt",
     name = "takt",
     hint = "nothing to build yet (the repo is still a skeleton)",
   },
-  {
+  desktop({
     repo = "StefanBartl/docmap-desktop",
     name = "docmap-desktop",
     artifact = "src-tauri/target/release/docmap-desktop.exe",
     sources = { "src", "src-tauri", "engine.lock" },
-    build = ps("scripts/build-install.ps1", "-BuildOnly"),
-    install = ps("scripts/build-install.ps1"),
-    hint = "scripts/build-install.ps1 [-BuildOnly]",
-  },
+    needs = { "rust", "msvc", "tauri-cli" },
+  }),
   {
     repo = "StefanBartl/appkit",
     name = "appkit",
