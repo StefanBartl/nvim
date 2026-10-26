@@ -866,8 +866,11 @@ return {
       --   -- Audio player behind `media.audio`; without it playback is silent,
       --   -- nothing else fails.
       --   mpv = nil, -- string
-      --   -- whisper.cpp CLI behind `media.transcribe`; the only feature that needs it.
+      --   -- whisper.cpp CLI, one of the two transcription engines.
       --   ["whisper-cli"] = nil, -- string
+      --   -- openai-whisper's CLI (pip install openai-whisper), the other one; also
+      --   -- found in Python's Scripts dirs when PATH does not reach them.
+      --   whisper = nil, -- string
       -- },
 
       -- Hard ceiling on one ffmpeg/ffprobe run, in ms: the backstop for a
@@ -918,9 +921,13 @@ return {
 
       -- Transcription (`:Media transcribe`).
       -- transcribe = {
-      --   engine = "whisper_cpp", -- registered engine tried first
+      --   -- "whisper_cpp" | "openai_whisper" | "auto" (first engine installed AND with a usable model)
+      --   engine = "auto",
+      --   auto = { "whisper_cpp", "openai_whisper" }, -- the order "auto" tries
       --   fallback = {}, -- engines tried in order when `engine` is unavailable
-      --   lang = nil, -- string; ISO 639-1 code, nil lets the engine detect it
+      --   lang = nil, -- string; "de", "de-AT", "german", "deutsch"; nil lets the engine detect it
+      --   -- Engine-neutral model: "tiny"|"base"|"small"|"medium"|"large-v3"|"turbo" or a file path.
+      --   model = nil, -- string
       --   task = "transcribe", -- "transcribe" keeps the language | "translate" gives English
       --   -- Where a finished transcript goes: "buffer" | "sidecar"
       --   -- (.transcript.md beside the source) | "srt" | "vtt".
@@ -932,6 +939,15 @@ return {
       --     -- Absolute path to a GGML model file (e.g. ggml-base.en.bin); the
       --     -- plugin never guesses or downloads one.
       --     model = nil, -- string
+      --     model_dir = nil, -- string; where model = "<name>" finds ggml-<name>.bin
+      --   },
+      --   openai_whisper = {
+      --     model = nil, -- string; nil = "turbo"
+      --     model_dir = nil, -- string; nil = ~/.cache/whisper
+      --     device = nil, -- "cpu" | "cuda"; nil lets PyTorch pick
+      --     -- false: a model not downloaded yet is an error instead of a silent
+      --     -- multi-GB fetch by whisper on first use.
+      --     allow_download = false,
       --   },
       -- },
 
