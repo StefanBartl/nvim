@@ -6,10 +6,16 @@ return function(H)
   local eq, ok = H.eq, H.ok
   local runner = require("bindings.usrcmds.plugin_repos.runner")
 
-  ok(
-    runner.is_known("casedesk.nvim") and runner.is_known("my.nvim"),
-    "the two repos with a self-hosted runner"
-  )
+  for _, name in ipairs({
+    "casedesk.nvim",
+    "my.nvim",
+    "tasks.nvim",
+    "rules.nvim",
+    "tasks-vault",
+    "rules-vault",
+  }) do
+    ok(runner.is_known(name), name .. " has a self-hosted runner")
+  end
   ok(not runner.is_known("lib.nvim"), "a repo with no self-hosted runner is not known")
 
   local saved = vim.env.USERPROFILE

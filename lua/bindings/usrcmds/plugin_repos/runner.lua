@@ -1,8 +1,8 @@
 ---@module 'bindings.usrcmds.plugin_repos.runner'
 ---@brief `:MyPlugins runner start|stop|status [repo]` - the GitHub Actions self-hosted runner of a private repo.
 ---@description
---- casedesk.nvim and my.nvim are private with no paid GitHub plan, so their CI runs on a self-hosted runner on
---- this machine instead of GitHub-hosted minutes (tasks-vault/TOOLS/self-hosted-runner.md has the one-time setup).
+--- The private repos (casedesk.nvim, my.nvim, tasks.nvim, rules.nvim, tasks-vault, rules-vault) have no paid GitHub
+--- plan, so their CI runs on a self-hosted runner on this machine instead of GitHub-hosted minutes (tasks-vault/TOOLS/self-hosted-runner.md has the one-time setup).
 --- The runner is a long-lived process (`run.cmd` in its own directory under
 --- `%USERPROFILE%\actions-runners\<repo>`) that listens for jobs; nothing starts it automatically, so a push stays
 --- "Queued" (discarded after 24h, no red mark) until someone starts it.
@@ -26,7 +26,7 @@ local M = {}
 local uv = vim.uv or vim.loop
 
 ---The repos with a registered self-hosted GitHub Actions runner.
-M.REPOS = { "casedesk.nvim", "my.nvim" }
+M.REPOS = { "casedesk.nvim", "my.nvim", "tasks.nvim", "rules.nvim", "tasks-vault", "rules-vault" }
 
 ---@param name string
 ---@return boolean
@@ -219,7 +219,7 @@ function M.routes()
     {
       path = { "runner", "start" },
       args = repo_arg,
-      desc = "Start the self-hosted GitHub Actions runner of one private repo (or all of them: casedesk.nvim, my.nvim) in a terminal.nvim split runner-<repo>",
+      desc = "Start the self-hosted GitHub Actions runner of one private repo (or all of them: casedesk.nvim, my.nvim, tasks.nvim, rules.nvim, tasks-vault, rules-vault) in a terminal.nvim split runner-<repo>",
       run = function(ctx)
         M.start(ctx.args.repo)
       end,

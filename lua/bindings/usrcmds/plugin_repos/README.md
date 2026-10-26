@@ -318,11 +318,11 @@ Code: `ci.lua`; spec: `TESTS/plugin_repos/ci_spec.lua`.
 
 ### `:MyPlugins runner start|stop|status [repo]`
 
-The GitHub Actions SELF-HOSTED RUNNER of `casedesk.nvim` and `my.nvim` — a different thing from `:MyPlugins ci`
-above. Those two repos' own `.github/workflows/ci.yml` runs on `runs-on: [self-hosted, windows]` rather than
+The GitHub Actions SELF-HOSTED RUNNERS of the private repos (`casedesk.nvim`, `my.nvim`, `tasks.nvim`, `rules.nvim`,
+`tasks-vault`, `rules-vault`) — a different thing from `:MyPlugins ci` above. Those repos' own `.github/workflows/ci.yml` runs on `runs-on: [self-hosted, windows]` rather than
 GitHub-hosted minutes (same billing reason as `ci` above), which means a push only actually triggers CI once a
 runner process is listening; setup (one time, per repo) is `tasks-vault/TOOLS/self-hosted-runner.md`. Nothing starts
-that process automatically — without it, a push to one of these two repos sits "Queued" on GitHub with no red mark.
+that process automatically — without it, a push to one of these repos sits "Queued" on GitHub with no red mark.
 
 - `runner start [repo]`: launches `run.cmd` of the runner (`%USERPROFILE%\actions-runners\<repo>\run.cmd`) in a
   terminal.nvim split of its own (`runner-<repo>`), or all of them with no `repo`. A no-op (warns) if that split is
@@ -334,6 +334,10 @@ that process automatically — without it, a push to one of these two repos sits
 
 No "install as a service" command here: that needs an elevated shell (`setup-runner.ps1 -Service`, see the doc
 above) and is a one-time, manual, admin-rights step — not something a usercmd on an ordinary session should do.
+Headless equivalent for agents and scripts (no Neovim, hidden window, waits until GitHub reports the runner online):
+`pwsh scripts/runners.ps1 status|start|ensure|stop [repo...|all]` (`ensure` is what a Claude Code session runs before
+it waits for a CI result of a private repo; see `docs/NOTES/CDX/templates/PROMPT`). The repos with a runner are listed in
+`runner.lua` (`REPOS`) and implied by the folders under `%USERPROFILE%ctions-runners` for the script.
 Code: `runner.lua`; spec: `TESTS/plugin_repos/runner_spec.lua`.
 
 ### `:MyPlugins reclone [dir] [--only=<name>]`
