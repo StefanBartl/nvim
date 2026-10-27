@@ -36,6 +36,21 @@ example:
 See `docs/installation.md` for the external tools the configuration expects
 and `docs/BINDINGS.md` for the keybindings.
 
+## Profiles
+
+`lua/profile.lua` selects one of two plugin sets:
+
+- `full` (default): everything.
+- `enterprise`: no AI plugins (`ai.nvim`, `buffer-ctx.nvim`) and no clients of
+  third-party APIs (`github_stats.nvim`, `reposcope.nvim`). The list is
+  `ENTERPRISE_OFF` in `lua/plugins/personal/core/source.lua`.
+
+Switch with `:Profile enterprise` / `:Profile full` (applies on the next start)
+or set `NVIM_PROFILE` (wins over `:Profile`). On the first start after a switch
+to `enterprise`, lazy.nvim removes the disabled plugins from the data folder;
+after a switch back, lazy.nvim installs them again. `:Profile` without an
+argument shows the active profile.
+
 ## License
 
 [MIT](LICENSE), Copyright (c) 2026 Stefan Bartl.

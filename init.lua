@@ -266,6 +266,12 @@ startup.on("UIReady", "usrcmds", function()
   require("bindings.usrcmds")
 end)
 
+-- UIReady: after a profile switch (lua/profile.lua), let lazy remove the plugins the
+-- new profile disables. Not on the sync path: lazy.clean runs async and only once.
+startup.on("UIReady", "profile_cleanup", function()
+  require("profile").apply_cleanup()
+end)
+
 -- UIReady: keymaps cannot be pressed before the UI accepts input. This pulls
 -- in ~19 submodules and is the single largest phase body, so keeping it off the
 -- synchronous path is what actually shortens time-to-first-paint.

@@ -41,7 +41,7 @@ local control = require("plugins.control.mode")
 --   "remote"   → ALL from GitHub
 --   "disabled" → ALL off
 ---@type "auto"|PersonalRepoMode
-local OVERRIDE = "dir"
+local OVERRIDE = "auto"
 
 -- Resolves the effective source when OVERRIDE == "auto":
 --   * "workstation" (see machine.lua) never has local checkouts of these
@@ -159,5 +159,27 @@ plugins.modes({
   ["media.nvim"] = "dir",
   ["pdfport.nvim"] = "dir",
 })
+
+-- ── ENTERPRISE PROFILE ─────────────────────────────────────────────────────
+-- Repos the "enterprise" profile (lua/profile.lua, `:Profile`) turns off: AI
+-- (sends buffer content to an LLM) and clients of third-party APIs (GitHub
+-- tokens, traffic stats). "disabled" wins over OVERRIDE/SOURCE, so they load
+-- neither locally nor remotely; profile.apply_cleanup() removes them from the
+-- data folder on the first start after the switch. pdfport.nvim's "ollama"/
+-- "claude" backends go through ai.nvim and fail cleanly without it.
+local ENTERPRISE_OFF = {
+  "ai.nvim",
+  "buffer-ctx.nvim",
+  "github_stats.nvim",
+  "reposcope.nvim",
+}
+
+if require("profile").is("enterprise") then
+  local off = {} ---@type table<string, string>
+  for _, name in ipairs(ENTERPRISE_OFF) do
+    off[name] = "disabled"
+  end
+  plugins.modes(off)
+end
 
 return plugins
