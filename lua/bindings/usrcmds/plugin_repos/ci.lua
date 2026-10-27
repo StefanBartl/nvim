@@ -2,7 +2,7 @@
 ---@brief `:MyPlugins ci [repo] [--fast] [--quiet]`, `ci status`, `ci hook install|remove [repo]` - local CI for the private repos.
 ---@description
 --- GitHub-hosted minutes of private repositories are limited, so the CI of the private repos
---- (`rules-vault`, `casedesk.nvim`, `tasks-vault`, `my.nvim`) runs on this machine. Each of them has a
+--- (`rules-vault`, `casedesk.nvim`, `tasks-vault`, `my.nvim`, `tasks.nvim`, `rules.nvim`) runs on this machine. Each of them has a
 --- `scripts/ci.sh` with exactly the steps of its workflow (the workflow calls the same script; `my.nvim`'s
 --- workflow runs the same gates on a self-hosted runner instead), and writes `<repo>/.ci-last.json`
 --- (commit, time, state) when it is done.
@@ -26,7 +26,7 @@ local M = {}
 local uv = vim.uv or vim.loop
 
 ---The private repos that have a local CI, in the order `ci` runs them.
-M.REPOS = { "rules-vault", "casedesk.nvim", "tasks-vault", "my.nvim" }
+M.REPOS = { "rules-vault", "casedesk.nvim", "tasks-vault", "my.nvim", "tasks.nvim", "rules.nvim" }
 
 ---First line of the hook we write; `hook remove` only deletes a file that carries it.
 M.HOOK_MARK = "# MyPlugins ci pre-push hook"
@@ -537,7 +537,7 @@ function M.routes()
           desc = "No terminal: the output goes to the quickfix list (for prompts and agents)",
         },
       },
-      desc = "Local CI of the private repos (rules-vault, casedesk.nvim, tasks-vault, my.nvim): runs scripts/ci.sh of one repo or of all one after the other, each live in a terminal.nvim split ci-<repo>. --quiet sends the output to the quickfix list instead, --fast runs the cheap gates only. Replaces GitHub minutes, which private repos have only a few of",
+      desc = "Local CI of the private repos (rules-vault, casedesk.nvim, tasks-vault, my.nvim, tasks.nvim, rules.nvim): runs scripts/ci.sh of one repo or of all one after the other, each live in a terminal.nvim split ci-<repo>. --quiet sends the output to the quickfix list instead, --fast runs the cheap gates only. Replaces GitHub minutes, which private repos have only a few of",
       run = function(ctx)
         M.run({
           repo = ctx.args.repo,
