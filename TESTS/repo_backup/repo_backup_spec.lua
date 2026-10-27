@@ -55,11 +55,30 @@ return function(H)
     backup.REPOS = { "Local-Repo", "Not-Here" }
     local bundle = dest .. "/Local-Repo.bundle"
 
+    -- the temp file is this process's own: two instances must not share one
+    local real_system, created_tmp = vim.system, nil
+    vim.system = function(cmd, ...)
+      if cmd[4] == "bundle" and cmd[5] == "create" then
+        created_tmp = cmd[6]
+      end
+      return real_system(cmd, ...)
+    end
     local started, results = run({ repos_dir = repos, backup_dir = dest })
+    vim.system = real_system
+    eq(created_tmp, ("%s.tmp-%d"):format(bundle, vim.uv.os_getpid()), "a temp file per process")
     eq(started, 1, "only the existing repo is backed up")
     eq(results, { ["Local-Repo"] = true }, "the backup succeeded")
     ok(vim.uv.fs_stat(bundle) ~= nil, "bundle written")
-    ok(vim.uv.fs_stat(bundle .. ".tmp") == nil, "no temp file left")
+    local function tmps()
+      local out = {}
+      for name in vim.fs.dir(dest) do
+        if name:find(".tmp-", 1, true) then
+          out[#out + 1] = name
+        end
+      end
+      return out
+    end
+    eq(tmps(), {}, "no temp file left")
     git({ "bundle", "verify", bundle })
 
     started = run({ repos_dir = repos, backup_dir = dest })
@@ -92,6 +111,31 @@ return function(H)
     eq(s2, 1, "the broken repo is still attempted")
     eq(r2, { ["Local-Repo"] = false }, "the run reports the failure")
     eq(H.read(bundle), before, "the previous bundle is untouched")
+    eq(tmps(), {}, "the failed run left no temp file")
+
+    -- A git that cannot be started is a reported failure, not an error thrown
+    -- into the startup phase.
+    vim.system = function()
+      error("ENOENT: no such file or directory (cmd): 'git'")
+    end
+    local s3, r3 = run({ repos_dir = repos, backup_dir = dest, now = os.time() + 3 * backup.EVERY })
+    vim.system = real_system
+    eq(s3, 1, "the run was attempted")
+    eq(r3, { ["Local-Repo"] = false }, "a missing git is reported as a failure")
+    eq(H.read(bundle), before, "and the bundle stays")
+
+    -- A temp file of a run that died is removed once it is old, a fresh one of a
+    -- live run elsewhere is not.
+    -- (still the broken repo: the clean-up runs before the bundle is tried)
+    local stale, live = bundle .. ".tmp-1", bundle .. ".tmp-2"
+    H.write(stale, "old")
+    H.write(live, "new")
+    local old = os.time() - 7200
+    vim.uv.fs_utime(stale, old, old)
+    run({ repos_dir = repos, backup_dir = dest, now = os.time() + 4 * backup.EVERY })
+    ok(vim.uv.fs_stat(stale) == nil, "the stale temp file is gone")
+    ok(vim.uv.fs_stat(live) ~= nil, "a fresh temp file of another run stays")
+    os.remove(live)
   end)
 
   backup.REPOS = saved_list

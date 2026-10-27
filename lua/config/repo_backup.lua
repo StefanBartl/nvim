@@ -51,34 +51,64 @@ function M.due(bundle, now)
   return (now or os.time()) - stat.mtime.sec >= M.EVERY
 end
 
+--- A temp file left by a run that died (Neovim killed mid-bundle) is removed once
+--- it is older than this: a live run of another instance is never that old.
+local STALE_TMP = 3600
+
+--- Remove `<bundle>.tmp-<pid>` files of earlier runs that never finished.
+---@param bundle string
+local function remove_stale_tmps(bundle)
+  local dir, base = vim.fs.dirname(bundle), vim.fs.basename(bundle) .. ".tmp-"
+  local now = os.time()
+  for name, kind in vim.fs.dir(dir) do
+    if kind == "file" and name:sub(1, #base) == base then
+      local path = vim.fs.joinpath(dir, name)
+      local stat = vim.uv.fs_stat(path)
+      if stat and now - stat.mtime.sec > STALE_TMP then
+        os.remove(path)
+      end
+    end
+  end
+end
+
+--- `vim.system`, but a git that cannot be started (not on PATH) is a failed run
+--- reported through `on_exit`, not an error thrown into the startup phase.
+---@param cmd string[]
+---@param on_exit fun(r: { code: integer, stderr: string|nil })
+local function run_git(cmd, on_exit)
+  local ok, err = pcall(vim.system, cmd, { text = true }, on_exit)
+  if not ok then
+    on_exit({ code = -1, stderr = tostring(err) })
+  end
+end
+
 ---@param repo_dir string
 ---@param bundle string
 ---@param on_done fun(ok: boolean, err: string|nil)
 local function backup(repo_dir, bundle, on_done)
-  local tmp = bundle .. ".tmp"
-  vim.system(
-    { "git", "-C", repo_dir, "bundle", "create", tmp, "--all" },
-    { text = true },
-    function(created)
-      if created.code ~= 0 then
-        os.remove(tmp)
-        return on_done(false, vim.trim(created.stderr or ""))
-      end
-      vim.system(
-        { "git", "-C", repo_dir, "bundle", "verify", tmp },
-        { text = true },
-        function(verified)
-          if verified.code ~= 0 then
-            os.remove(tmp)
-            return on_done(false, "verify failed: " .. vim.trim(verified.stderr or ""))
-          end
-          -- libuv renames with MOVEFILE_REPLACE_EXISTING on Windows: replaces the old bundle.
-          local ok, err = vim.uv.fs_rename(tmp, bundle)
-          on_done(ok == true, err)
-        end
-      )
+  remove_stale_tmps(bundle)
+  -- One temp file per process: two Neovim instances started together both find
+  -- the bundle due, and a shared name let one verify and rename the file the
+  -- other was still writing.
+  local tmp = ("%s.tmp-%d"):format(bundle, vim.uv.os_getpid())
+  run_git({ "git", "-C", repo_dir, "bundle", "create", tmp, "--all" }, function(created)
+    if created.code ~= 0 then
+      os.remove(tmp)
+      return on_done(false, vim.trim(created.stderr or ""))
     end
-  )
+    run_git({ "git", "-C", repo_dir, "bundle", "verify", tmp }, function(verified)
+      if verified.code ~= 0 then
+        os.remove(tmp)
+        return on_done(false, "verify failed: " .. vim.trim(verified.stderr or ""))
+      end
+      -- libuv renames with MOVEFILE_REPLACE_EXISTING on Windows: replaces the old bundle.
+      local ok, err = vim.uv.fs_rename(tmp, bundle)
+      if not ok then
+        os.remove(tmp)
+      end
+      on_done(ok == true, err)
+    end)
+  end)
 end
 
 --- Back up every repo of `M.REPOS` whose bundle is due.
