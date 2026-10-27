@@ -66,6 +66,7 @@ local specs = {
   "bindings_explorer/report_dir_spec.lua",
   "bindings/insert_moves_spec.lua",
   "profile/profile_spec.lua",
+  "repo_backup/repo_backup_spec.lua",
   "cdx/usrcmds_help_spec.lua",
   "cdx/prompt_templates_spec.lua",
   "execute/execute_spec.lua",
