@@ -12,6 +12,8 @@
     status  one line per runner: <repo> <local: running|stopped> <github: online|offline|missing> [busy]
     start   start the runners that are not running (detached, hidden window); returns at once
     ensure  start, then wait until GitHub reports each one online (-WaitSeconds, default 90)
+            start and ensure run the tool check first when a runner is about to be started and warn about
+            MISSING/WARN lines (they never stop the start; -SkipCheck leaves the check out)
     stop    stop the runner processes (a running job is cancelled)
     check   are the tools the workflows rely on here (git, gh, nvim, cargo, jq, shellcheck, Inno Setup, ...)? One
             line per tool, exit 1 when one is missing; also finds a ~/.cargo/bin whose programs vanished
@@ -29,7 +31,8 @@ param(
   [Parameter(Position = 1, ValueFromRemainingArguments)] [string[]] $Repo = @('all'),
   [string] $Root = (Join-Path $env:USERPROFILE 'actions-runners'),
   [string] $Owner = 'WKDSteve',
-  [int] $WaitSeconds = 90
+  [int] $WaitSeconds = 90,
+  [switch] $SkipCheck
 )
 
 $ErrorActionPreference = 'Stop'
@@ -82,6 +85,18 @@ switch ($Action) {
     }
   }
   { $_ -in 'start', 'ensure' } {
+    # A runner keeps the PATH of the process that starts it, so this is the moment to look: a tool that is
+    # missing now would turn a job red later (exit 127). Only a warning; the runners start in any case.
+    # Skipped when every runner runs already (nothing is started) and with -SkipCheck.
+    $toStart = @($names | Where-Object { -not (Get-Listener $_) })
+    if ($toStart.Count -gt 0 -and -not $SkipCheck) {
+      $report = @(& (Join-Path $PSScriptRoot 'runner_tools_check.ps1') -Owner $Owner 2>&1 | ForEach-Object { "$_" })
+      $problems = @($report | Where-Object { $_ -match '^(MISSING|WARN)\s' })
+      if ($problems.Count -gt 0) {
+        Write-Output "warning: the tool check found $($problems.Count) problem(s); the runners start anyway (details: runners.ps1 check, -SkipCheck silences this)"
+        $problems | ForEach-Object { Write-Output "  $_" }
+      }
+    }
     foreach ($n in $names) {
       if (Get-Listener $n) { continue }
       # The runner takes the PATH of this process: scoop shims (stylua, luacheck, gh), Git and nvim must be on it.
