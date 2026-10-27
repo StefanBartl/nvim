@@ -51,6 +51,8 @@ to `enterprise`, lazy.nvim removes the disabled plugins from the data folder;
 after a switch back, lazy.nvim installs them again. `:Profile` without an
 argument shows the active profile.
 
+Details (German): `docs/NOTES/Profiles/README.md`.
+
 ## License
 
 [MIT](LICENSE), Copyright (c) 2026 Stefan Bartl.

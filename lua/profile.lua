@@ -15,6 +15,7 @@
 --- `M.apply_cleanup()` lets lazy delete the now-disabled plugins from the data
 --- folder; switching back needs nothing, lazy's `install.missing` clones them again.
 --- The lockfile is shared: lazy keeps the entries of disabled plugins.
+--- Docs: docs/NOTES/Profiles/.
 
 local M = {}
 
