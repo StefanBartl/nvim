@@ -152,7 +152,10 @@ plugins.modes({
   ["reposcope.nvim"] = "dir",
   ["docmap.nvim"] = "dir",
   ["gitsuite.nvim"] = "dir",
-  ["casedesk.nvim"] = "dir",
+  -- "local": developed on the workstation too, so its own checkout loads there
+  -- even under SOURCE "remote" (no `:Lazy update` after every push). Without a
+  -- checkout it falls back to GitHub like "dir".
+  ["casedesk.nvim"] = "local",
   ["tasks.nvim"] = "dir",
   ["terminal.nvim"] = "dir",
   ["learn-cli.nvim"] = "disabled", -- needed neither locally nor remotely
