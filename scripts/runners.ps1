@@ -13,6 +13,9 @@
     start   start the runners that are not running (detached, hidden window); returns at once
     ensure  start, then wait until GitHub reports each one online (-WaitSeconds, default 90)
     stop    stop the runner processes (a running job is cancelled)
+    check   are the tools the workflows rely on here (git, gh, nvim, cargo, jq, shellcheck, Inno Setup, ...)? One
+            line per tool, exit 1 when one is missing; also finds a ~/.cargo/bin whose programs vanished
+            (scripts/runner_tools_check.ps1; takes no repo names)
 
   Repos: names (tasks.nvim) or `all` (every folder below the runner root). Exit code 0 when every named
   runner is in the wanted state, 1 when not, 2 for wrong usage.
@@ -22,7 +25,7 @@
   pwsh scripts/runners.ps1 ensure tasks.nvim rules.nvim
 #>
 param(
-  [Parameter(Mandatory, Position = 0)] [ValidateSet('status', 'start', 'ensure', 'stop')] [string] $Action,
+  [Parameter(Mandatory, Position = 0)] [ValidateSet('status', 'start', 'ensure', 'stop', 'check')] [string] $Action,
   [Parameter(Position = 1, ValueFromRemainingArguments)] [string[]] $Repo = @('all'),
   [string] $Root = (Join-Path $env:USERPROFILE 'actions-runners'),
   [string] $Owner = 'WKDSteve',
@@ -30,6 +33,10 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+if ($Action -eq 'check') {
+  & (Join-Path $PSScriptRoot 'runner_tools_check.ps1') -Owner $Owner
+  exit $LASTEXITCODE
+}
 if (-not (Test-Path $Root)) { Write-Output "no runners: $Root does not exist"; exit 2 }
 
 $names = if ($Repo -contains 'all') { Get-ChildItem $Root -Directory | Select-Object -ExpandProperty Name } else { $Repo }
