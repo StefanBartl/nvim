@@ -143,6 +143,15 @@ end)
 -- `declarative` is named explicitly rather than relying on the default:
 -- this call is the documentation of what the phase does.
 startup.now("my", function()
+  -- my.nvim is private: source.lua turns it off on a "remote" machine without a
+  -- local checkout. Skip with a notice instead of failing the phase.
+  if not require("lazy.core.config").plugins["my.nvim"] then
+    vim.notify(
+      "[startup] my.nvim is disabled (no local checkout under $REPOS_DIR), phase 'my' skipped",
+      vim.log.levels.WARN
+    )
+    return
+  end
   require("my").setup({
     declarative = true,
     highlights = true,

@@ -22,9 +22,12 @@ local machine = require("machine")
 local notify = require("lib.nvim.notify").create("[plugins.personal]")
 local control = require("plugins.control.mode")
 
----@alias PersonalRepoMode "disabled"|"dir"|"remote"
+---@alias PersonalRepoMode "disabled"|"dir"|"local"|"remote"
 ---  - "disabled" → don't load the repo at all (enabled = false)
 ---  - "dir"      → local, out of the repos directory (dir), falls back to remote if the folder is missing
+---  - "local"    → like "dir", but wins over OVERRIDE/SOURCE "remote"/"dir"/"auto": for a
+---                 private repo whose local checkout is the only way to load it. Only a
+---                 "disabled" (own or OVERRIDE) beats it.
 ---  - "remote"   → from GitHub (WKDSteve/...)
 
 -- ── MANUAL SWITCH ──────────────────────────────────────────────────────────
@@ -63,7 +66,7 @@ else
   SOURCE = "auto"
 end
 
-local VALID_MODE = { disabled = true, dir = true, remote = true }
+local VALID_MODE = { disabled = true, dir = true, ["local"] = true, remote = true }
 
 --- Personal resolver, injected into the generic core (plugins.control.mode).
 --- A repo's own "disabled" always wins over OVERRIDE/SOURCE: a repo you
@@ -72,8 +75,10 @@ local VALID_MODE = { disabled = true, dir = true, remote = true }
 ---@param configured string|nil  from plugins.modes(...) for this basename
 ---@param name string            repo basename
 local function resolve(spec, configured, name)
-  -- Precedence: repo's own "disabled" > global OVERRIDE/SOURCE > repo's own dir/remote > default "dir".
+  -- Precedence: repo's own "disabled" > repo's own "local" (unless OVERRIDE is "disabled")
+  -- > global OVERRIDE/SOURCE > repo's own dir/remote > default "dir".
   local mode = (configured == "disabled") and "disabled"
+    or (configured == "local" and SOURCE ~= "disabled") and "local"
     or (SOURCE ~= "auto") and SOURCE
     or (configured or "dir")
 
@@ -86,7 +91,7 @@ local function resolve(spec, configured, name)
 
   if mode == "disabled" then
     spec.enabled = false
-  elseif mode == "dir" then
+  elseif mode == "dir" or mode == "local" then
     spec.dir = personal_utils.local_dev(name) -- nil → remote, if the folder is missing
   end
   -- "remote": dir stays nil → lazy uses repo[1]
@@ -100,11 +105,12 @@ local plugins = control.new({ resolve = resolve })
 plugins.modes({
   -- foundation
   ["lib.nvim"] = "dir",
-  -- The one PRIVATE repo in this list: "remote" would have lazy clone
-  -- https://github.com/WKDSteve/my.nvim, which fails without credentials.
-  -- Gated on the *effective* SOURCE, not the raw machine role, so a local
-  -- checkout is still used whenever OVERRIDE forces anything but "remote".
-  ["my.nvim"] = (SOURCE == "remote") and "disabled" or "dir",
+  -- PRIVATE repo: "remote" would have lazy clone https://github.com/WKDSteve/my.nvim,
+  -- which fails without credentials. A local checkout is always used ("local" wins
+  -- over SOURCE "remote", e.g. on the workstation); without one it is off under
+  -- "remote" (init.lua's phase "my" then skips setup with a notice).
+  ["my.nvim"] = personal_utils.local_dev("my.nvim") and "local"
+    or ((SOURCE == "remote") and "disabled" or "dir"),
 
   -- ai
   ["ai.nvim"] = "dir",
