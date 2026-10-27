@@ -53,18 +53,36 @@ function Get-Listener([string] $name) {
     Where-Object { $_.ExecutablePath -and $_.ExecutablePath.ToLowerInvariant().StartsWith($dir) }
 }
 
-function Get-Remote([string] $name) {
+function ConvertTo-Remote([string] $name, [int] $code, [string] $json) {
   # missing = GitHub does not know a runner with this machine's name for the repo
-  $json = gh api "repos/$Owner/$name/actions/runners" 2>$null
-  if ($LASTEXITCODE -ne 0 -or -not $json) { return @{ status = 'unknown'; busy = $false } }
+  if ($code -ne 0 -or -not $json) { return @{ status = 'unknown'; busy = $false } }
   $r = ($json | ConvertFrom-Json).runners | Where-Object { $_.name -like "*-$name" } | Select-Object -First 1
   if (-not $r) { return @{ status = 'missing'; busy = $false } }
   return @{ status = $r.status; busy = [bool] $r.busy }
 }
 
-function Show([string] $name) {
+function Get-RemoteMany([string[]] $list) {
+  # One `gh api` per repo takes about a second; eleven in a row were 12 s, and the wait loop and the final
+  # status line each asked again (26 s for `ensure all` with nothing to start). Several at a time (PowerShell 7).
+  $answers = @{}
+  if ($PSVersionTable.PSVersion.Major -ge 7) {
+    $got = $list | ForEach-Object -ThrottleLimit 6 -Parallel {
+      $out = gh api "repos/$($using:Owner)/$_/actions/runners" 2>$null
+      [pscustomobject]@{ Name = $_; Code = $LASTEXITCODE; Json = ($out -join "`n") }
+    }
+  } else {
+    $got = foreach ($n in $list) {
+      $out = gh api "repos/$Owner/$n/actions/runners" 2>$null
+      [pscustomobject]@{ Name = $n; Code = $LASTEXITCODE; Json = ($out -join "`n") }
+    }
+  }
+  foreach ($g in $got) { $answers[$g.Name] = ConvertTo-Remote -name $g.Name -code $g.Code -json $g.Json }
+  return $answers
+}
+
+function Show([string] $name, $remote) {
   $local = if (Get-Listener $name) { 'running' } else { 'stopped' }
-  $remote = Get-Remote $name
+  if ($null -eq $remote) { $remote = (Get-RemoteMany @($name))[$name] }
   $line = '{0,-14} local={1,-8} github={2}' -f $name, $local, $remote.status
   if ($remote.busy) { $line += ' busy' }
   [Console]::WriteLine($line)
@@ -74,7 +92,8 @@ function Show([string] $name) {
 switch ($Action) {
   'status' {
     $ok = $true
-    foreach ($n in $names) { if (-not (Show $n)) { $ok = $false } }
+    $remotes = Get-RemoteMany $names
+    foreach ($n in $names) { if (-not (Show $n $remotes[$n])) { $ok = $false } }
     exit ([int] (-not $ok))
   }
   'stop' {
@@ -97,8 +116,8 @@ switch ($Action) {
         $problems | ForEach-Object { Write-Output "  $_" }
       }
     }
-    foreach ($n in $names) {
-      if (Get-Listener $n) { continue }
+    foreach ($n in $toStart) {
+      # (the list from above: asking the process table again for every runner is a CIM query each)
       # The runner takes the PATH of this process: scoop shims (stylua, luacheck, gh), Git and nvim must be on it.
       Start-Process -FilePath (Join-Path $Root "$n\run.cmd") -WorkingDirectory (Join-Path $Root $n) -WindowStyle Hidden
       Write-Output "$n started"
@@ -106,12 +125,15 @@ switch ($Action) {
     if ($Action -eq 'ensure') {
       $deadline = (Get-Date).AddSeconds($WaitSeconds)
       $pending = @($names)
+      $remotes = @{}
       while ($pending.Count -gt 0 -and (Get-Date) -lt $deadline) {
-        $pending = @($pending | Where-Object { (Get-Remote $_).status -ne 'online' })
+        $round = Get-RemoteMany $pending
+        foreach ($n in $round.Keys) { $remotes[$n] = $round[$n] }
+        $pending = @($pending | Where-Object { $remotes[$_].status -ne 'online' })
         if ($pending.Count -gt 0) { Start-Sleep -Seconds 3 }
       }
       $ok = $true
-      foreach ($n in $names) { if (-not (Show $n)) { $ok = $false } }
+      foreach ($n in $names) { if (-not (Show $n $remotes[$n])) { $ok = $false } }
       exit ([int] (-not $ok))
     }
   }
