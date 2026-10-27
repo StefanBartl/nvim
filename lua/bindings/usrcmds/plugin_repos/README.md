@@ -316,10 +316,10 @@ luacheck, test suite, conformance.)
 (and for casedesk.nvim `ui.nvim`, `testing.nvim`) via `$<NAME>_DIR`, `<repo>/.deps/<name>` or a sibling checkout.
 Code: `ci.lua`; spec: `TESTS/plugin_repos/ci_spec.lua`.
 
-### `:MyPlugins runner start|stop|status [repo]`
+### `:MyPlugins runner start|stop|status [repo]`, `runner autostart on|off|status`
 
 The GitHub Actions SELF-HOSTED RUNNERS of the private repos (`casedesk.nvim`, `my.nvim`, `tasks.nvim`, `rules.nvim`,
-`tasks-vault`, `rules-vault`, `appkit`, `tasks-desktop`, `rules-desktop`) — a different thing from `:MyPlugins ci` above. Those repos' own `.github/workflows/ci.yml` runs on `runs-on: [self-hosted, windows]` rather than
+`tasks-vault`, `rules-vault`, `appkit`, `tasks-desktop`, `rules-desktop`, `ai-desktop`, `docmap-desktop`) — a different thing from `:MyPlugins ci` above. Those repos' own `.github/workflows/ci.yml` runs on `runs-on: [self-hosted, windows]` rather than
 GitHub-hosted minutes (same billing reason as `ci` above), which means a push only actually triggers CI once a
 runner process is listening; setup (one time, per repo) is `tasks-vault/TOOLS/self-hosted-runner.md`. Nothing starts
 that process automatically — without it, a push to one of these repos sits "Queued" on GitHub with no red mark.
@@ -331,6 +331,12 @@ that process automatically — without it, a push to one of these repos sits "Qu
   spawned. A no-op (info) if it is not running.
 - `runner status [repo]`: asks GitHub (`gh api repos/<owner>/<repo>/actions/runners`) whether the runner is
   online/offline, and whether it is currently busy.
+- `runner autostart on|off|status`: a scheduled task "GitHub Runners" of this user that runs
+  `scripts/runners.ps1 ensure all` at every logon (hidden window), so the runners are back after a restart. `off`
+  removes it, `status` says whether it exists. It is `schtasks`, not a Windows service: a service runs as another
+  account without this user's PATH (scoop shims, cargo, ...). Normally no elevated shell is needed; on a machine
+  that insists, run the same `schtasks /Create /SC ONLOGON ...` line (see `autostart_argv` in `runner.lua`) from an
+  administrator PowerShell.
 
 No "install as a service" command here: that needs an elevated shell (`setup-runner.ps1 -Service`, see the doc
 above) and is a one-time, manual, admin-rights step — not something a usercmd on an ordinary session should do.

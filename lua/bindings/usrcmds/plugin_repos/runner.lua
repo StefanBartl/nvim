@@ -1,8 +1,8 @@
 ---@module 'bindings.usrcmds.plugin_repos.runner'
----@brief `:MyPlugins runner start|stop|status [repo]` - the GitHub Actions self-hosted runner of a private repo.
+---@brief `:MyPlugins runner start|stop|status [repo]`, `runner autostart on|off|status` - the GitHub Actions self-hosted runner of a private repo.
 ---@description
 --- The private repos (casedesk.nvim, my.nvim, tasks.nvim, rules.nvim, tasks-vault, rules-vault, appkit, tasks-desktop,
---- rules-desktop) have no paid GitHub
+--- rules-desktop, ai-desktop, docmap-desktop) have no paid GitHub
 --- plan, so their CI runs on a self-hosted runner on this machine instead of GitHub-hosted minutes (tasks-vault/TOOLS/self-hosted-runner.md has the one-time setup).
 --- The runner is a long-lived process (`run.cmd` in its own directory under
 --- `%USERPROFILE%\actions-runners\<repo>`) that listens for jobs; nothing starts it automatically, so a push stays
@@ -12,6 +12,10 @@
 ---                             a no-op if that split is already running
 ---  - `runner stop [repo]`     stop the terminal's job (kills run.cmd and the Runner.Listener.exe it spawned)
 ---  - `runner status [repo]`   ask GitHub whether the runner is online/offline/busy (`gh api`)
+---
+---  - `runner autostart on|off|status`  a scheduled task "GitHub Runners" of this user that runs
+---                             `scripts/runners.ps1 ensure all` at every logon (no elevated shell needed on most
+---                             machines); `off` removes it
 ---
 --- This is the GitHub-registered runner SERVICE, not `:MyPlugins ci` (`ci.lua`), which runs `scripts/ci.sh`
 --- locally without going through GitHub Actions at all -- the two are independent and both exist.
@@ -37,7 +41,12 @@ M.REPOS = {
   "appkit",
   "tasks-desktop",
   "rules-desktop",
+  "ai-desktop",
+  "docmap-desktop",
 }
+
+---Name of the scheduled task that starts the runners at logon (`runner autostart on`).
+M.AUTOSTART_TASK = "GitHub Runners"
 
 ---@param name string
 ---@return boolean
@@ -68,7 +77,7 @@ local function owner_repo(name)
       end
     end
   end
-  return "StefanBartl/" .. name
+  return "WKDSteve/" .. name
 end
 
 ---Name of the terminal that shows a runner's listener output.
@@ -203,6 +212,54 @@ function M.status(repo)
   end
 end
 
+---The schtasks call for `runner autostart on|off|status`: a task of the current user that runs
+---`runners.ps1 ensure all` at logon (hidden window). Not a Windows service: that runs as another account without
+---this user's PATH (scoop shims, cargo, ...) and needs an elevated shell. Returns the argv, or nil and why.
+---@param action "on"|"off"|"status"
+---@return string[]|nil argv
+---@return string|nil err
+function M.autostart_argv(action)
+  local task = M.AUTOSTART_TASK
+  if action == "off" then
+    return { "schtasks", "/Delete", "/TN", task, "/F" }
+  elseif action == "status" then
+    return { "schtasks", "/Query", "/TN", task, "/FO", "LIST" }
+  elseif action == "on" then
+    local path = vim.fs.normalize(vim.fn.stdpath("config") .. "/scripts/runners.ps1")
+    local script = path:gsub("/", "\\")
+    -- /TR is one string that schtasks splits itself; a space in the path would need quotes inside the quotes
+    if script:find("%s") then
+      return nil, "the path of runners.ps1 has a space (" .. script .. "): create the task by hand"
+    end
+    local run = ("pwsh -NoProfile -WindowStyle Hidden -File %s ensure all"):format(script)
+    return { "schtasks", "/Create", "/SC", "ONLOGON", "/TN", task, "/TR", run, "/F" }
+  end
+  return nil, "unknown action '" .. tostring(action) .. "' (on, off, status)"
+end
+
+---Switch the start at logon on or off, or say whether it is set up.
+---@param action "on"|"off"|"status"
+function M.autostart(action)
+  local argv, why = M.autostart_argv(action)
+  if not argv then
+    notify.error(why or "autostart: nothing to do")
+    return
+  end
+  local res = vim.system(argv, { text = true }):wait()
+  local text = vim.trim((res.stdout or "") .. (res.stderr or ""))
+  if res.code == 0 then
+    notify.info(("autostart %s: %s"):format(action, text ~= "" and text or "ok"))
+  elseif action == "status" then
+    notify.warn(
+      ("autostart: no scheduled task '%s' (`:MyPlugins runner autostart on` creates it)"):format(
+        M.AUTOSTART_TASK
+      )
+    )
+  else
+    notify.error(("autostart %s failed (exit %d): %s"):format(action, res.code, text))
+  end
+end
+
 ---The argument type of the repo name (the private repos with a self-hosted runner).
 function M.register_types()
   require("lib.nvim.bindings.usercmd.composer").register_type("MYPLUGINS_RUNNER_REPO", {
@@ -249,6 +306,27 @@ function M.routes()
       desc = "Ask GitHub whether one runner (or all) is online/offline and busy (gh api)",
       run = function(ctx)
         M.status(ctx.args.repo)
+      end,
+    },
+    {
+      path = { "runner", "autostart", "on" },
+      desc = "Start all runners at every logon (a scheduled task 'GitHub Runners' running scripts/runners.ps1 ensure all)",
+      run = function()
+        M.autostart("on")
+      end,
+    },
+    {
+      path = { "runner", "autostart", "off" },
+      desc = "Remove the scheduled task that starts the runners at logon",
+      run = function()
+        M.autostart("off")
+      end,
+    },
+    {
+      path = { "runner", "autostart", "status" },
+      desc = "Is the scheduled task that starts the runners at logon set up?",
+      run = function()
+        M.autostart("status")
       end,
     },
   }
