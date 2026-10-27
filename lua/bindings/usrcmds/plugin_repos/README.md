@@ -343,7 +343,8 @@ above) and is a one-time, manual, admin-rights step — not something a usercmd 
 Headless equivalent for agents and scripts (no Neovim, hidden window, waits until GitHub reports the runner online):
 `pwsh scripts/runners.ps1 status|start|ensure|stop [repo...|all]` (`ensure` is what a Claude Code session runs before
 it waits for a CI result of a private repo; see `docs/NOTES/CDX/templates/PROMPT`). The repos with a runner are listed in
-`runner.lua` (`REPOS`) and implied by the folders under `%USERPROFILE%ctions-runners` for the script.
+`runner.lua` (`REPOS`) and implied by the folders under `%USERPROFILE%\actions-runners` for the script.
+`pwsh scripts/runners.ps1 check` looks at the tools the workflows rely on (`ensure`/`start` warn before starting).
 Code: `runner.lua`; spec: `TESTS/plugin_repos/runner_spec.lua`.
 
 ### `:MyPlugins reclone [dir] [--only=<name>]`
