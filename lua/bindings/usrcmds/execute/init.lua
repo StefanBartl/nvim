@@ -54,36 +54,15 @@ local M = {}
 ---@field yes? boolean         skip the question before a risky plan
 ---@field range? Execute.Range `ctx.range` of the command
 
----A question with a few answers: `ui.kit.confirm`, `vim.fn.confirm` when the kit is not there. The first choice is the
----harmless one (Cancel) and what a dismissed dialog means. `cb` gets the index of the answer, once. A seam: specs replace it.
+---A question with a few answers, asked through `lib.nvim.ui.dialog`. The first choice is the harmless one (Cancel) and
+---what a dismissed dialog means. `cb` gets the index of the answer, once. A seam: specs replace it.
 ---@param question string
 ---@param choices string[]
 ---@param cb fun(index: integer)
 function M.ask(question, choices, cb)
-  local ok_kit, kit = pcall(require, "ui.kit")
-  if ok_kit and type(kit) == "table" and type(kit.confirm) == "function" then
-    local shown = pcall(kit.confirm, {
-      question = question,
-      choices = choices,
-      on_answer = function(choice)
-        for index, label in ipairs(choices) do
-          if label == choice then
-            return cb(index)
-          end
-        end
-        cb(1)
-      end,
-    })
-    if shown then
-      return
-    end
-  end
-  local labels = {}
-  for index, label in ipairs(choices) do
-    labels[index] = "&" .. label
-  end
-  local picked = vim.fn.confirm(question, table.concat(labels, "\n"), 1)
-  cb(picked > 0 and picked or 1)
+  require("lib.nvim.ui.dialog").choose(question, choices, 1, function(index)
+    cb(index > 0 and index or 1)
+  end)
 end
 
 ---Ask before a plan that reaches outside the editor runs. A seam: specs replace it.

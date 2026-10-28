@@ -351,6 +351,30 @@ local function run(kind, only)
     vim.list_extend(hints, held)
   end
 
+  local function go()
+    running = true
+    -- a throw before the first command (a tool check) must not leave `running` set for the session
+    local ok, err = pcall(function()
+      if kind == "uninstall" then
+        next_app()
+      elseif kind == "build" then
+        hold_back(toolchain.check(toolchain.needed(todo)))
+        next_app()
+      else
+        notify.info("Install: checking the tools ...")
+        toolchain.ensure(toolchain.needed(todo), items, function(missing, tool_hints)
+          hold_back(missing)
+          vim.list_extend(hints, tool_hints)
+          next_app()
+        end)
+      end
+    end)
+    if not ok then
+      running = false
+      notify.error(label .. " stopped: " .. tostring(err))
+    end
+  end
+
   if kind == "uninstall" then
     local names = table.concat(
       vim.tbl_map(function(n)
@@ -358,33 +382,21 @@ local function run(kind, only)
       end, todo),
       ", "
     )
-    if vim.fn.confirm("Uninstall " .. names .. "?", "&Yes\n&No", 2) ~= 1 then
-      notify.info("Uninstall cancelled.")
-      return
-    end
+    -- asked through the shared dialog, so the work continues in the answer's callback
+    require("bindings.usrcmds.plugin_repos.confirm").yesno(
+      "Uninstall " .. names .. "?",
+      "uninstall",
+      function(yes)
+        if not yes then
+          notify.info("Uninstall cancelled.")
+          return
+        end
+        go()
+      end
+    )
+    return
   end
-
-  running = true
-  -- a throw before the first command (a tool check) must not leave `running` set for the session
-  local ok, err = pcall(function()
-    if kind == "uninstall" then
-      next_app()
-    elseif kind == "build" then
-      hold_back(toolchain.check(toolchain.needed(todo)))
-      next_app()
-    else
-      notify.info("Install: checking the tools ...")
-      toolchain.ensure(toolchain.needed(todo), items, function(missing, tool_hints)
-        hold_back(missing)
-        vim.list_extend(hints, tool_hints)
-        next_app()
-      end)
-    end
-  end)
-  if not ok then
-    running = false
-    notify.error(label .. " stopped: " .. tostring(err))
-  end
+  go()
 end
 
 ---@param only? string
