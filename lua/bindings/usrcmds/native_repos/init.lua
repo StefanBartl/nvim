@@ -382,18 +382,27 @@ local function run(kind, only)
       end, todo),
       ", "
     )
-    -- asked through the shared dialog, so the work continues in the answer's callback
-    require("bindings.usrcmds.plugin_repos.confirm").yesno(
+    -- asked through the shared dialog, so the work continues in the answer's callback; until
+    -- then the command counts as running, or a build/install started meanwhile would share
+    -- `running`, `items` and the quickfix list with the uninstall that is answered later
+    running = true
+    local asked, err = pcall(
+      require("bindings.usrcmds.plugin_repos.confirm").yesno,
       "Uninstall " .. names .. "?",
       "uninstall",
       function(yes)
         if not yes then
+          running = false
           notify.info("Uninstall cancelled.")
           return
         end
         go()
       end
     )
+    if not asked then
+      running = false
+      error(err, 0)
+    end
     return
   end
   go()

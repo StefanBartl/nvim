@@ -231,6 +231,36 @@ return function(H)
     error("probe broke")
   end
   native.install("ai-desktop")
+
+  -- an uninstall is a running command while its question is open: a second command waits for the
+  -- answer instead of sharing the state with the uninstall that is answered later (the probe that
+  -- throws ends each install at once, so none of them stays running)
+  local dialog = require("lib.nvim.ui.dialog")
+  local real_yesno = dialog.yesno
+  local answer_cb
+  dialog.yesno = function(_, _, cb)
+    answer_cb = cb
+  end
+  local ensured = 0
+  toolchain.ensure = function()
+    ensured = ensured + 1
+    error("probe broke")
+  end
+  native.uninstall("ai-desktop")
+  eq(type(answer_cb), "function", "the uninstall asks before it does anything")
+  native.install("ai-desktop")
+  eq(ensured, 0, "an install started while the question is open is refused")
+  answer_cb(false)
+  native.install("ai-desktop")
+  eq(ensured, 1, "...and runs once the question is answered with no")
+  dialog.yesno = function()
+    error("dialog broke")
+  end
+  eq(pcall(native.uninstall, "ai-desktop"), false, "a dialog that raises is reported")
+  native.install("ai-desktop")
+  eq(ensured, 2, "...and does not leave the command running")
+  dialog.yesno = real_yesno
+
   local reached = false
   toolchain.ensure = function()
     reached = true
