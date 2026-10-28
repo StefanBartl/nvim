@@ -198,13 +198,14 @@ fi
 # Who answers a question: the terminal when /dev/tty opens (Linux, macOS), else the Neovim the
 # commit runs under ($NVIM: lazygit or a Neovim terminal) via lib.nvim's nvim-ask. Git for Windows
 # starts hooks without any /dev/tty, so there only Neovim can be asked.
-# LARGE_FILE_TTY lets a test feed terminal answers from a file, LARGE_FILE_NVIM_ASK names the script.
+# LARGE_FILE_TTY lets a test feed terminal answers from a file, LARGE_FILE_NVIM_ASK overrides the
+# script for a test. In real use terminal.nvim's native terminals already hand it over as $NVIM_ASK.
 channel=""
 tty="${LARGE_FILE_TTY:-/dev/tty}"
 if [ -r "$tty" ] && { exec 3<"$tty"; } 2>/dev/null; then
   channel=tty
 elif [ -n "${NVIM:-}" ]; then
-  nvim_ask="${LARGE_FILE_NVIM_ASK:-$(command -v nvim-ask 2>/dev/null)}"
+  nvim_ask="${LARGE_FILE_NVIM_ASK:-${NVIM_ASK:-$(command -v nvim-ask 2>/dev/null)}}"
   if [ -z "$nvim_ask" ]; then
     nvim_ask="$(nvim --clean --headless --server "$NVIM" --remote-expr \
       "luaeval('require(\"lib.nvim.terminal.ask\").script()')" 2>/dev/null)"

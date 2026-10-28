@@ -22,7 +22,7 @@ export LARGE_FILE_MB=1
 # Nobody to ask unless a case says so: no real terminal, no real Neovim (a run from a
 # Neovim terminal would otherwise put dialogs into it).
 export LARGE_FILE_TTY=/nonexistent
-unset NVIM LARGE_FILE_NVIM_ASK LARGE_FILE_ACTION LARGE_FILE_DELETE LARGE_FILE_OK
+unset NVIM NVIM_ASK LARGE_FILE_NVIM_ASK LARGE_FILE_ACTION LARGE_FILE_DELETE LARGE_FILE_OK
 new_repo() {
   repo="$root/$1"
   mkdir -p "$repo" && cd "$repo" && git init -q && git config user.email t@t && git config user.name t
@@ -156,6 +156,15 @@ NVIM=fake LARGE_FILE_NVIM_ASK="$stub" STUB_MAIN="Abort" git commit -qm t </dev/n
 check "nvim: Abort commits nothing" no_commit
 NVIM=fake LARGE_FILE_NVIM_ASK="$stub" STUB_EXIT=3 git commit -qm t </dev/null 2>/dev/null
 check "nvim: no answer (nvim-ask fails) commits nothing" no_commit
+
+# $NVIM_ASK (what terminal.nvim's native terminals actually set) must be used directly,
+# not just the LARGE_FILE_NVIM_ASK test override above.
+new_repo nvim_ask_env
+big_text n.log
+git add -A
+NVIM=fake NVIM_ASK="$stub" STUB_MAIN="Compress to .zip" STUB_DELETE="Delete originals" \
+  git commit -qm t </dev/null 2>/dev/null
+check "\$NVIM_ASK alone (terminal.nvim's own bridge) is used" in_head n.log.zip
 
 echo
 [ "$fails" -eq 0 ] && echo "all passed" || echo "$fails failed"
