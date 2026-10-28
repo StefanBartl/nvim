@@ -103,6 +103,32 @@ function M.setup()
     require("ui").setup({
       usrcmds = true,
       keymaps = keymaps_opts,
+      -- vim.ui.select / vim.ui.input through the kit (ui.nvim lua/ui/vim_ui/README.md): up to 4 entries
+      -- as buttons, up to 12 in the kit's chooser, longer lists in snacks' picker (snacks' own
+      -- `picker.ui_select` is off, plugins/snacks.lua). Dialogs of the plugins that call vim.ui.select
+      -- and vim.ui.input then look like every other dialog here.
+      vim_ui = {
+        buttons_max = 4,
+        chooser_max = 12,
+        fallback_select = function(items, opts, on_choice)
+          local snacks = rawget(_G, "Snacks")
+          if snacks and snacks.picker and snacks.picker.select then
+            return snacks.picker.select(items, opts, on_choice)
+          end
+          -- snacks is not there: the chooser takes the long list too (the kit's chooser scrolls)
+          return require("ui.kit").select({
+            items = items,
+            format_item = opts and opts.format_item,
+            title = opts and opts.prompt,
+            on_select = function(item, idx)
+              on_choice(item, idx)
+            end,
+            on_cancel = function()
+              on_choice(nil, nil)
+            end,
+          })
+        end,
+      },
       -- Open-task counter segment (tasks_counter): the cwd folder `nvim` maps to
       -- the vault area `nvim-config`. Vault found via $TASKS_VAULT / $REPOS_DIR.
       tasks = { breakdown = true, areas = { nvim = "nvim-config" } },

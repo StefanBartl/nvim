@@ -52,7 +52,11 @@ return {
         -- In-picker keys/actions come from pickers.nvim, which patches them
         -- into Snacks.config.picker itself (pickers.entry_actions.patch).
         -- Preview line wrapping: pickers.nvim `display.preview_wrap`.
-        picker = { enabled = true },
+        -- `ui_select = false`: snacks does not take over `vim.ui.select`. ui.nvim's `vim_ui` provider
+        -- does (config/ui_statusline): buttons for a short list, the kit's chooser for a medium one, and
+        -- `Snacks.picker.select` only for the long lists. With snacks owning it, whichever setup() ran
+        -- last would decide who answers.
+        picker = { enabled = true, ui_select = false },
       }
       return cfg
     end,
