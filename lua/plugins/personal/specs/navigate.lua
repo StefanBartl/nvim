@@ -1587,6 +1587,11 @@ return {
           --   on_conflict = "suffix", -- "overwrite" | "suffix" | "error"
           --   confirm = true,
           -- },
+          -- compress = {
+          --   enabled = true,
+          --   keymap = "gz", -- zip the node / marked nodes
+          --   multiple = "ask", -- several nodes: "each" | "together" | "ask"
+          -- },
           lsp_diagnostics = {
             --   enabled = true,
             --   show_errors = true,
