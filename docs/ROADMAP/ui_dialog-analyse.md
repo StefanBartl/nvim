@@ -1,1 +1,0 @@
-E:/repos/tasks-vault/ALL/Dialog-Analyse-2026-10-27.md
