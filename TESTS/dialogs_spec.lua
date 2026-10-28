@@ -13,10 +13,18 @@ return function(H)
       seen = { question, label, cb }
     end
     local got = {}
-    require("bindings.usrcmds.plugin_repos.confirm").yesno("Uninstall x?", "uninstall", function(yes)
-      got[#got + 1] = yes
-    end)
-    eq({ seen[1], seen[2] }, { "Uninstall x?", "uninstall" }, "the question and the label reach the dialog")
+    require("bindings.usrcmds.plugin_repos.confirm").yesno(
+      "Uninstall x?",
+      "uninstall",
+      function(yes)
+        got[#got + 1] = yes
+      end
+    )
+    eq(
+      { seen[1], seen[2] },
+      { "Uninstall x?", "uninstall" },
+      "the question and the label reach the dialog"
+    )
     seen[3](true)
     seen[3](false)
     eq(got, { true, false }, "the answers come back as booleans")

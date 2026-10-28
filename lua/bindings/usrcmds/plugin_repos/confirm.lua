@@ -14,7 +14,7 @@ local M = {}
 ---@param yes_label string|nil e.g. "delete" -- shown as "Yes, delete"
 ---@param cb fun(accepted: boolean)
 function M.yesno(msg, yes_label, cb)
-	require("lib.nvim.ui.dialog").yesno(msg, yes_label, cb)
+  require("lib.nvim.ui.dialog").yesno(msg, yes_label, cb)
 end
 
 return M
