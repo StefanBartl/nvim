@@ -115,3 +115,20 @@ aktuell ist, nichts Ungepushtes zurückbleibt und die gebauten Apps nicht älter
 (read-only; `-Pull` zieht nur saubere Repos auf `main` per `--ff-only`). In Neovim: `:MyPlugins machine`.
 
 Ablauf, Zustände und Build-Befehle: `$REPOS_DIR/tasks-vault/TOOLS/machine-sync.md`.
+
+## Git-Hooks auf jeder Maschine
+
+`scripts/git-hooks/` enthält zwei Hooks: `pre-commit` (Warnung vor großen Dateien) und `commit-msg`
+(entfernt `Co-Authored-By:`-Trailer von Claude/Anthropic aus Commit-Nachrichten; Trailer echter Personen
+bleiben). Hooks liegen in `.git/hooks` und werden nicht mitgepusht, deshalb gilt: **auf jeder Maschine
+nach dem Klonen/Einrichten einmal** ausführen:
+
+```sh
+bash scripts/git-hooks/install.sh <repo> [<repo> ...]          # beide Hooks
+bash scripts/git-hooks/install.sh --commit-msg-only <repo> ...  # nur commit-msg
+```
+
+Die Hooks sind Einzeiler, die das Skript aus diesem Checkout aufrufen (spätere Änderungen brauchen keine
+Neuinstallation). Ein fremder Hook gleichen Namens wird nie überschrieben, sondern gemeldet. Es wird
+kein globales `core.hooksPath` gesetzt. Tests: `bash scripts/git-hooks/test-commit-msg-no-claude-trailer.sh`
+und `bash scripts/git-hooks/test-large-files.sh`. Bereits bestehende Historie wird nicht verändert.
