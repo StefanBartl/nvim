@@ -490,6 +490,9 @@ und der Body gehen über stdin. Geprüft nur mit Fake-Runner und einem lokalen H
 - [ ] Windows: Befehle über `.cmd`-Shims (translate-shell) mit Text, der `&`, `%` oder `^`
       enthält, werden abgelehnt statt von `cmd.exe` interpretiert (`3198fac`). Offen als Task:
       `translate-shell-text-via-stdin` (Text per stdin statt argv, `trans` war nicht installiert).
+      _(Stand 2026-10-29: erledigt, der Text geht per stdin an `trans` (`translate_providers_spec`);
+      nicht mehr „abgelehnt“. Offen ist nur der Echt-Check mit installiertem `trans`, Task
+      `language.nvim/shell-engine-stdin-pfad-mit-echtem-trans-unter-windows-verif`.)_
 - [ ] Google-Anfrage geht jetzt als POST-Body über stdin (`curl --data-urlencode q@-`): eine
       6 000-Zeichen-Zeile, eine 30 000-Zeichen-Zeile zwischen zwei anderen und eine
       600-Zeichen-Zeile Japanisch (ohne Leerzeichen) kommen vollständig und als **eine** Zeile
@@ -1224,7 +1227,8 @@ Beide Wege enden im selben Dry-Run, derselben Bestätigung und demselben Anlegen
 - [ ] `:Case new --form --steps` meldet einen Fehler, `new_mode = "bogus"` fällt auf `steps`
       zurück, `:checkhealth casedesk` nennt es.
 - [ ] Beide Wege ergeben denselben Case (Ordner, `.case.json`, Dry-Run-Liste). Danach enthält
-      `Research/00_Research.md` den Checklisten-Block (K12) und der Case eine `Links.md` (K11).
+      `Notes.md` den Checklisten-Block (K12) und der Case eine `Links.md` (K11).
+      _(Text 2026-10-29 aktualisiert: der Block ist von `Research/00_Research.md` nach `Notes.md` umgezogen.)_
 - [ ] Esc-Verhalten: im Steps-Formular **überspringt** `<Esc>` ein Feld
       (bestehendes `kit.form`-Verhalten), im `--form`-Fenster bricht `<Esc>` alles ab.
 - [x] Ohne `ui.kit.sheet` (ältere ui.nvim): `--form` fällt mit Hinweis auf die Schritte zurück. _(auto 2026-10-29: casedesk.nvim/TESTS/ui_case_new_spec.lua grün)_
@@ -1310,9 +1314,10 @@ Commit `casedesk.nvim` `20bf95f`. Struktur: `## Tickets`, `## Docs & references`
 ### K12. Erstantwort-Checkliste
 
 Commit `casedesk.nvim` `2d8c468`; Fragen im Work-Repo `43d717c`. Die Checkliste steht in
-`Research/00_Research.md` zwischen `<!-- casedesk:checklist begin … -->` und `… end -->`.
+`Notes.md` zwischen `<!-- casedesk:checklist begin … -->` und `… end -->` (bis zum Umzug in
+`Research/00_Research.md`; ein alter Block dort wird übernommen, Text 2026-10-29 aktualisiert).
 
-- [ ] Neuer Case: `Research/00_Research.md` enthält oben (unter dem `# …`) den Block mit den
+- [ ] Neuer Case: `Notes.md` enthält oben (unter dem `# …`) den Block mit den
       Abschnitten *Vor der Antwort*, *Beim Kunden erfragen — Stufe 1*, *Senden und danach*; bei
       DEX/XScan/Cloud im Titel zusätzlich *Je nach Fall* und die passenden Logs.
 - [x] Titel mit `XScan unmapped controls Fiori`: AppType, ControlsAffected, HTML-Seite, TBox-Log,
@@ -1320,7 +1325,7 @@ Commit `casedesk.nvim` `2d8c468`; Fragen im Work-Repo `43d717c`. Die Checkliste 
       gpresult (Stufe 2). _(auto 2026-10-29: casedesk.nvim/TESTS/checklist_spec.lua grün)_
 - [ ] `:Case checklist 1213172` in einem **echten** Case: Block wird eingefügt/aktualisiert, die
       Datei öffnet am Block. Bei Cases mit Bild unter `assets/` steht `[x] … — gefunden: <Datei>`.
-      **Vorsicht: das schreibt in `Research/00_Research.md` des echten Cases** (nur den Block).
+      **Vorsicht: das schreibt in `Notes.md` des echten Cases** (nur den Block).
 - [x] Ein Häkchen von Hand setzen (`[x]`), eins auf `[-]`, dann `:Case checklist`: beide bleiben.
       Eine Support-Info-Datei in `assets/` legen: nächster Lauf hakt `Support Info` ab. _(auto 2026-10-29: casedesk.nvim/TESTS/checklist_spec.lua grün)_
 - [ ] Text **außerhalb** des Blocks (Notes, eigene Zeilen) bleibt unverändert; ungespeicherte
