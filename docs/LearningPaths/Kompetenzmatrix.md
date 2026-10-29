@@ -60,8 +60,8 @@ geprüft**, `?` = keine Grundlage für eine Schätzung, zuerst einen Einstufungs
 | Datenbanken | 1 | 1 | 2 | 4 | Phase 5 | Kaum Material. Nachweis 4: Klausur Datenbanksysteme und eigener KV-Store |
 | Rechnernetze | 2 | 1 | 2 | 4 | Phase 6 | Viele Bücher, wenig eigene Notizen. Nachweis: HTTP-Server auf Sockets |
 | Verteilte Systeme | 1 | 1 | 1 | 3 | Phase 6 | Nachweis: Raft (MIT 6.5840 Labs) |
-| IT-Security | 2 | 2 | 3 | 3 | – | Cyber-Security-Repo, Reverse-Engineering-Bücher. Nachweis: CTF-Ergebnisse |
-| Machine Learning / KI | 1 | 1 | 1 | 2 | nach M4 | LLM-Integration (ai.nvim, ai-desktop) ist Engineering, kein ML. Setzt Stochastik und LA voraus |
+| IT-Security | 2 | 2 | 3 | 3 | – | Cyber-Security-Repo, Reverse-Engineering-Bücher; seit 2026-10-29 rund 200 Bücher in `Literatur-Security` (u. a. Web Application Hacker's Handbook). Nachweis: CTF-Ergebnisse |
+| Machine Learning / KI | 1 | 1 | 1 | 2 | nach M4 | LLM-Integration (ai.nvim, ai-desktop) ist Engineering, kein ML. Setzt Stochastik und LA voraus. Bücher liegen in `Literatur-PythonAI/07_AI_ML` (u. a. Russell/Norvig 4th) |
 | **Software Engineering** | | | | | | |
 | Softwarearchitektur & Design | 2 | 3 | 3 | 4 | Phase 4 | Plugin-Ökosystem auf lib.nvim, rules-vault mit Gates. Nachweis: ADRs und Review eines Dritten |
 | Testing & QA | 2 | 3 | 3 | 4 | Phase 4 | testing.nvim, Beruf bei Tricentis. Nachweis: Testsuite eines Plugins nach Khorikov neu aufgebaut |
@@ -101,3 +101,4 @@ geprüft**, `?` = keine Grundlage für eine Schätzung, zuerst einen Einstufungs
 | Datum | Änderung |
 |---|---|
 | 2026-10-29 | Erste Einstufung (Schätzung Claude, ungeprüft) |
+| 2026-10-29 | Bestand um rund 1.560 Bücher in fünf Themen-Repos erweitert; Hinweise bei IT-Security und ML/KI ergänzt, Einstufung unverändert |
