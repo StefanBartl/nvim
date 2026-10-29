@@ -65,4 +65,10 @@ dokumentiert und an pdfport zurückgemeldet ist.
 
 ## Befunde
 
--
+**Bau erledigt (Task `openai-file-part-bauen`):** `user_content()` baut jetzt
+`{ type = "file", file = { filename, file_data = "data:application/pdf;base64,..." } }`, `documents` bleibt `false`.
+Zum Live-Test `capabilities.documents` im Test-Setup auf `true` setzen (oder Wegwerf-Skript). Zu pruefen:
+- [ ] Nimmt die API `file_data` als Data-URI (so gebaut, Guide-Form) oder nur als rohes Base64 (Referenz-Wortlaut)? Bei Fehler Variante tauschen.
+- [ ] `filename` wird immer gesendet (Fallback `document.pdf`); Referenz nennt ihn optional.
+- [ ] Modell mit PDF-Support (gpt-4o oder neuer) bestaetigen.
+- Bei Erfolg: `documents = true`, `docs/attachments.md` (Satz zum file-Part + Tabelle) und `doc/ai.txt` anpassen.

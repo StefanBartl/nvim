@@ -4,7 +4,7 @@ Offene Handarbeits-Tasks (`actor: me`) der Area `nvim-config`, die headless nich
 
 Konvention: `- [ ]` offen, `- [x]` verifiziert, darunter bei Bedarf eine Zeile `Notiz:`.
 
-**Voraussetzungen (für alle Abschnitte):** nvim-config gepullt (Stand `main`), Neovim neu gestartet, `:checkhealth` ohne neue Fehler. Windows-Rechner mit echtem Terminal (nicht aus einer Claude-Sitzung: die Claude-App leitet AppData/HKCU um). Abschnitt 8 gilt für die Workstation, Abschnitt 6 für `OHANA`.
+**Voraussetzungen (für alle Abschnitte):** nvim-config gepullt (Stand `main`), Neovim neu gestartet, `:checkhealth` ohne neue Fehler. Windows-Rechner mit echtem Terminal (nicht aus einer Claude-Sitzung: die Claude-App leitet AppData/HKCU um). Abschnitt 6 gilt für `OHANA`; Abschnitt 5 läuft auf `STEVESPC` oder `OHANA` (beide möglich). Auf der Workstation ist nichts vorzubereiten (dort nur händische Installationen/Checks der eigenen Apps, keine Claude-Sitzungen, also kein Hook nötig).
 
 ## Table of content
 
@@ -15,7 +15,6 @@ Konvention: `- [ ]` offen, `- [x]` verifiziert, darunter bei Bedarf eine Zeile `
   - [5 — `:MyNative install` und `uninstall`](#5--mynative-install-und-uninstall)
   - [6 — OHANA: Startup neu messen](#6--ohana-startup-neu-messen)
   - [7 — `context_open` (`M-o`) ausprobieren](#7--context_open-m-o-ausprobieren)
-  - [8 — Workstation: commit-msg-Hook installieren (Erinnerung)](#8--workstation-commit-msg-hook-installieren-erinnerung)
 
 ---
 
@@ -153,7 +152,7 @@ Schritte:
 
 Bekannt: Auf der Workstation startet der Hub über `tasks-hub start` derzeit nicht (EDR beendet die Kette über wscript), siehe Task `appkit/start-ueber-wscript-von-edr-beendet`; dort sind App-Starts nicht aussagekräftig und gehören nicht in diesen Check.
 
-Falls rot: was nicht klappt in die Notizen der Task, mit eigener Task (`kind: bug`), falls etwas zu ändern ist. Offene Frage: welche Maschine wird für den Lauf benutzt (STEVESPC oder OHANA)?
+Falls rot: was nicht klappt in die Notizen der Task, mit eigener Task (`kind: bug`), falls etwas zu ändern ist. Maschine: `STEVESPC` oder `OHANA`, beide möglich (nicht die Workstation).
 
 Danach: Task `nvim-config/mynative-install-und-uninstall-einmal-live-durchspielen` mit `done` schließen.
 
@@ -211,19 +210,3 @@ Falls etwas nicht öffnet oder falsch verteilt: Ziel, Cursorposition und gewähl
 
 Danach: Ergebnis in die Notizen der Task `nvim-config/context-open-review` schreiben und mit `done` schließen.
 
----
-
-## 8 — Workstation: commit-msg-Hook installieren (Erinnerung)
-
-Task `nvim-config/workstation-commit-msg-hook-installieren`. Kein Live-Check im engeren Sinn, sondern eine einmalige Handlung: Hooks liegen in `.git/hooks` und werden nicht mitgepusht (Hintergrund: `ALL/co-author-trailer-entscheidung-alle-repos`). Auf der Workstation **keine eigenen Apps** verwenden; dieser Hook startet kein eigenes Programm.
-
-- [ ] nvim-config auf der Workstation pullen.
-  Notiz:
-- [ ] `bash scripts/git-hooks/install.sh --commit-msg-only <repo1> <repo2> ...` aus dem nvim-config-Ordner ausführen (Repos als Pfade; Skript installiert `commit-msg` -> `commit-msg-no-claude-trailer.sh`, Marker `no-claude-trailer-hook`). Ein vorhandener fremder Hook bleibt unangetastet (Meldung `skip: … is not ours`, Exit 1).
-  Notiz:
-- [ ] Stichprobe: in einem der Repos `git commit --allow-empty -m "test" -m "Co-Authored-By: Claude <x@y>"` — erwartet: Hook lehnt ab (danach nichts committet lassen: falls doch ein Commit entstand, `git reset --soft HEAD~1`).
-  Notiz:
-
-Offene Frage: Welche Repos sind auf der Workstation vorhanden (Liste für `<repo>`-Argumente)? Aus der Task nicht ersichtlich.
-
-Danach: Task `nvim-config/workstation-commit-msg-hook-installieren` mit `done` schließen.

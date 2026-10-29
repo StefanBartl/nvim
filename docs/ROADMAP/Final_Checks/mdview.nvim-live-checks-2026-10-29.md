@@ -77,7 +77,7 @@ require("mdview").setup({ any_file = true })
 Task `mdview.nvim/shared-relay-live-pruefen-zwei-nvim-instanzen-echter-browser` (Vorgänger:
 `mdview.nvim/mdview-browser-sync-ueber-nvim-instanzen-hinweg`). Headless mit zwei Instanzen gegen
 einen echten Relay schon durchgespielt; offen: echter Tab und echtes Focus-Reporting des
-Terminals (Windows Terminal oder WezTerm).
+Terminals (Terminal: **WezTerm**).
 
 Zusätzlich zur Dev-Config oben:
 
@@ -185,8 +185,7 @@ sehr große `.md` mit einem sehr häufigen Token (Abschnitt "Deckel").
 
 ## Offene Fragen
 
-- Abschnitt 2: die Task nennt "Windows Terminal/WezTerm"; welches ist heute dein Terminal? (Focus-
-  Reporting hängt davon ab.)
+- Abschnitt 2: beantwortet (2026-10-29): Terminal ist **WezTerm** (Focus-Reporting im WezTerm prüfen).
 - Abschnitt 3: Die Task nennt "a relay newer than v0.3.0", `README` nennt "v0.4.0 or newer", die
   Doku zu `shared_relay` "newer than v0.4.3". Reicht der Checkout-Build für beides (Annahme: ja)?
 
