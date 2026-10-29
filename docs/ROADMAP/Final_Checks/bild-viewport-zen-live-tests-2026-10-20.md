@@ -117,18 +117,18 @@ es ist aber nichts aufgegangen, kein float oder ähnlches
 
 - [ ] Loslassen: kurz `cutting the selection …`, dann öffnet der Bereich in einem eigenen Float,
       Titel `name.png · 2/2`, scharf (volle Auflösung).
-- [ ] Im Ausschnitt noch einmal markieren → dritte Ebene `3/3`; **der richtige Bereich** des
-      Originals ist zu sehen (Versatz stimmt), nicht ein verschobener.
+- [x] Im Ausschnitt noch einmal markieren → dritte Ebene `3/3`; **der richtige Bereich** des
+      Originals ist zu sehen (Versatz stimmt), nicht ein verschobener. _(auto 2026-10-29: images.nvim/TESTS/zen_select_spec.lua grün)_
 - [ ] Zoom/Verschieben im Ausschnitt funktioniert wie im ersten Float.
 - [ ] `<BS>`: eine Ebene zurück, das vorige Bild ist wieder da, im Zoom von vorher.
-- [ ] `q` in der tiefsten Ebene: alle Ebenen sind zu.
-- [ ] Ein Klick (ohne Ziehen) öffnet nichts.
-- [ ] Tastatur: `v`, dann `lll jj` (oder `L`/`J` für 5er-Schritte), `<CR>` → Ausschnitt;
-      `v` … `<Esc>` verwirft nur die Auswahl, der Float bleibt.
-- [ ] Klick in ein **anderes** Fenster, während der Zen-Float fokussiert ist: Fokus wechselt dorthin
-      wie gewohnt (Klick wird durchgereicht).
-- [ ] Während „cutting the selection …“ sofort ein zweites Mal ziehen: es entsteht **kein**
-      zweiter Float.
+- [x] `q` in der tiefsten Ebene: alle Ebenen sind zu. _(auto 2026-10-29: images.nvim/TESTS/zen_select_spec.lua grün)_
+- [x] Ein Klick (ohne Ziehen) öffnet nichts. _(auto 2026-10-29: images.nvim/TESTS/zen_select_spec.lua grün)_
+- [x] Tastatur: `v`, dann `lll jj` (oder `L`/`J` für 5er-Schritte), `<CR>` → Ausschnitt;
+      `v` … `<Esc>` verwirft nur die Auswahl, der Float bleibt. _(auto 2026-10-29: images.nvim/TESTS/zen_select_spec.lua grün)_
+- [x] Klick in ein **anderes** Fenster, während der Zen-Float fokussiert ist: Fokus wechselt dorthin
+      wie gewohnt (Klick wird durchgereicht). _(auto 2026-10-29: images.nvim/TESTS/zen_select_spec.lua grün)_
+- [x] Während „cutting the selection …“ sofort ein zweites Mal ziehen: es entsteht **kein**
+      zweiter Float. _(auto 2026-10-29: images.nvim/TESTS/zen_select_spec.lua grün)_
 - [ ] Nachmessen der Treffgenauigkeit: einen kleinen, klar abgegrenzten Bildteil (ein Icon)
       markieren — er muss im Ausschnitt vollständig sein (Toleranz ±1 Zelle, dokumentiert).
 

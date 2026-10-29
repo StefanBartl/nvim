@@ -59,7 +59,7 @@ nur headless getestet. Claude kann dabei Messskripte liefern, falls etwas unklar
       denselben Puffer
 - [ ] Tabellen-Raster und Überschrift-Regeln passen in **beiden** Fenstern zur jeweiligen Breite
       (nicht beide an der Breite des aktiven Fensters)
-- [ ] Fenster live verbreitern/verschmälern: das Raster legt sich neu aus (Resize)
+- [x] Fenster live verbreitern/verschmälern: das Raster legt sich neu aus (Resize) _(auto 2026-10-29: markdown.nvim/TESTS/table_render_screen_spec.lua grün)_
 - [ ] `:close` des einen Fensters: das andere bleibt korrekt
 
 ### Falls rot
@@ -89,8 +89,8 @@ Task `markdown.nvim/tabellen-kuerzung-und-zellen-popup-im-echten-fenster-pruefen
 
 ### Kürzung und Cursorzeile
 
-- [ ] Zellen über 40 Spalten werden mit `…` gekürzt dargestellt, die Spalten bleiben ausgerichtet;
-      die Datei selbst ist unverändert (`:w` und `git diff` zeigen keine Änderung)
+- [x] Zellen über 40 Spalten werden mit `…` gekürzt dargestellt, die Spalten bleiben ausgerichtet;
+      die Datei selbst ist unverändert (`:w` und `git diff` zeigen keine Änderung) _(auto 2026-10-29: markdown.nvim/TESTS/table_truncate_spec.lua grün)_
 - [ ] Die **Cursorzeile** zeigt den vollen Text (solange `concealcursor` den aktuellen Modus nicht
       enthält); Bewegung mit `h`/`l` über den verdeckten Text ist brauchbar (kein Springen)
 - [ ] Mit gesetztem `concealcursor` (z. B. `:set concealcursor=nvic`): Verhalten ist brauchbar
@@ -113,8 +113,8 @@ Task `markdown.nvim/tabellen-kuerzung-und-zellen-popup-im-echten-fenster-pruefen
 
 - [ ] Falls render-markdown oder markview installiert ist: Tabellen werden nicht doppelt oder
       fehlerhaft gezeichnet, keine Fehlermeldungen
-- [ ] Doppelbreite-Zeichen (CJK/Emoji) am Schnitt einer gekürzten Zelle: die Zeile ist
-      **höchstens eine Spalte schmaler** als die anderen, keine kaputten Zeichen
+- [x] Doppelbreite-Zeichen (CJK/Emoji) am Schnitt einer gekürzten Zelle: die Zeile ist
+      **höchstens eine Spalte schmaler** als die anderen, keine kaputten Zeichen _(auto 2026-10-29: markdown.nvim/TESTS/table_truncate_spec.lua grün)_
 
 ### Falls rot
 

@@ -151,9 +151,9 @@ Checkliste im Repo: `TESTS/CHECK.md`.
       Custom Highlight API greift der `<mark>`-Fallback.
 - [ ] Nach jedem Re-Render (Pufferaenderung) sind die Markierungen wieder da;
       neu geoeffneter/neu geladener Tab bekommt sofort den aktuellen Stand.
-- [ ] `browser.spotlight_sync = false` bzw. `:MDView spotlight off`: nichts
-      wird mehr gesendet (Datenschutz: geteilter Bildschirm/offener Tab).
-- [ ] Ohne spotlight.nvim: kein Fehler, nichts passiert.
+- [x] `browser.spotlight_sync = false` bzw. `:MDView spotlight off`: nichts
+      wird mehr gesendet (Datenschutz: geteilter Bildschirm/offener Tab). _(auto 2026-10-29: mdview.nvim/TESTS/nvim/spotlight_sync_spec.lua grün)_
+- [x] Ohne spotlight.nvim: kein Fehler, nichts passiert. _(auto 2026-10-29: mdview.nvim/TESTS/nvim/spotlight_mirror_spec.lua + spotlight_sync_spec.lua grün)_
 - [ ] Trefferlimit pro Spotlight bei einem grossen Dokument (Performance).
 
 ---
@@ -185,14 +185,14 @@ Checkliste im Repo: `TESTS/CHECK.md`.
 ## B. spotlight.nvim
 
 - [ ] `:Spotlight`-Verhalten unveraendert im Alltag (Toggle, Sets, Persist).
-- [ ] `require("spotlight").spotlights()` / `.colors()` und das
+- [x] `require("spotlight").spotlights()` / `.colors()` und das
       `User SpotlightChanged`-Event: genau ein gebuendeltes Event pro
-      Massenoperation, keines bei "nichts geaendert" (`refresh()`).
-- [ ] Wort-Token behaelt seine Art auch mit `match.word_boundaries = false`
-      und nach Persist-Roundtrip; alte Snapshots laden weiter.
-- [ ] `export()` / `import(items)` / `origin_path(origin)` laut `docs/api.md`.
-- [ ] Bei `palette.reapply_on_colorscheme = false` feuert bei ColorScheme kein
-      Event (bewusst; mdview hoert selbst auf ColorScheme).
+      Massenoperation, keines bei "nichts geaendert" (`refresh()`). _(auto 2026-10-29: spotlight.nvim/TESTS/events_spec.lua + read_api_spec.lua grün)_
+- [x] Wort-Token behaelt seine Art auch mit `match.word_boundaries = false`
+      und nach Persist-Roundtrip; alte Snapshots laden weiter. _(auto 2026-10-29: spotlight.nvim/TESTS/kind_spec.lua grün)_
+- [x] `export()` / `import(items)` / `origin_path(origin)` laut `docs/api.md`. _(auto 2026-10-29: spotlight.nvim/TESTS/export_import_spec.lua + path_spec.lua grün)_
+- [x] Bei `palette.reapply_on_colorscheme = false` feuert bei ColorScheme kein
+      Event (bewusst; mdview hoert selbst auf ColorScheme). _(auto 2026-10-29: spotlight.nvim/TESTS/events_spec.lua grün)_
 - [ ] Mit nvim 0.9: Link-only-Highlight-Gruppen loesen in `colors()` keine
       Farben auf (Fallback auf Palettenfarben).
 
@@ -388,9 +388,9 @@ Alle Stellen, die den Buffer-Text in die Vorschau geben, laufen jetzt über
 - [ ] `browser_behavior = "reuse"` mit zwei Markdown-Dateien: Puffer wechseln, der Tab folgt, der
       Inhalt stimmt; nie der Inhalt des vorherigen Dokuments.
 - [ ] Modi `new_tab` und `manual`: wie bisher.
-- [ ] Datei, deren Puffer nicht geladen ist (`:MDView start <pfad>` bzw. Wechsel auf einen
+- [x] Datei, deren Puffer nicht geladen ist (`:MDView start <pfad>` bzw. Wechsel auf einen
       versteckten Puffer): zeigt die Datei von der Platte, nie ein leeres Dokument
-      (Fix `e7b24c2`).
+      (Fix `e7b24c2`). _(auto 2026-10-29: mdview.nvim/TESTS/nvim/mirror_unloaded_spec.lua + start_initial_push_spec.lua grün)_
 - [ ] In-Editor-Vorschau `:MDView preview-tab`: Inhalt stimmt, live synchron.
 - [ ] `experimental.line_diff = true`: Zeilen mitten im Dokument einfügen, löschen, Undo/Redo,
       große Blockänderung; die Vorschau bleibt konsistent. Die Diff-Harness-Gegenprobe
@@ -400,14 +400,14 @@ Alle Stellen, die den Buffer-Text in die Vorschau geben, laufen jetzt über
 - [ ] Breadcrumbs (`core/breadcrumbs.lua`, liest nur bis zur Cursorzeile) unverändert.
 - [ ] Großes Dokument (rund 5 000 Zeilen): kein spürbarer Mehraufwand beim Tippen
       (der Session-Snapshot-Hash wird jetzt erst beim ersten Lesen berechnet, `6255d6d`).
-- [ ] `:MDView start a.md` mit einem **anderen** geladenen Buffer `sub/a.md` (und `a.md` nur auf
+- [x] `:MDView start a.md` mit einem **anderen** geladenen Buffer `sub/a.md` (und `a.md` nur auf
       der Platte): zeigt den Inhalt von `./a.md`, nicht den des fremden Buffers
       (`lines_for_path` vergleicht den Pfad jetzt exakt statt als Datei-Muster, `e1316f8`).
       Dateinamen mit `[ ] { } ~ * ? % #` und Leerzeichen gehen ebenfalls. Bekannte Grenze: derselbe
       Buffer unter anderem Basisnamen (Symlink, 8.3-Name) wird beim ersten Push nicht erkannt, dann
-      steht der Plattenstand da, bis zum nächsten Edit.
-- [ ] Datei mit ungespeicherten Änderungen in einem geladenen Buffer: `:MDView start` zeigt die
-      ungespeicherten Änderungen, nicht die Platte.
+      steht der Plattenstand da, bis zum nächsten Edit. _(auto 2026-10-29: mdview.nvim/TESTS/nvim/mirror_exact_path_spec.lua grün)_
+- [x] Datei mit ungespeicherten Änderungen in einem geladenen Buffer: `:MDView start` zeigt die
+      ungespeicherten Änderungen, nicht die Platte. _(auto 2026-10-29: mdview.nvim/TESTS/nvim/start_initial_push_spec.lua + mirror_unloaded_spec.lua grün)_
 
 ---
 
@@ -419,43 +419,43 @@ geprüft, **nichts** gegen einen echten Provider.
 - [ ] `require("ai").ask({ prompt = ..., provider = "<name>", bulk = { label = "t", max_chars =
       4000, concurrency = 2 } }, cb)` mit einem echten Provider: Antwort kommt, `res.bulk`
       nennt Provider, Modell, `temperature = 0`, `deterministic`.
-- [ ] Provider **außerhalb** der Allow-List: Anfrage scheitert mit klarer Meldung; erst
+- [x] Provider **außerhalb** der Allow-List: Anfrage scheitert mit klarer Meldung; erst
       `require("ai.policy").grant_bulk("<id>")` erlaubt ihn (einmal je Sitzung);
       `allow_unlisted` an der Anfrage und die Bestätigung bei `:Ai provider` zählen hier
-      **nicht**.
-- [ ] `max_chars` überschritten: `bulk_limit`, es wird nichts gesendet. `max_total_chars`
+      **nicht**. _(auto 2026-10-29: ai.nvim/TESTS/ai/bulk_spec.lua grün)_
+- [x] `max_chars` überschritten: `bulk_limit`, es wird nichts gesendet. `max_total_chars`
       kumulativ je Label; `config.bulk.max_session_chars` über alle Läufe; `0` ist eine Grenze
       wie jede andere und lehnt alles ab; ein Tippfehler im Wert (`"500000"`) lehnt ebenfalls
-      ab statt durchzulassen.
-- [ ] Abbruch mitten in einer langen Antwort: `handle:kill()` und
+      ab statt durchzulassen. _(auto 2026-10-29: ai.nvim/TESTS/ai/bulk_spec.lua grün)_
+- [x] Abbruch mitten in einer langen Antwort: `handle:kill()` und
       `require("ai.bulk").cancel("<label>")`: der Callback läuft genau einmal mit
       `kind = "cancelled"`. Bekannt: ein schon gesendeter HTTP-Request läuft weiter, nur die
-      Antwort wird verworfen (kein Prozess-Handle der nicht-streamenden Provider).
-- [ ] `require("ai.bulk").reset("<label>")` während Anfragen laufen, danach `kill()`:
-      `usage()` zeigt nie negative Werte (Fix `336122b`).
+      Antwort wird verworfen (kein Prozess-Handle der nicht-streamenden Provider). _(auto 2026-10-29: ai.nvim/TESTS/ai/bulk_spec.lua grün)_
+- [x] `require("ai.bulk").reset("<label>")` während Anfragen laufen, danach `kill()`:
+      `usage()` zeigt nie negative Werte (Fix `336122b`). _(auto 2026-10-29: ai.nvim/TESTS/ai/bulk_spec.lua grün)_
 - [ ] OpenAI-Modell, das nur Temperatur 1 akzeptiert (o-Serie): Fehler mit Hinweis auf
       `bulk.temperature = false`; mit `false` läuft die Anfrage. (Der Hinweis hat keine eigene
       Spec.)
-- [ ] `ai-desktop` und `claude-cli`: nehmen keine Temperatur, `res.bulk.deterministic = false`.
+- [x] `ai-desktop` und `claude-cli`: nehmen keine Temperatur, `res.bulk.deterministic = false`. _(auto 2026-10-29: ai.nvim/TESTS/ai/bulk_spec.lua grün)_
 - [ ] Ollama lokal mit `temperature = 0`: gleiche Eingabe zweimal ergibt gleiche Ausgabe.
-- [ ] Hängender Provider: der Watchdog (`timeout_ms` plus 5 s) beendet die Anfrage mit
-      `kind = "timeout"`.
+- [x] Hängender Provider: der Watchdog (`timeout_ms` plus 5 s) beendet die Anfrage mit
+      `kind = "timeout"`. _(auto 2026-10-29: ai.nvim/TESTS/ai/bulk_spec.lua grün)_
 - [ ] Prompt mit NUL-Byte oder falschem Feldtyp (`system = 5`): Fehler kommt als
       `cb(false, invalid_request)`, **keine** Exception aus `ai.ask` (`7785236`). Eine Datei mit
       NUL-Bytes (UTF-16 ohne BOM) als Chunk-Quelle durchlaufen lassen.
-- [ ] Provider mit **Command-Key-Quelle** (`:Ai key`-Profil, Befehl statt Datei): `kill()`,
+- [x] Provider mit **Command-Key-Quelle** (`:Ai key`-Profil, Befehl statt Datei): `kill()`,
       `cancel(label)` oder Watchdog **während** der Key-Befehl noch läuft: danach geht kein
       Request mit dem Dokumenttext mehr raus. Schlägt der Key-Befehl fehl, läuft er einmal, nicht
       einmal je Job (kein Passwort-Prompt-Sturm, keine Konto-Sperre). Bekannt offen: kurzer
-      Negativ-Cache außerhalb der Bulk-Queue (Task `ai.nvim/ai-keys-fehlgeschlagene-command-key-quelle-kurz-negativ-cach`).
-- [ ] Lange Queue (mehrere hundert Chunks) mit einem Provider, der sofort fehlschlägt (falscher
+      Negativ-Cache außerhalb der Bulk-Queue (Task `ai.nvim/ai-keys-fehlgeschlagene-command-key-quelle-kurz-negativ-cach`). _(auto 2026-10-29: ai.nvim/TESTS/ai/bulk_spec.lua grün)_
+- [x] Lange Queue (mehrere hundert Chunks) mit einem Provider, der sofort fehlschlägt (falscher
       Key): alle Callbacks kommen an, kein Stack-Overflow, das Label ist danach wieder frei
-      (`usage(label)` zeigt `active = 0`).
+      (`usage(label)` zeigt `active = 0`). _(auto 2026-10-29: ai.nvim/TESTS/ai/bulk_spec.lua grün)_
 - [ ] `config.bulk.max_session_chars = 0`, ein String (`"500000"`), eine negative Zahl und ein
       Tippfehler-Key unter `bulk`: jeder lehnt Bulk ab (fail-closed), warnt beim Start, steht in
       `:checkhealth ai` und `:Ai info`.
-- [ ] `bulk.temperature = false` mit gesetztem `req.temperature`: es wird keine Temperatur
-      gesendet, `res.bulk.temperature` meldet das Gesendete.
+- [x] `bulk.temperature = false` mit gesetztem `req.temperature`: es wird keine Temperatur
+      gesendet, `res.bulk.temperature` meldet das Gesendete. _(auto 2026-10-29: ai.nvim/TESTS/ai/bulk_spec.lua grün)_
 
 ---
 
@@ -473,17 +473,17 @@ und der Body gehen über stdin. Geprüft nur mit Fake-Runner und einem lokalen H
       in keiner Prozessliste stehen:
       `Get-CimInstance Win32_Process -Filter "Name like 'curl%'" | Select CommandLine`.
 - [ ] translate-shell (`trans`) und eine `custom`-Engine mit großer Eingabe.
-- [ ] Datei mit **sehr langen Einzelzeilen** (ein Absatz in einer Zeile, über 5 000 Zeichen)
+- [x] Datei mit **sehr langen Einzelzeilen** (ein Absatz in einer Zeile, über 5 000 Zeichen)
       und mit Leerzeilen zwischen Absätzen: Zeilen und Leerzeilen bleiben erhalten
       (Task `language.nvim/google-long-line-limit`, Fix `dd67f2e`). Das ist der Fall, der später
-      `display_lang` trifft, weil Markdown-Absätze oft in einer Zeile stehen.
+      `display_lang` trifft, weil Markdown-Absätze oft in einer Zeile stehen. _(auto 2026-10-29: language.nvim/TESTS/translate_chunk_spec.lua grün)_
 - [ ] Fehlerfall mitten im Lauf (Netz trennen oder ungültiger Schlüssel): **eine** klare
       Meldung mit Blocknummer und Zeilenbereich, die Fortschrittsanzeige hängt nicht, der
       Callback läuft nur einmal.
 - [ ] Abbruch mitten im Lauf (`:Translate!`-Fenster schließen): weitere Blöcke werden nicht mehr
       gesendet.
-- [ ] `translate.max_chars` kleiner setzen: mehr Blöcke; größer setzen: wirkt nicht (nur senken).
-      Zeitgrenze: `timeout_ms` gilt **je Block**, die Gesamtdauer kann N-mal so lang sein.
+- [x] `translate.max_chars` kleiner setzen: mehr Blöcke; größer setzen: wirkt nicht (nur senken).
+      Zeitgrenze: `timeout_ms` gilt **je Block**, die Gesamtdauer kann N-mal so lang sein. _(auto 2026-10-29: language.nvim/TESTS/translate_chunk_spec.lua grün)_
 - [ ] `:Translate DE cwd` bzw. `path=<ordner>` mit einer großen und einer unlesbaren Datei: nur
       diese eine Datei scheitert, Fortschritt und die übrigen Dateien laufen weiter.
 - [ ] Regression: Hover-Übersetzung, `:TranslateReplace --nocode`, `:Translate!` wie vorher.
@@ -775,22 +775,22 @@ Voraussetzung für Auth: `links.web = true`, `links.fetch = true`, `links.pdf = 
       ablegen (z. B. `C:\Users\bartl\hover-pins\`), Pin eintragen, Neovim neu starten.
 - [ ] Link-URL im Markdown/Text hovern: PDF erscheint (erste Seite), `<C-Down>`/`<C-Up>`
       blättern, `>` zoomt, `F` Vollbild.
-- [ ] Pin mit `links.web = false`: funktioniert trotzdem (nichts geht ins Netz).
+- [x] Pin mit `links.web = false`: funktioniert trotzdem (nichts geht ins Netz). _(auto 2026-10-29: hover.nvim/TESTS/pins_spec.lua grün)_
 - [ ] Pin als PNG (DevTools-Screenshot): Bild wird gezeigt, `>` croppt.
-- [ ] Glob-Varianten: nur Host (`tricentis.atlassian.net`), mit Pfad (`.../pages/ID*`), Liste
-      von Globs, erster Treffer gewinnt (spezifisch vor allgemein).
-- [ ] Link mit Port (z. B. `:8090`): Pin trifft, wenn der Glob keinen Port nennt.
-- [ ] Datei umbenennen/löschen: Float sagt `pinned file not found (links.pins: ...)` (bei
+- [x] Glob-Varianten: nur Host (`tricentis.atlassian.net`), mit Pfad (`.../pages/ID*`), Liste
+      von Globs, erster Treffer gewinnt (spezifisch vor allgemein). _(auto 2026-10-29: hover.nvim/TESTS/pins_spec.lua grün)_
+- [x] Link mit Port (z. B. `:8090`): Pin trifft, wenn der Glob keinen Port nennt. _(auto 2026-10-29: hover.nvim/TESTS/pins_spec.lua grün)_
+- [x] Datei umbenennen/löschen: Float sagt `pinned file not found (links.pins: ...)` (bei
       PDF/Bild auch beim automatischen Hovern), nicht die Login-Seite;
-      `:checkhealth hover` listet den Pin.
-- [ ] `<CR>` im Pin-Float öffnet die **echte URL** im Browser (mit `$` oder `?` in der URL).
-- [ ] `:Hover why` auf dem Link: zeigt `pinned: ...`.
+      `:checkhealth hover` listet den Pin. _(auto 2026-10-29: hover.nvim/TESTS/pins_spec.lua + health_spec.lua grün)_
+- [x] `<CR>` im Pin-Float öffnet die **echte URL** im Browser (mit `$` oder `?` in der URL). _(auto 2026-10-29: hover.nvim/TESTS/pins_spec.lua grün)_
+- [x] `:Hover why` auf dem Link: zeigt `pinned: ...`. _(auto 2026-10-29: hover.nvim/TESTS/pins_spec.lua grün)_
 - [ ] Ungepinnte URL mit `links.web = false` und konfigurierten Pins: verhält sich wie vorher
       (keine Flicker, Positions-Previews antworten weiter).
-- [ ] `links.enabled = false` mit Pin: kein automatisches Hovern; `:Hover show` geht.
+- [x] `links.enabled = false` mit Pin: kein automatisches Hovern; `:Hover show` geht. _(auto 2026-10-29: hover.nvim/TESTS/pins_spec.lua grün)_
 - [ ] Pin auf `.md`/`.docx`: öffnet nur mit `:Hover show` (nur `pdf`/`image` automatisch).
-- [ ] Zweites `setup()` mit kürzerer Pin-Liste: alte Pins sind weg (Liste ersetzt, nicht gemischt).
-- [ ] UNC-Pfad als `show` (`\\\\server\\share\\x.pdf`) und `#` im Dateinamen funktionieren.
+- [x] Zweites `setup()` mit kürzerer Pin-Liste: alte Pins sind weg (Liste ersetzt, nicht gemischt). _(auto 2026-10-29: hover.nvim/TESTS/pins_spec.lua grün)_
+- [x] UNC-Pfad als `show` (`\\\\server\\share\\x.pdf`) und `#` im Dateinamen funktionieren. _(auto 2026-10-29: hover.nvim/TESTS/pins_spec.lua grün)_
 
 ---
 
@@ -807,15 +807,15 @@ Erst nach den Blockern aus I1. **Nur mit synthetischen/öffentlichen Seiten, kei
       (darf weder Token noch `Authorization` zeigen).
 - [ ] Normale Confluence-**Seiten**-URL hovern: erwartbar weiter Login/JS-Shell (Auth macht
       Seiten nicht lesbar, nur Dokumente). Für Seiten Pin verwenden.
-- [ ] Rule mit `*.atlassian.net` in der Config: wird **abgelehnt** (Health warnt, nichts wird
-      gesendet), nicht stillschweigend akzeptiert.
-- [ ] Token-Variable absichtlich leer/unset: es wird nichts gesendet, Health meldet `is not
-      set`.
-- [ ] Token mit Zeilenumbruch (aus Datei gelesen) wird getrimmt; mit Steuerzeichen mittendrin
-      zählt er als nicht gesetzt.
-- [ ] Link mit `[` `]` oder `{` `}` in der URL: genau ein Request (`--globoff`).
-- [ ] Zweite Regel mit **eigener** Variable für einen anderen Host; Allow der Reihenfolge
-      (erste passende Regel entscheidet, auch bei leerer Variable).
+- [x] Rule mit `*.atlassian.net` in der Config: wird **abgelehnt** (Health warnt, nichts wird
+      gesendet), nicht stillschweigend akzeptiert. _(auto 2026-10-29: hover.nvim/TESTS/auth_spec.lua + health_spec.lua grün)_
+- [x] Token-Variable absichtlich leer/unset: es wird nichts gesendet, Health meldet `is not
+      set`. _(auto 2026-10-29: hover.nvim/TESTS/auth_spec.lua + health_spec.lua grün)_
+- [x] Token mit Zeilenumbruch (aus Datei gelesen) wird getrimmt; mit Steuerzeichen mittendrin
+      zählt er als nicht gesetzt. _(auto 2026-10-29: hover.nvim/TESTS/auth_spec.lua grün)_
+- [x] Link mit `[` `]` oder `{` `}` in der URL: genau ein Request (`--globoff`). _(auto 2026-10-29: hover.nvim/TESTS/auth_spec.lua grün)_
+- [x] Zweite Regel mit **eigener** Variable für einen anderen Host; Allow der Reihenfolge
+      (erste passende Regel entscheidet, auch bei leerer Variable). _(auto 2026-10-29: hover.nvim/TESTS/auth_spec.lua grün)_
 - [ ] Heruntergeladene Auth-PDFs liegen in `stdpath("cache")/hover.nvim/webpdf` (bis zu
       `cache_days`, Standard 7; `0` = nie aufräumen!). Bei Bedarf `cache_days = 1` setzen oder
       Ordner löschen. Unter Windows keine 0700-Rechte (gelten nur auf Linux/macOS/CI).
@@ -963,15 +963,15 @@ Neovim noch nicht ausprobiert.
       spürbare Verzögerung; `:MyPlugins jumpTo ai<Tab>` ergänzt `ai.nvim`.
 - [ ] Die zwei, die zuerst nicht gingen: `jumpTo ai.nvim` und `jumpTo dap.nvim` landen auf der Zeile
       hinter `return {` (ai.lua:42, inspect.lua:51).
-- [ ] Namen in anderer Schreibweise: `jumpTo SESSIONS.nvim` findet dieselbe Stelle.
+- [x] Namen in anderer Schreibweise: `jumpTo SESSIONS.nvim` findet dieselbe Stelle. _(auto 2026-10-29: nvim/TESTS/plugin_repos/jump_spec.lua grün)_
 - [ ] Unbekannter Name: `jumpTo gibtsnicht.nvim` gibt die Warnung „No install spec …“, keinen Fehler.
 - [ ] Ein deaktiviertes Plugin (Modus `disabled` in `core/source.lua`) lässt sich anspringen und wird
       vervollständigt.
-- [ ] Ungespeicherte Änderungen in einer Spec-Datei, dann `jumpTo` auf ein **anderes Plugin derselben
-      Datei**: der Cursor springt, die Änderung bleibt, kein E37.
-- [ ] Ungespeicherte Änderungen, die Zeilen **über** dem Ziel einfügen (z. B. 5 Zeilen am Dateianfang),
+- [x] Ungespeicherte Änderungen in einer Spec-Datei, dann `jumpTo` auf ein **anderes Plugin derselben
+      Datei**: der Cursor springt, die Änderung bleibt, kein E37. _(auto 2026-10-29: nvim/TESTS/plugin_repos/jump_spec.lua grün)_
+- [x] Ungespeicherte Änderungen, die Zeilen **über** dem Ziel einfügen (z. B. 5 Zeilen am Dateianfang),
       dann `jumpTo` auf ein anderes Plugin derselben Datei: der Cursor landet auf der verschobenen
-      Zeile des Plugins, nicht auf der alten Plattenposition.
+      Zeile des Plugins, nicht auf der alten Plattenposition. _(auto 2026-10-29: nvim/TESTS/plugin_repos/jump_spec.lua grün)_
 - [ ] Ungespeicherte Änderungen, Sprung in eine **andere** Datei: mit gesetztem `hidden` öffnet sie
       sich normal; mit `:set nohidden` kommt eine Fehlermeldung als Notify, kein Lua-Stacktrace.
 - [ ] Aus einem Dateibaum-Fenster (`winfixbuf`) aufrufen: Meldung statt Fehler. Bekannt: aus einem
@@ -998,7 +998,7 @@ Neovim noch nicht ausprobiert.
       „Removed 2 [cite: N] marker(s)“. Leerzeichen drumherum bleiben (`A  b .`).
 - [ ] Listenform `[cite: 1, 2]` und `[cite:1]` verschwinden ebenfalls; `[cite: x]`, `[other: 4]`
       und `[CITE: 3]` bleiben stehen.
-- [ ] Mit Bereich: `:3,5Format cite` und visuell `:'<,'>Format cite` wirken nur dort.
+- [x] Mit Bereich: `:3,5Format cite` und visuell `:'<,'>Format cite` wirken nur dort. _(auto 2026-10-29: buffer-ctx.nvim/TESTS/format_spec.lua grün)_
 - [ ] Mit `:Mark` markierte Zeilen behalten ihr Zeichen (Extmarks), auch Zeilen ohne Marker.
       `u` macht alles in einem Schritt rückgängig.
 - [ ] `<Tab>` nach `:Format ` bietet `cite` an.
@@ -1077,48 +1077,48 @@ Commits, `casedesk.nvim` (`main`): `8f7645d`, `fa935ac`, `c101c3b`, `b721bf9` (K
 
 ### K2. `:Case clipboard`: neue Felder und Wordings
 
-- [ ] `:Case clipboard snowurl 1135620`: Clipboard enthält den SNOW-Link
-      (`.../x_ttng2_sapresolve_case/<32 Hex>`), Meldung nennt `1135620: copied snowurl`.
-- [ ] `:Case clipboard resolveurl 1135620`: Clipboard enthält den
-      `resolve.sap.com/site#resolve-Display...Incident/0020751295_1135620_2026`-Link.
-- [ ] `:Case clipboard snowurl,resolveurl 1135620 --sep=blank`: beide Links, durch eine
-      Leerzeile getrennt. Aliase `snowlink` und `resolvelink` gehen auch.
-- [ ] `:Case clipboard resolveurl 1149596` (nur SNOW-Link): Warnung mit Grund, **Clipboard
-      bleibt unverändert** (vorher etwas anderes hineinkopieren und kontrollieren).
-- [ ] `:Case clipboard snowurl 1007631` (keine Links): Warnung, nichts kopiert.
-- [ ] `:Case clipboard link 1135620`: ohne `config.snow_url_format` die bekannte Meldung
-      (`link` ist nicht `snowurl`).
-- [ ] `:Case clipboard firstResponse 1135620`: Clipboard-Text beginnt mit dem Kontaktnamen
-      aus `.case.json`, **kein** `<<customer>>` mehr.
-- [ ] `:Case clipboard firstResponse 1007631` (ohne Kontakt): Platzhalter `<<customer>>`
-      bleibt stehen, **Warnung** sagt, dass er nicht gefüllt werden konnte.
-- [ ] Schreibweise egal: `:Case clipboard FIRSTRESPONSE 1135620` und `firstresponse` gehen;
-      Reihenfolge egal (`1135620 firstResponse`).
-- [ ] `:Case clipboard firstResponse --edit 1135620`: kopiert **und** öffnet die Datei
-      `FirstResponses/FirstResponse.md`; ohne `--edit` wird nichts geöffnet.
-- [ ] `:Case clipboard number,title --labels` in einem Case-Buffer: `Case: ...`, `Title: ...`.
+- [x] `:Case clipboard snowurl 1135620`: Clipboard enthält den SNOW-Link
+      (`.../x_ttng2_sapresolve_case/<32 Hex>`), Meldung nennt `1135620: copied snowurl`. _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_urls_spec.lua + clipboard_spec.lua grün)_
+- [x] `:Case clipboard resolveurl 1135620`: Clipboard enthält den
+      `resolve.sap.com/site#resolve-Display...Incident/0020751295_1135620_2026`-Link. _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_urls_spec.lua grün)_
+- [x] `:Case clipboard snowurl,resolveurl 1135620 --sep=blank`: beide Links, durch eine
+      Leerzeile getrennt. Aliase `snowlink` und `resolvelink` gehen auch. _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_urls_spec.lua + clipboard_spec.lua grün)_
+- [x] `:Case clipboard resolveurl 1149596` (nur SNOW-Link): Warnung mit Grund, **Clipboard
+      bleibt unverändert** (vorher etwas anderes hineinkopieren und kontrollieren). _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_urls_spec.lua + clipboard_spec.lua grün)_
+- [x] `:Case clipboard snowurl 1007631` (keine Links): Warnung, nichts kopiert. _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_urls_spec.lua + clipboard_spec.lua grün)_
+- [x] `:Case clipboard link 1135620`: ohne `config.snow_url_format` die bekannte Meldung
+      (`link` ist nicht `snowurl`). _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_urls_spec.lua + clipboard_spec.lua grün)_
+- [x] `:Case clipboard firstResponse 1135620`: Clipboard-Text beginnt mit dem Kontaktnamen
+      aus `.case.json`, **kein** `<<customer>>` mehr. _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_wordings_spec.lua grün)_
+- [x] `:Case clipboard firstResponse 1007631` (ohne Kontakt): Platzhalter `<<customer>>`
+      bleibt stehen, **Warnung** sagt, dass er nicht gefüllt werden konnte. _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_wordings_spec.lua grün)_
+- [x] Schreibweise egal: `:Case clipboard FIRSTRESPONSE 1135620` und `firstresponse` gehen;
+      Reihenfolge egal (`1135620 firstResponse`). _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_wordings_spec.lua + clipboard_spec.lua grün)_
+- [x] `:Case clipboard firstResponse --edit 1135620`: kopiert **und** öffnet die Datei
+      `FirstResponses/FirstResponse.md`; ohne `--edit` wird nichts geöffnet. _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_wordings_spec.lua grün)_
+- [x] `:Case clipboard number,title --labels` in einem Case-Buffer: `Case: ...`, `Title: ...`. _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_spec.lua grün)_
 - [ ] `:Case clipboard` ohne Argument: Multi-Select mit dem Wert je Feld; `snowurl`,
       `resolveurl`, `firstResponse`, `firstResponseDelay`, `germanSpeaker` sind dabei, ein
       fehlender Wert steht als `—`. `<Tab>` markiert mehrere, `<CR>` kopiert.
-- [ ] Completion: `:Case clipboard <Tab>` listet Felder **und** Wordings, `snowurl` ist dabei.
-- [ ] Fehler: `:Case clipboard titel` meldet "unknown field" mit der Liste der bekannten.
+- [x] Completion: `:Case clipboard <Tab>` listet Felder **und** Wordings, `snowurl` ist dabei. _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_spec.lua + clipboard_wordings_spec.lua + clipboard_urls_spec.lua grün)_
+- [x] Fehler: `:Case clipboard titel` meldet "unknown field" mit der Liste der bekannten. _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_spec.lua grün)_
 
 ---
 
 ### K3. `:Cases clipboard` (ohne Case)
 
-- [ ] `:Cases clipboard firstResponse`: Text unverändert, `<<customer>>` bleibt Platzhalter.
-- [ ] `:Cases clipboard firstResponse germanSpeaker --sep=blank`: beide Texte, getrennt.
-- [ ] `:Cases clipboard title`: abgelehnt mit "needs a case — use :Case clipboard",
-      Clipboard bleibt unverändert.
-- [ ] `:Cases clipboard 1135620`: ebenfalls abgelehnt (eine Casenummer braucht `:Case`).
-- [ ] `:Cases clipboard` ohne Argument: Picker, der **nur** Wordings zeigt, keine Case-Felder.
-- [ ] `:Cases clipboard <Tab>`: nur Wordings (kein `number`, `title`, ...).
-- [ ] `:Cases clipboard firstResponse --edit`: kopiert und öffnet die Datei.
-- [ ] `:Cases wordings firstResponse`: verhält sich wie vorher (Datei öffnen **und** kopieren,
-      Text unverändert).
-- [ ] Wording, dessen Datei fehlt (Pfad in `config.wordings` bewusst falsch setzen): Warnung mit
-      Grund, nichts kopiert, kein Lua-Fehler.
+- [x] `:Cases clipboard firstResponse`: Text unverändert, `<<customer>>` bleibt Platzhalter. _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_wordings_spec.lua grün)_
+- [x] `:Cases clipboard firstResponse germanSpeaker --sep=blank`: beide Texte, getrennt. _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_wordings_spec.lua grün)_
+- [x] `:Cases clipboard title`: abgelehnt mit "needs a case — use :Case clipboard",
+      Clipboard bleibt unverändert. _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_wordings_spec.lua grün)_
+- [x] `:Cases clipboard 1135620`: ebenfalls abgelehnt (eine Casenummer braucht `:Case`). _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_wordings_spec.lua grün)_
+- [x] `:Cases clipboard` ohne Argument: Picker, der **nur** Wordings zeigt, keine Case-Felder. _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_wordings_spec.lua grün)_
+- [x] `:Cases clipboard <Tab>`: nur Wordings (kein `number`, `title`, ...). _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_wordings_spec.lua grün)_
+- [x] `:Cases clipboard firstResponse --edit`: kopiert und öffnet die Datei. _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_wordings_spec.lua grün)_
+- [x] `:Cases wordings firstResponse`: verhält sich wie vorher (Datei öffnen **und** kopieren,
+      Text unverändert). _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_wordings_spec.lua grün)_
+- [x] Wording, dessen Datei fehlt (Pfad in `config.wordings` bewusst falsch setzen): Warnung mit
+      Grund, nichts kopiert, kein Lua-Fehler. _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_wordings_spec.lua + clipboard_spec.lua grün)_
 
 ---
 
@@ -1143,21 +1143,21 @@ Testen ohne casedesk, direkt im Command-Line-Modus:
 :lua require("ui.kit").form({ back = true, fields = { { name = "a", label = "Eins" }, { name = "b", label = "Zwei" }, { name = "c", label = "Drei", required = true } }, on_submit = function(v) vim.print(v) end, on_cancel = function() print("cancel") end })
 ```
 
-- [ ] Titel zeigt `Eins (1/3)`, `Zwei (2/3)` usw.; im ersten Feld **kein** `[← Back]`-Button.
-- [ ] In Feld 2 `<BS>` auf **leerem** Feld: zurück zu Feld 1, dessen Antwort steht wieder
-      im Feld (Cursor am Ende). Mit Text im Feld ist `<BS>` ein normales Löschen.
-- [ ] `<BS>` gedrückt halten auf einem leeren Feld: wandert **nicht** durch alle Felder zurück
-      (der Hold wird ignoriert), nach kurzer Pause geht es einen Schritt zurück.
+- [x] Titel zeigt `Eins (1/3)`, `Zwei (2/3)` usw.; im ersten Feld **kein** `[← Back]`-Button. _(auto 2026-10-29: ui.nvim/TESTS/ui_kit_spec.lua grün)_
+- [x] In Feld 2 `<BS>` auf **leerem** Feld: zurück zu Feld 1, dessen Antwort steht wieder
+      im Feld (Cursor am Ende). Mit Text im Feld ist `<BS>` ein normales Löschen. _(auto 2026-10-29: ui.nvim/TESTS/ui_kit_form_back_ui_spec.lua + ui_kit_spec.lua grün)_
+- [x] `<BS>` gedrückt halten auf einem leeren Feld: wandert **nicht** durch alle Felder zurück
+      (der Hold wird ignoriert), nach kurzer Pause geht es einen Schritt zurück. _(auto 2026-10-29: ui.nvim/TESTS/ui_kit_form_back_ui_spec.lua + ui_kit_spec.lua grün)_
 - [ ] `<S-Tab>` und `<C-p>` gehen zurück; mit offenem Completion-Popup gehören sie dem Popup.
-- [ ] Vorwärts und zurück verliert keine Eingabe; halb getippter Text bleibt erhalten.
+- [x] Vorwärts und zurück verliert keine Eingabe; halb getippter Text bleibt erhalten. _(auto 2026-10-29: ui.nvim/TESTS/ui_kit_spec.lua grün)_
 - [ ] `<Down>` oder `<Tab>` im Feld setzt den Fokus auf die Buttonleiste (startet bei `Next`);
       dort `h`/`l` und Pfeile bewegen, `<CR>` drückt, `<Up>`/`k`/`i`/`a` kehrt ins Feld zurück.
 - [ ] Mausklick auf `[← Back]`, `[Skip]`, `[Next ↵]` (nach `:set mouse=a`): fokussiert **und**
       drückt in einer Aktion. Beim letzten Feld heißt der Button `[Done ↵]`.
-- [ ] `<Esc>` überspringt ein optionales Feld (Wert wieder `default`) und bricht bei dem
-      `required`-Feld (`Drei`) ab (`cancel` wird gedruckt); `[Skip]` fehlt auf `Drei`.
-- [ ] Einfügen mit Zeilenumbruch (mehrzeilig kopierter Text): bleibt **eine** Zeile, die Buttons
-      bleiben sichtbar. Sehr langer Text, der seitwärts scrollt: Buttonleiste bleibt im Bild.
+- [x] `<Esc>` überspringt ein optionales Feld (Wert wieder `default`) und bricht bei dem
+      `required`-Feld (`Drei`) ab (`cancel` wird gedruckt); `[Skip]` fehlt auf `Drei`. _(auto 2026-10-29: ui.nvim/TESTS/ui_kit_spec.lua grün)_
+- [x] Einfügen mit Zeilenumbruch (mehrzeilig kopierter Text): bleibt **eine** Zeile, die Buttons
+      bleiben sichtbar. Sehr langer Text, der seitwärts scrollt: Buttonleiste bleibt im Bild. _(auto 2026-10-29: ui.nvim/TESTS/ui_kit_form_back_ui_spec.lua grün)_
 - [ ] Regression ohne `back = true`: gleiche Form ohne die Option verhält sich wie früher (keine
       Buttons, kein `(1/3)`, `<BS>` auf leerem Feld tut nichts). Prüfen mit den bestehenden
       casedesk-Dialogen: `:Case imp`, `:Case tag`, `:Tricentis pto`, die Case-Infocard-Edits.
@@ -1170,22 +1170,22 @@ Testen ohne casedesk, direkt im Command-Line-Modus:
 :lua require("ui.kit").sheet({ title = "Test", fields = { { name = "number", label = "Case number", required = true, live = true, validate = function(v) if v:match("^%d+$") then return true end return false, "nur Ziffern" end }, { name = "area", label = "Area", kind = "select", choices = { "SAP", "CS" } }, { name = "title", label = "Title" }, { name = "token", label = "Token", secret = true } }, submit_label = "Anlegen", cancel_label = "Abbruch", on_submit = function(v) vim.print(v) end, on_cancel = function() print("cancel") end })
 ```
 
-- [ ] Ein Fenster zeigt alle vier Zeilen mit Label links; die Labels lassen sich nicht
-      bearbeiten und der Cursor landet nie auf einem Label.
+- [x] Ein Fenster zeigt alle vier Zeilen mit Label links; die Labels lassen sich nicht
+      bearbeiten und der Cursor landet nie auf einem Label. _(auto 2026-10-29: ui.nvim/TESTS/ui_kit_sheet_spec.lua + ui_kit_sheet_ui_spec.lua grün)_
 - [ ] `<Tab>`/`<S-Tab>` wechseln Feld und danach die beiden Buttons, umlaufend; `<Down>`/`<Up>`
       ohne Umlauf.
-- [ ] `12x` in `number` tippen: rote Meldung "nur Ziffern" unter dem Feld (`live`), Fenster
-      wächst; beim Korrigieren verschwindet sie sofort und das Fenster schrumpft.
-- [ ] `<CR>` im letzten Feld drückt `[Anlegen]`; mit ungültigem Feld wird nicht abgeschickt
-      und der Fokus springt auf das erste ungültige.
-- [ ] `number` leer lassen und abschicken: "required".
-- [ ] Select-Feld `area`: `h`/`l` und Pfeile wechseln `SAP`/`CS`; `<CR>` oder `<Space>` öffnet
-      die Auswahl, eine Wahl springt zum nächsten Feld.
-- [ ] `token`: Eingabe erscheint als `*`, `on_submit` bekommt den echten Wert.
-- [ ] `<Esc>` aus jeder Position bricht ab (`cancel`), keine Fenster bleiben zurück
-      (`:lua print(#vim.api.nvim_list_wins())` vorher/nachher gleich).
+- [x] `12x` in `number` tippen: rote Meldung "nur Ziffern" unter dem Feld (`live`), Fenster
+      wächst; beim Korrigieren verschwindet sie sofort und das Fenster schrumpft. _(auto 2026-10-29: ui.nvim/TESTS/ui_kit_sheet_spec.lua + ui_kit_sheet_ui_spec.lua grün)_
+- [x] `<CR>` im letzten Feld drückt `[Anlegen]`; mit ungültigem Feld wird nicht abgeschickt
+      und der Fokus springt auf das erste ungültige. _(auto 2026-10-29: ui.nvim/TESTS/ui_kit_sheet_spec.lua grün)_
+- [x] `number` leer lassen und abschicken: "required". _(auto 2026-10-29: ui.nvim/TESTS/ui_kit_sheet_spec.lua + ui_kit_sheet_ui_spec.lua grün)_
+- [x] Select-Feld `area`: `h`/`l` und Pfeile wechseln `SAP`/`CS`; `<CR>` oder `<Space>` öffnet
+      die Auswahl, eine Wahl springt zum nächsten Feld. _(auto 2026-10-29: ui.nvim/TESTS/ui_kit_sheet_spec.lua grün)_
+- [x] `token`: Eingabe erscheint als `*`, `on_submit` bekommt den echten Wert. _(auto 2026-10-29: ui.nvim/TESTS/ui_kit_sheet_spec.lua + ui_kit_sheet_ui_spec.lua grün)_
+- [x] `<Esc>` aus jeder Position bricht ab (`cancel`), keine Fenster bleiben zurück
+      (`:lua print(#vim.api.nvim_list_wins())` vorher/nachher gleich). _(auto 2026-10-29: ui.nvim/TESTS/ui_kit_sheet_spec.lua + ui_kit_sheet_ui_spec.lua grün)_
 - [ ] Mausklick auf ein Feld setzt Fokus und Cursor; Klick auf `[Anlegen]`/`[Abbruch]` drückt.
-- [ ] Einfügen mit Zeilenumbruch in ein Feld: wird mit Leerzeichen zu einer Zeile verbunden.
+- [x] Einfügen mit Zeilenumbruch in ein Feld: wird mit Leerzeichen zu einer Zeile verbunden. _(auto 2026-10-29: ui.nvim/TESTS/ui_kit_sheet_spec.lua grün)_
 - [ ] Hell und dunkel: `KitError`-Meldung, `*`-Markierung des Pflichtfelds und der fokussierte
       Label sind in beiden Themes lesbar.
 - [ ] Sehr schmales Fenster (`:set columns=50`): lange Werte brechen unter die Wertspalte um.
@@ -1208,26 +1208,26 @@ Testen ohne casedesk, direkt im Command-Line-Modus:
 Commits `casedesk.nvim`: `2f49cd1`, `4b8d5ee`, `34a00bf`, `0fc3ad3`; `ui.nvim`: `40d3565`, `bc8da10`.
 Beide Wege enden im selben Dry-Run, derselben Bestätigung und demselben Anlegen.
 
-- [ ] `:Case new --steps` (und ohne Flag, solange `new_mode = "steps"`): Nummer, dann Area (nur
+- [x] `:Case new --steps` (und ohne Flag, solange `new_mode = "steps"`): Nummer, dann Area (nur
       bei mehreren Areas), dann Titel, Company, Name, SNOW-Link, Resolve-Link als Formular.
-      Titel zeigt `Title (1/5)` usw.
+      Titel zeigt `Title (1/5)` usw. _(auto 2026-10-29: casedesk.nvim/TESTS/ui_case_new_spec.lua + ui.nvim/TESTS/ui_kit_spec.lua grün)_
 - [ ] Im Formular `<BS>` auf **leerem** Feld und `<S-Tab>` gehen zurück, die alte Antwort steht
       wieder im Feld. Vom ersten Feld aus geht es zurück zur Area, von dort zur Nummer.
-- [ ] Beim Zurückgehen eine Nummer eingeben, die es schon gibt: Hinweis, **die bis dahin
-      getippten Antworten bleiben** (fragt nur erneut), der Ablauf endet nicht.
-- [ ] `:Case new --form`: ein Fenster mit Nummer, Area (Auswahlzeile, fehlt bei nur einer Area),
-      Titel, Company, Name, SNOW-Link, Resolve-Link und `[ Create ] [ Cancel ]`.
-- [ ] Im Form-Modus: ungültige Nummer (`12`, `abc`) zeigt die rote Meldung **beim Tippen** unter
-      dem Feld; eine Nummer, die in der gewählten Area schon existiert, ebenfalls.
-- [ ] `:Case new 977130 --form`: die Nummer steht schon im Feld und ist geprüft; existiert sie
-      in der Standard-Area schon, startet das Fenster auf der Nummer mit Meldung.
+- [x] Beim Zurückgehen eine Nummer eingeben, die es schon gibt: Hinweis, **die bis dahin
+      getippten Antworten bleiben** (fragt nur erneut), der Ablauf endet nicht. _(auto 2026-10-29: casedesk.nvim/TESTS/ui_case_new_spec.lua grün)_
+- [x] `:Case new --form`: ein Fenster mit Nummer, Area (Auswahlzeile, fehlt bei nur einer Area),
+      Titel, Company, Name, SNOW-Link, Resolve-Link und `[ Create ] [ Cancel ]`. _(auto 2026-10-29: casedesk.nvim/TESTS/ui_case_new_spec.lua grün)_
+- [x] Im Form-Modus: ungültige Nummer (`12`, `abc`) zeigt die rote Meldung **beim Tippen** unter
+      dem Feld; eine Nummer, die in der gewählten Area schon existiert, ebenfalls. _(auto 2026-10-29: casedesk.nvim/TESTS/ui_case_new_spec.lua + ui.nvim/TESTS/ui_kit_sheet_spec.lua grün)_
+- [x] `:Case new 977130 --form`: die Nummer steht schon im Feld und ist geprüft; existiert sie
+      in der Standard-Area schon, startet das Fenster auf der Nummer mit Meldung. _(auto 2026-10-29: casedesk.nvim/TESTS/ui_case_new_spec.lua grün)_
 - [ ] `:Case new --form --steps` meldet einen Fehler, `new_mode = "bogus"` fällt auf `steps`
       zurück, `:checkhealth casedesk` nennt es.
 - [ ] Beide Wege ergeben denselben Case (Ordner, `.case.json`, Dry-Run-Liste). Danach enthält
       `Research/00_Research.md` den Checklisten-Block (K12) und der Case eine `Links.md` (K11).
 - [ ] Esc-Verhalten: im Steps-Formular **überspringt** `<Esc>` ein Feld
       (bestehendes `kit.form`-Verhalten), im `--form`-Fenster bricht `<Esc>` alles ab.
-- [ ] Ohne `ui.kit.sheet` (ältere ui.nvim): `--form` fällt mit Hinweis auf die Schritte zurück.
+- [x] Ohne `ui.kit.sheet` (ältere ui.nvim): `--form` fällt mit Hinweis auf die Schritte zurück. _(auto 2026-10-29: casedesk.nvim/TESTS/ui_case_new_spec.lua grün)_
 
 ---
 
@@ -1244,17 +1244,17 @@ steht bewusst nicht in den Texten.
       zeigt `TCSupportInfo`, `CommanderLog`, `TBoxLog`, `BrowserExtensionLog`, `DexServerLog`,
       `DexAgentLog`, `ToscaServerLog`, `HAR`, `GpResult` und deren `_DE`-Varianten sowie die
       Fragen (`ProductComponent`, `Subset`, ...).
-- [ ] `:Cases clipboard TCSupportInfo CommanderLog --sep=blank`: beide Texte, durch eine
-      Leerzeile getrennt.
+- [x] `:Cases clipboard TCSupportInfo CommanderLog --sep=blank`: beide Texte, durch eine
+      Leerzeile getrennt. _(auto 2026-10-29: casedesk.nvim/TESTS/wordings_spec.lua grün)_
 - [ ] `:Cases clipboard CommanderLog_DE`: der deutsche Text.
-- [ ] **Neue Datei ohne Neustart:** eine Datei `Workflow/Templates/Wordings/Logs/Test.md` anlegen,
+- [x] **Neue Datei ohne Neustart:** eine Datei `Workflow/Templates/Wordings/Logs/Test.md` anlegen,
       dann sofort `:Cases clipboard Test` und `:Cases wordings Test` (beides ohne Neustart gültig);
-      Datei wieder löschen.
-- [ ] `:Cases clipboard startCdxChat`: der Prompt aus `Workflow/CDX/StartChat.md` **bis
-      einschließlich** `### Activity Stream:`, nichts danach (kein Platzhalter, keine Templates).
-- [ ] Die Zeile `### Activity Stream:` in einer Kopie der Datei umbenennen und `startCdxChat`
-      auf die Kopie zeigen lassen: Warnung, **nichts** wird kopiert (nicht die ganze Datei).
-- [ ] `:Cases clipboard` ohne Argument: Picker nur über die Wordings (jetzt mehr als vorher).
+      Datei wieder löschen. _(auto 2026-10-29: casedesk.nvim/TESTS/wordings_spec.lua grün)_
+- [x] `:Cases clipboard startCdxChat`: der Prompt aus `Workflow/CDX/StartChat.md` **bis
+      einschließlich** `### Activity Stream:`, nichts danach (kein Platzhalter, keine Templates). _(auto 2026-10-29: casedesk.nvim/TESTS/wordings_spec.lua grün)_
+- [x] Die Zeile `### Activity Stream:` in einer Kopie der Datei umbenennen und `startCdxChat`
+      auf die Kopie zeigen lassen: Warnung, **nichts** wird kopiert (nicht die ganze Datei). _(auto 2026-10-29: casedesk.nvim/TESTS/wordings_spec.lua grün)_
+- [x] `:Cases clipboard` ohne Argument: Picker nur über die Wordings (jetzt mehr als vorher). _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_wordings_spec.lua grün)_
 - [ ] `:Case clipboard TCSupportInfo 1135620`: Snippet ohne Case-Bezug, Kopie identisch.
 
 ---
@@ -1264,18 +1264,18 @@ steht bewusst nicht in den Texten.
 Commit `casedesk.nvim` `e6754ec`. Cursor in einen Buffer setzen, dann:
 
 - [ ] `:Case insert sap-url 1135620`: fügt den Resolve-Link ein **und** kopiert ihn.
-- [ ] `:Case insert snow-url 1135620`: der SNOW-GUID-Link. `snow-number` ist dasselbe wie `snow`.
-- [ ] `:Case insert sap-number 1135620`: `1135620/2026`. `:Case insert sap-incident 1135620`:
-      `0020751295_1135620_2026`.
-- [ ] `:Case insert sap-url 1149596` (nur SNOW-Link): Meldung mit Grund (`no SAP Resolve link …`),
-      **nichts** eingefügt.
+- [x] `:Case insert snow-url 1135620`: der SNOW-GUID-Link. `snow-number` ist dasselbe wie `snow`. _(auto 2026-10-29: casedesk.nvim/TESTS/insert_links_spec.lua grün)_
+- [x] `:Case insert sap-number 1135620`: `1135620/2026`. `:Case insert sap-incident 1135620`:
+      `0020751295_1135620_2026`. _(auto 2026-10-29: casedesk.nvim/TESTS/insert_links_spec.lua grün)_
+- [x] `:Case insert sap-url 1149596` (nur SNOW-Link): Meldung mit Grund (`no SAP Resolve link …`),
+      **nichts** eingefügt. _(auto 2026-10-29: casedesk.nvim/TESTS/insert_links_spec.lua grün)_
 - [ ] `:Case insert` ohne Argument: der Picker zeigt die fünf Zeilen mit ihren Werten (`—` wenn
       keiner da ist); `<Tab>` nach `:Case insert ` kennt die neuen Namen.
 - [ ] Mit Visual-Auswahl (`:'<,'>Case insert sap-number`) ersetzt die Auswahl.
 - [ ] `:Case insert sap-number` in einem **CS**-Case: Meldung "area CS has no SAP incidents".
 - [ ] `:Case insert snow` und `:Case insert link` verhalten sich wie vorher.
-- [ ] `:Case clipboard sap-number,sap-incident,sap-url 1135620 --sep=blank`: dieselben Werte
-      (gleiche Felder, `sapnumber`, `sapincident`, `resolveurl`).
+- [x] `:Case clipboard sap-number,sap-incident,sap-url 1135620 --sep=blank`: dieselben Werte
+      (gleiche Felder, `sapnumber`, `sapincident`, `resolveurl`). _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_urls_spec.lua grün)_
 
 ---
 
@@ -1284,24 +1284,24 @@ Commit `casedesk.nvim` `e6754ec`. Cursor in einen Buffer setzen, dann:
 Commit `casedesk.nvim` `20bf95f`. Struktur: `## Tickets`, `## Docs & references`,
 `## SWARM / internal tickets`, eine Zeile `- [Label](URL) — Zweck` je Link.
 
-- [ ] Neuen Case anlegen mit SNOW- und Resolve-Link: `Links.md` liegt im Case-Ordner, öffnet sich
+- [x] Neuen Case anlegen mit SNOW- und Resolve-Link: `Links.md` liegt im Case-Ordner, öffnet sich
       **nicht**, beide Links stehen unter *Tickets* mit Zweck (`ServiceNow case record`,
-      `SAP Resolve incident`). Ohne die Links ist die Gruppe leer.
+      `SAP Resolve incident`). Ohne die Links ist die Gruppe leer. _(auto 2026-10-29: casedesk.nvim/TESTS/case_links_spec.lua grün)_
 - [ ] Älterer Case: `:Case links open 1135620` legt die Datei an (mit seinen Links in *Tickets*)
       und öffnet sie; ebenso `:Case sync` (listet `Links.md` als fehlend).
-- [ ] `:Case links add https://docs.tricentis.com/... was der Kunde zuerst einrichten muss`:
-      Zeile unter *Docs & references*; zweiter Link kommt **dahinter**, nicht darüber.
-- [ ] Atlassian-Jira-Link (`.../browse/SWAT-1`) landet unter *SWARM / internal tickets*,
-      `--section=swarm|docs|tickets` überschreibt, `--label=Text` setzt den Linktext.
-- [ ] Einen Link im Browser kopieren, dann `:Case links add` (nur Zweck als Text, z. B.
-      `:Case links add das SWAT-Ticket`): nimmt die URL aus der Zwischenablage, sagt es.
-- [ ] `:Case links add <url>` ohne Zweck: fragt "What is this link for?"; leere Antwort fügt
-      **nichts** hinzu.
-- [ ] Denselben Link nochmal: Meldung `already listed`, keine zweite Zeile.
-- [ ] Ein Resolve-/SNOW-Link, den du von Hand in `Links.md` einträgst, wird von
+- [x] `:Case links add https://docs.tricentis.com/... was der Kunde zuerst einrichten muss`:
+      Zeile unter *Docs & references*; zweiter Link kommt **dahinter**, nicht darüber. _(auto 2026-10-29: casedesk.nvim/TESTS/case_links_spec.lua grün)_
+- [x] Atlassian-Jira-Link (`.../browse/SWAT-1`) landet unter *SWARM / internal tickets*,
+      `--section=swarm|docs|tickets` überschreibt, `--label=Text` setzt den Linktext. _(auto 2026-10-29: casedesk.nvim/TESTS/case_links_spec.lua grün)_
+- [x] Einen Link im Browser kopieren, dann `:Case links add` (nur Zweck als Text, z. B.
+      `:Case links add das SWAT-Ticket`): nimmt die URL aus der Zwischenablage, sagt es. _(auto 2026-10-29: casedesk.nvim/TESTS/case_links_spec.lua grün)_
+- [x] `:Case links add <url>` ohne Zweck: fragt "What is this link for?"; leere Antwort fügt
+      **nichts** hinzu. _(auto 2026-10-29: casedesk.nvim/TESTS/case_links_spec.lua grün)_
+- [x] Denselben Link nochmal: Meldung `already listed`, keine zweite Zeile. _(auto 2026-10-29: casedesk.nvim/TESTS/case_links_spec.lua grün)_
+- [x] Ein Resolve-/SNOW-Link, den du von Hand in `Links.md` einträgst, wird von
       `:Case clipboard snowurl` / `resolveurl` / `:Case insert sap-url` gefunden, wenn
-      `.case.json` keinen hat; hat `.case.json` einen, gewinnt der.
-- [ ] `:Case links 1135620` (ohne `add`/`open`) ist weiter die Doku-Versionsprüfung.
+      `.case.json` keinen hat; hat `.case.json` einen, gewinnt der. _(auto 2026-10-29: casedesk.nvim/TESTS/case_links_spec.lua grün)_
+- [x] `:Case links 1135620` (ohne `add`/`open`) ist weiter die Doku-Versionsprüfung. _(auto 2026-10-29: casedesk.nvim/TESTS/case_links_spec.lua grün)_
 - [ ] `:Case doctor` und `:checkhealth casedesk` bei einem älteren Case ansehen: taucht `Links.md`
       dort als fehlend auf? (Nicht geprüft, ob diese Prüfungen das Blueprint auswerten.)
 
@@ -1315,28 +1315,28 @@ Commit `casedesk.nvim` `2d8c468`; Fragen im Work-Repo `43d717c`. Die Checkliste 
 - [ ] Neuer Case: `Research/00_Research.md` enthält oben (unter dem `# …`) den Block mit den
       Abschnitten *Vor der Antwort*, *Beim Kunden erfragen — Stufe 1*, *Senden und danach*; bei
       DEX/XScan/Cloud im Titel zusätzlich *Je nach Fall* und die passenden Logs.
-- [ ] Titel mit `XScan unmapped controls Fiori`: AppType, ControlsAffected, HTML-Seite, TBox-Log,
+- [x] Titel mit `XScan unmapped controls Fiori`: AppType, ControlsAffected, HTML-Seite, TBox-Log,
       Browser-Extension-Log erscheinen; Titel mit `DEX unattended`: DEX-Preflight, DEX-Agent-Log,
-      gpresult (Stufe 2).
+      gpresult (Stufe 2). _(auto 2026-10-29: casedesk.nvim/TESTS/checklist_spec.lua grün)_
 - [ ] `:Case checklist 1213172` in einem **echten** Case: Block wird eingefügt/aktualisiert, die
       Datei öffnet am Block. Bei Cases mit Bild unter `assets/` steht `[x] … — gefunden: <Datei>`.
       **Vorsicht: das schreibt in `Research/00_Research.md` des echten Cases** (nur den Block).
-- [ ] Ein Häkchen von Hand setzen (`[x]`), eins auf `[-]`, dann `:Case checklist`: beide bleiben.
-      Eine Support-Info-Datei in `assets/` legen: nächster Lauf hakt `Support Info` ab.
+- [x] Ein Häkchen von Hand setzen (`[x]`), eins auf `[-]`, dann `:Case checklist`: beide bleiben.
+      Eine Support-Info-Datei in `assets/` legen: nächster Lauf hakt `Support Info` ab. _(auto 2026-10-29: casedesk.nvim/TESTS/checklist_spec.lua grün)_
 - [ ] Text **außerhalb** des Blocks (Notes, eigene Zeilen) bleibt unverändert; ungespeicherte
       Änderungen im Buffer: Meldung "save it first".
 - [ ] Die Erstreaktions-Zeile nennt die fällige Zeit (`Erstreaktion fällig 2026-… (P2, in …)`),
       sobald der Case Priorität und Activity Stream hat (`:Case activity`).
-- [ ] `:Case clipboard ask`: höchstens 4 nummerierte englische Fragen der aktuellen Stufe, mehrzeilige
+- [x] `:Case clipboard ask`: höchstens 4 nummerierte englische Fragen der aktuellen Stufe, mehrzeilige
       Texte (Browser-Extension-Log) eingerückt; Hinweis "stage 1 has N open questions, 4 asked at
-      a time". Sind alle Punkte abgehakt: "nothing left to ask".
-- [ ] `:Case checklist draft` in einem Case, dessen `Replies/00_PSO.md` noch das Gerüst
+      a time". Sind alle Punkte abgehakt: "nothing left to ask". _(auto 2026-10-29: casedesk.nvim/TESTS/checklist_spec.lua grün)_
+- [x] `:Case checklist draft` in einem Case, dessen `Replies/00_PSO.md` noch das Gerüst
       (`Dear {name},`) ist: Entwurf mit Anrede (Kontaktname oder `<<customer>>`), nummerierten
-      Fragen und Schluss. Hat die Datei schon Text: Entwurf nur in der Zwischenablage.
-- [ ] `config.checklist = { lang = "de" }`: Fragen kommen aus den `_DE`-Dateien.
-- [ ] `config.checklist = { skip = { "timer" } }` entfernt den Punkt, `extra = { { id =
+      Fragen und Schluss. Hat die Datei schon Text: Entwurf nur in der Zwischenablage. _(auto 2026-10-29: casedesk.nvim/TESTS/checklist_spec.lua grün)_
+- [x] `config.checklist = { lang = "de" }`: Fragen kommen aus den `_DE`-Dateien. _(auto 2026-10-29: casedesk.nvim/TESTS/checklist_spec.lua grün)_
+- [x] `config.checklist = { skip = { "timer" } }` entfernt den Punkt, `extra = { { id =
       "licence", block = "ask", text = "Lizenzdatei", snippet = "TCSupportInfo", keywords = {
-      "license" }, files = { "%.lic$" } } }` fügt einen eigenen hinzu.
+      "license" }, files = { "%.lic$" } } }` fügt einen eigenen hinzu. _(auto 2026-10-29: casedesk.nvim/TESTS/checklist_spec.lua grün)_
 - [ ] Fragen prüfen: sind die Formulierungen der `Wordings/Ask/*.md` so, wie du sie schicken
       willst? (Stufe-1-Auswahl und Reihenfolge ist meine Ableitung aus `Workflow.md`,
       `Workflow_DecisionTree.md`, `Policies_CDX.md`, `1_Answer.md`.)
@@ -1379,30 +1379,30 @@ _Neue Felder (`snowurl`, `resolveurl`, Wordings, `ask`, ...) und `:Cases clipboa
       `\n`, `\t`, `\\` werden dekodiert) gegen einen echten Case.
 - [ ] Explizite Case-Angabe (`AREA/Nummer`, `.`, volle SNOW-ID) an beliebiger
       Position; zwei verschiedene Cases ergeben einen Fehler.
-- [ ] Feld ohne Wert (z. B. `title` ohne Titel, `link` ohne `snow_url_format`):
-      Warnung mit Grund, Rest wird kopiert, Zwischenablage nie leer.
-- [ ] Tab-Completion: Feldnamen, Felder nach dem Komma, Case-Nummern, und auch
-      ab dem dritten Token (variadisch, lib.nvim `f0d76b9`).
+- [x] Feld ohne Wert (z. B. `title` ohne Titel, `link` ohne `snow_url_format`):
+      Warnung mit Grund, Rest wird kopiert, Zwischenablage nie leer. _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_spec.lua grün)_
+- [x] Tab-Completion: Feldnamen, Felder nach dem Komma, Case-Nummern, und auch
+      ab dem dritten Token (variadisch, lib.nvim `f0d76b9`). _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_spec.lua grün)_
 
 #### Spotlights pro Case (`:Case spotlight`)
 
-- [ ] Markierungen in Case A setzen, nach Case B wechseln (leer), dort
+- [x] Markierungen in Case A setzen, nach Case B wechseln (leer), dort
       markieren, zurueck nach A: `:Case spotlight list` und `show` stimmen,
-      A hat wieder seine eigenen Markierungen, nichts vermischt sich.
+      A hat wieder seine eigenen Markierungen, nichts vermischt sich. _(auto 2026-10-29: casedesk.nvim/TESTS/case_spotlights_spec.lua grün)_
 - [ ] Neustart von Neovim in einem Case: Markierungen kommen zurueck, kein
       Hinweis-Dauerlaerm (Session-Restore von spotlight.nvim).
-- [ ] Origin-Filter: in einer Datei **ausserhalb** des gebundenen Cases
+- [x] Origin-Filter: in einer Datei **ausserhalb** des gebundenen Cases
       markieren; Markierung bleibt live, wird aber nicht in `.spotlight.json`
       geschrieben; einmalige Info erscheint; `:Case spotlight save` speichert
-      alles.
-- [ ] Case-Wechsel (BufEnter) mit zurueckgehaltenen Markierungen: Bindung wird
+      alles. _(auto 2026-10-29: casedesk.nvim/TESTS/case_spotlights_spec.lua grün)_
+- [x] Case-Wechsel (BufEnter) mit zurueckgehaltenen Markierungen: Bindung wird
       geloest, Markierungen bleiben, eine Info nennt den Weg
-      (`:Case spotlight load` fragt vor dem Ersetzen, `save` weist zu).
-- [ ] Unlesbare `.spotlight.json` in einem betretenen Case: Warnung, Bindung am
-      alten Case wird geloest (kein stilles Schreiben in den falschen Case).
-- [ ] Portable Origins: gespeicherte absolute Pfade unter `$REPOS_DIR` stehen
+      (`:Case spotlight load` fragt vor dem Ersetzen, `save` weist zu). _(auto 2026-10-29: casedesk.nvim/TESTS/case_spotlights_spec.lua grün)_
+- [x] Unlesbare `.spotlight.json` in einem betretenen Case: Warnung, Bindung am
+      alten Case wird geloest (kein stilles Schreiben in den falschen Case). _(auto 2026-10-29: casedesk.nvim/TESTS/case_spotlights_spec.lua grün)_
+- [x] Portable Origins: gespeicherte absolute Pfade unter `$REPOS_DIR` stehen
       als `$REPOS_DIR/...` in der Datei; auf einer zweiten Maschine mit anderem
-      `$REPOS_DIR` kommen die Markierungen richtig zurueck.
+      `$REPOS_DIR` kommen die Markierungen richtig zurueck. _(auto 2026-10-29: casedesk.nvim/TESTS/case_spotlights_spec.lua grün)_
 - [ ] `:checkhealth casedesk`: zeigt `follow`, `origin_filter`,
       `warn_unignored`; Gitignore-Warnung fuer `.spotlight.json`,
       `.spotlight.json.tmp`, `.spotlight.json.corrupt`; mit
@@ -2067,7 +2067,7 @@ Du hast `<A-h>`, `<A-l>`, `<Esc>` und `<C-h/j/k/l>` schon geprüft; hier das, wa
 - [ ] `<C-l>` im Terminal leert die Shell (`clear`/`cls`), `<A-l>` im Terminal tut nichts mehr; `<A-l>` im Normal-Modus öffnet weiter filetree.
 - [ ] `3<A-h>` öffnet das Terminal "3" (eigener Job, eigener Titel), `<A-h>` ohne Zahl "main"; zweimal `<A-h>`: ausblenden, der Job läuft weiter (Prompt, Verlauf noch da), wieder `<A-h>` blendet ihn ein.
 - [ ] `:Terminal open build --layout=vsplit` / `split` / `tab` / `float`: jedes Layout öffnet im Projekt-Root (Git-Wurzel des Buffers), Größe aus `float`/`split`; `:Terminal list` zeigt die Terminals des Projekts, Auswahl öffnet es.
-- [ ] Ein anderes Projekt (anderer Git-Root) hat **eigene** Terminals: `:Terminal list` im ersten Projekt zeigt die des zweiten nicht.
+- [x] Ein anderes Projekt (anderer Git-Root) hat **eigene** Terminals: `:Terminal list` im ersten Projekt zeigt die des zweiten nicht. _(auto 2026-10-29: terminal.nvim/TESTS/api_spec.lua grün)_
 - [ ] `exit` in der Shell: Fenster und Buffer verschwinden (`on_exit = "close"`); mit `on_exit = "keep"` bleibt der Text stehen und `<A-h>` startet neu.
 - [ ] `:Terminal close` beendet die Shell; danach `<A-h>` startet eine frische.
 - [ ] Kitty (nur wenn du Kitty nutzt): Padding enger beim Start, wieder weit beim Beenden.
@@ -2077,19 +2077,19 @@ Du hast `<A-h>`, `<A-l>`, `<Esc>` und `<C-h/j/k/l>` schon geprüft; hier das, wa
 
 ### L3. Text und Befehle senden (`send`, `run`)
 
-- [ ] `:Terminal send line` tippt die aktuelle Zeile ins Terminal "run" **ohne** Enter; `--exec` führt aus.
-- [ ] `:'<,'>Terminal send selection` mit **einer** Zeile tippt sie; mit **mehreren** Zeilen ohne `--exec` kommt die Meldung "N lines would be executed one by one" und nichts wird gesendet; mit `--exec` laufen alle Zeilen. (Vorher scheiterte der Befehl mit E481.)
-- [ ] `:Terminal send file --exec` führt den ganzen Buffer aus (nur mit einem harmlosen Testbuffer).
+- [x] `:Terminal send line` tippt die aktuelle Zeile ins Terminal "run" **ohne** Enter; `--exec` führt aus. _(auto 2026-10-29: terminal.nvim/TESTS/bindings_spec.lua + api_spec.lua grün)_
+- [x] `:'<,'>Terminal send selection` mit **einer** Zeile tippt sie; mit **mehreren** Zeilen ohne `--exec` kommt die Meldung "N lines would be executed one by one" und nichts wird gesendet; mit `--exec` laufen alle Zeilen. (Vorher scheiterte der Befehl mit E481.) _(auto 2026-10-29: terminal.nvim/TESTS/bindings_spec.lua grün)_
+- [x] `:Terminal send file --exec` führt den ganzen Buffer aus (nur mit einem harmlosen Testbuffer). _(auto 2026-10-29: terminal.nvim/TESTS/bindings_spec.lua grün)_
 - [ ] `:Terminal run echo hallo` tippt und führt aus; `:Terminal run -- git log --oneline` behält `--oneline`; `:Terminal run --direct --name=job cmd /c exit 3` startet den Job direkt (Fenster bleibt, Exit-Code 3 sichtbar).
 - [ ] Quoting in **deiner** Shell (pwsh): `:lua require("terminal").run({ "echo", "a b", "it's", "x;y" })` zeigt die Wörter unverändert (keine Ausführung von `;y`); ein Wort mit typografischem Apostroph (`’`) bleibt ein Wort.
-- [ ] `:lua require("terminal").run({ "echo", "a\nb" })` wird abgelehnt (Zeilenumbruch).
+- [x] `:lua require("terminal").run({ "echo", "a\nb" })` wird abgelehnt (Zeilenumbruch). _(auto 2026-10-29: terminal.nvim/TESTS/api_spec.lua grün)_
 
 ---
 
 ### L4. `run --direct` für andere Plugins (lazygit-Fallback)
 
 - [ ] `:lua require("terminal").run({ "lazygit" }, { direct = true, name = "lazygit", title = "lazygit", float = { width = 0.9, height = 0.9 }, close = "always", cwd = vim.fn.getcwd() })`: Float mit Titel "lazygit", beim Beenden von lazygit verschwindet das Fenster.
-- [ ] `close = "success"`: bei Exit-Code ≠ 0 bleibt das Fenster lesbar stehen.
+- [x] `close = "success"`: bei Exit-Code ≠ 0 bleibt das Fenster lesbar stehen. _(auto 2026-10-29: terminal.nvim/TESTS/api_spec.lua grün)_
 - [ ] `on_open = function(h) vim.keymap.set("n", "q", "<Cmd>close<CR>", { buffer = h.bufnr }) end`: `q` im Normal-Modus schließt das Fenster.
 
 ---
@@ -2119,7 +2119,7 @@ Zwei WezTerm-Panes nebeneinander: links nvim, rechts eine Shell. Zweite Variante
 - [ ] Von der Shell-Pane (rechts) nach links: `<C-h>` tut in der Shell, was die Shell damit tut (Standard `send`); wechselst du auf `shell_panes = "navigate"`, springt es nach links in das nvim-Pane.
 - [ ] Zwei nvim-Panes nebeneinander: aus dem linken über den Rand ins rechte und zurück, ohne Hänger und ohne dass die Taste im falschen Programm landet.
 - [ ] (Optional, Entscheidung L1) `keymaps = { nav_left = "<C-h>" }`: aus einem normalen Fenster am Rand ins Nachbar-Pane; `3<C-h>` springt drei Fenster.
-- [ ] `terminal.navigate("l")` per `:lua`: gibt `moved`, `edge` oder `float` zurück.
+- [x] `terminal.navigate("l")` per `:lua`: gibt `moved`, `edge` oder `float` zurück. _(auto 2026-10-29: terminal.nvim/TESTS/navigate_spec.lua grün)_
 - [ ] Taste am Rand **gedrückt halten** (Key-Repeat): kein Ruckeln und kein Prozess-Sturm (höchstens ein Hand-off-Prozess gleichzeitig, der letzte Druck wartet).
 
 ---
@@ -2142,11 +2142,11 @@ In der Spec `backend = "wezterm"` setzen (nur zum Testen), nvim in WezTerm neu s
 
 - [ ] Native Terminal öffnen (`<A-h>`), `:Terminal pin` in WezTerm: das native Fenster verschwindet, das gleiche Terminal läuft als **WezTerm-Pane** im gleichen Verzeichnis; Verlauf und Ausgabe des alten sind weg (ehrlich so dokumentiert).
 - [ ] nvim beenden: das Pane lebt weiter. Neues nvim: `:Terminal adopt` zeigt den Bildschirm des Panes **schreibgeschützt** in einem Buffer (`terminal://wezterm/<pane>/<name>`), er aktualisiert sich etwa einmal pro Sekunde, solange er sichtbar ist, und meldet, wenn das Pane weg ist. (Hinweis: `adopt` findet ein Terminal über die Registry der laufenden Sitzung, also nur eines, das **diese** nvim-Sitzung gepinnt hat.)
-- [ ] `:Terminal pin` ohne WezTerm/tmux: Meldung "no multiplexer backend is available"; `pin` für ein schon gepinntes Terminal: "already lives in ...".
-- [ ] `env = { FOO = "1" }` gesetzt, `:Terminal pin`: Fehlermeldung (ein Pane kann kein `env`), das **native Terminal bleibt unangetastet** (der Fehler wird vor dem Beenden geprüft).
+- [x] `:Terminal pin` ohne WezTerm/tmux: Meldung "no multiplexer backend is available"; `pin` für ein schon gepinntes Terminal: "already lives in ...". _(auto 2026-10-29: terminal.nvim/TESTS/pin_adopt_spec.lua grün)_
+- [x] `env = { FOO = "1" }` gesetzt, `:Terminal pin`: Fehlermeldung (ein Pane kann kein `env`), das **native Terminal bleibt unangetastet** (der Fehler wird vor dem Beenden geprüft). _(auto 2026-10-29: terminal.nvim/TESTS/pin_adopt_spec.lua grün)_
 - [ ] Ein langlaufender Befehl, der einen Port oder ein Lock hält (z. B. `python -m http.server` per `:Terminal run --direct`), dann `:Terminal pin`: der alte Job endet **vor** dem Start des Panes, der Server läuft danach im Pane (nicht doppelt).
-- [ ] `wezterm cli` unbrauchbar machen (WezTerm-Socket weg, bzw. in tmux `$TMUX` auf einen toten Socket) und `:Terminal pin`: Fehlermeldung „… is not reachable …“, das laufende **native Terminal bleibt unangetastet** (der Multiplexer wird vor dem Beenden gefragt).
-- [ ] (Kaum von Hand auslösbar) Scheitert nur das Anlegen des Panes nach einer Antwort des Multiplexers, startet ein **neues** natives Terminal mit demselben Befehl (die alte Ausgabe ist weg) und die Meldung sagt, ob das geklappt hat.
+- [x] `wezterm cli` unbrauchbar machen (WezTerm-Socket weg, bzw. in tmux `$TMUX` auf einen toten Socket) und `:Terminal pin`: Fehlermeldung „… is not reachable …“, das laufende **native Terminal bleibt unangetastet** (der Multiplexer wird vor dem Beenden gefragt). _(auto 2026-10-29: terminal.nvim/TESTS/pin_adopt_spec.lua grün)_
+- [x] (Kaum von Hand auslösbar) Scheitert nur das Anlegen des Panes nach einer Antwort des Multiplexers, startet ein **neues** natives Terminal mit demselben Befehl (die alte Ausgabe ist weg) und die Meldung sagt, ob das geklappt hat. _(auto 2026-10-29: terminal.nvim/TESTS/pin_adopt_spec.lua grün)_
 
 ---
 
@@ -2206,22 +2206,22 @@ Im Repo `terminal.nvim`; jedes schreibt eine Zeile je Prüfung und endet mit `RE
 
 Der Durchlauf über alle 432 Regeln hat vier Blöcke und drei ultracode-Review-Runden (30, 25 und 27 bestätigte Befunde) hinterlassen; viele Änderungen sind Verhalten, das du von Hand sehen kannst. Vor dem Testen **`terminal.nvim` auf `main` pullen**. Ergebnisliste: `tasks-vault/terminal.nvim/NOTES/rules-sweep-ergebnisse.md`.
 
-- [ ] **`:Terminal close ghost`** und **`:Terminal hide ghost`** (es gibt kein Terminal "ghost"): eine Meldung `[terminal] no terminal 'ghost' in this project`, kein Fehler.
-- [ ] **Tab-Vervollständigung der Namen:** `:Terminal close <Tab>` bietet nur die offenen Terminals an; `:Terminal toggle <Tab>` zusätzlich `main`, `run` und `1`..`9`; `:Terminal run --name=<Tab>` ebenso.
-- [ ] **Zeichenweise Auswahl:** in einer Zeile `echo hello world` das Wort `hello` mit `viw` markieren, `:` drücken (die Zeile beginnt mit `'<,'>`), `Terminal send selection` ausführen: im Terminal erscheint nur `hello`, nicht die Zeile. Mit `V` oder einem eingetippten Bereich (`:2,3Terminal send selection --exec`) werden ganze Zeilen gesendet, auch wenn der Bereich eine ältere Auswahl überdeckt.
-- [ ] **`clear`-Taste** (nur wenn du `keymaps.clear` gebunden hast): in Git Bash oder WSL tippt sie `clear`, in `cmd.exe` und PowerShell `cls`.
+- [x] **`:Terminal close ghost`** und **`:Terminal hide ghost`** (es gibt kein Terminal "ghost"): eine Meldung `[terminal] no terminal 'ghost' in this project`, kein Fehler. _(auto 2026-10-29: terminal.nvim/TESTS/bindings_spec.lua grün)_
+- [x] **Tab-Vervollständigung der Namen:** `:Terminal close <Tab>` bietet nur die offenen Terminals an; `:Terminal toggle <Tab>` zusätzlich `main`, `run` und `1`..`9`; `:Terminal run --name=<Tab>` ebenso. _(auto 2026-10-29: terminal.nvim/TESTS/bindings_spec.lua grün)_
+- [x] **Zeichenweise Auswahl:** in einer Zeile `echo hello world` das Wort `hello` mit `viw` markieren, `:` drücken (die Zeile beginnt mit `'<,'>`), `Terminal send selection` ausführen: im Terminal erscheint nur `hello`, nicht die Zeile. Mit `V` oder einem eingetippten Bereich (`:2,3Terminal send selection --exec`) werden ganze Zeilen gesendet, auch wenn der Bereich eine ältere Auswahl überdeckt. _(auto 2026-10-29: terminal.nvim/TESTS/bindings_spec.lua grün)_
+- [x] **`clear`-Taste** (nur wenn du `keymaps.clear` gebunden hast): in Git Bash oder WSL tippt sie `clear`, in `cmd.exe` und PowerShell `cls`. _(auto 2026-10-29: terminal.nvim/TESTS/bindings_spec.lua grün)_
 - [ ] **Float offen, Terminal einziges Fenster:** `:Terminal hide` und `:Terminal close` werfen kein E444 mehr; der Puffer zeigt danach die Datei, die du vorher bearbeitet hast, keinen leeren Puffer.
 - [ ] **`:checkhealth terminal`:** in WezTerm ohne tmux keine Warnung wegen tmux oder `allow-passthrough`; unter tmux ohne WezTerm-Export keine Warnung wegen `nvim_ui_send`; mit einer absichtlich falschen Option (`float = { width = -1 }`) steht `config: config key 'float.width' ...` im Bericht.
 - [ ] **Tippfehler in der Config:** `setup({ navigate = { handof = "tmux" } })` meldet den Fehler einmal, Navigation und Statusexport laufen weiter.
-- [ ] **Pin mit falschem Layout:** `:lua require("terminal").pin({ name = "main" }, { layout = "bogus" })` meldet `unknown layout`, **das native Terminal bleibt unverändert** (früher wurde es beendet).
+- [x] **Pin mit falschem Layout:** `:lua require("terminal").pin({ name = "main" }, { layout = "bogus" })` meldet `unknown layout`, **das native Terminal bleibt unverändert** (früher wurde es beendet). _(auto 2026-10-29: terminal.nvim/TESTS/pin_adopt_spec.lua grün)_
 - [ ] **tmux-Startverzeichnis mit `#`:** ein Projekt-Ordner wie `C#` oder `a##b` öffnet das tmux-Pane im richtigen Ordner (früher im Home-Verzeichnis).
 - [ ] **PowerShell-Quoting:** `:lua require("terminal").run({ "echo", 'say "hi"' })` mit `shell = "pwsh"` wird abgelehnt (Hinweis auf `direct = true`); ein Wort mit Leerzeichen und abschließendem Backslash (`C:\my dir\`) ebenso. Gewöhnliche Wörter (`a b`, `it's`) gehen wie vorher.
 - [ ] **Branch im Status:** in einem Repo `git switch` auf einen anderen Branch: Tab-Titel bzw. `@terminal_branch` zeigen ihn sofort (kein Warten auf einen Timer); ein Terminal-Puffer zeigt nach `:cd` in ein anderes Repo dessen Branch.
-- [ ] **Ein Terminal in zwei Fenstern schließen (Windows):** ein laufendes Terminal öffnen (`layout = "split"`), im Terminal-Fenster `:vsplit`, dann `:Terminal close`: beide Fenster verschwinden, Neovim läuft weiter (ein Zwischenstand der Review-Runden ließ es hier mit `0xC0000005` abstürzen).
-- [ ] **Blockweise Auswahl:** in Zeilen unterschiedlicher Länge einen Block mit `CTRL-V` markieren, einmal mit `$`, einmal mit dem Cursor knapp hinter dem Ende der kürzeren Zeile, `:Terminal send selection --exec`: gesendet wird genau, was `y` kopieren würde (ohne `$`: der Block, mit `$`: jede Zeile bis zu ihrem Ende). Ein Mapping, das mit `:<C-u>` beginnt, verliert den Bereich: `:<C-u>'<,'>Terminal send selection<CR>` schreiben.
-- [ ] **Liste mit Lücke:** `:lua require("terminal").run({ "echo", nil, "x" })` meldet `argument 2 is not a string` und startet nichts (früher wurde das Wort hinter der Lücke still weggelassen).
+- [x] **Ein Terminal in zwei Fenstern schließen (Windows):** ein laufendes Terminal öffnen (`layout = "split"`), im Terminal-Fenster `:vsplit`, dann `:Terminal close`: beide Fenster verschwinden, Neovim läuft weiter (ein Zwischenstand der Review-Runden ließ es hier mit `0xC0000005` abstürzen). _(auto 2026-10-29: terminal.nvim/TESTS/native_spec.lua grün)_
+- [x] **Blockweise Auswahl:** in Zeilen unterschiedlicher Länge einen Block mit `CTRL-V` markieren, einmal mit `$`, einmal mit dem Cursor knapp hinter dem Ende der kürzeren Zeile, `:Terminal send selection --exec`: gesendet wird genau, was `y` kopieren würde (ohne `$`: der Block, mit `$`: jede Zeile bis zu ihrem Ende). Ein Mapping, das mit `:<C-u>` beginnt, verliert den Bereich: `:<C-u>'<,'>Terminal send selection<CR>` schreiben. _(auto 2026-10-29: terminal.nvim/TESTS/bindings_spec.lua grün)_
+- [x] **Liste mit Lücke:** `:lua require("terminal").run({ "echo", nil, "x" })` meldet `argument 2 is not a string` und startet nichts (früher wurde das Wort hinter der Lücke still weggelassen). _(auto 2026-10-29: terminal.nvim/TESTS/api_spec.lua grün)_
 - [ ] **Programmwort `time` oder `if` (bash/PowerShell):** `:lua require("terminal").run({ "time", "-v", "make" })` führt das Programm `time` aus, nicht das Schlüsselwort.
-- [ ] **Rahmen `bold`:** `float = { border = "bold" }` gilt ab Neovim 0.12; unter 0.11 meldet die Config den Wert als ungültig.
+- [x] **Rahmen `bold`:** `float = { border = "bold" }` gilt ab Neovim 0.12; unter 0.11 meldet die Config den Wert als ungültig. _(auto 2026-10-29: terminal.nvim/TESTS/config_spec.lua grün)_
 - [ ] **GitHub-Beschreibung (Nutzeraktion, nicht ausgeführt):** der Befehl steht im Task `terminal.nvim/ruleset-github-metadata`; ausführen oder verwerfen.
 
 Bekannte Restpunkte stehen als 13 Tasks `ruleset-*` im Wkdbook (`terminal.nvim/ROADMAP/tasks/`): lib.nvim-Module, asynchroner Statuspublish, strukturierte Fehlertypen, die Entscheidung zum verschachtelten Neovim (fail-open oder fail-closed), Modulkopplung, `@types` je Ebene, Werkzeuge, Zeitgrenzen als Optionen, zentrales Cleanup, Startmessung mit UI, Plattform-Matrix, Demo-GIF/Logo, GitHub-Beschreibung.
@@ -2309,120 +2309,120 @@ zusätzlich in einer Testkonfiguration oder per `:lua`:
 
 **O3.1 Grundfluss**
 
-- [ ] `:UI slots` in einem frischen Projekt: Meldung "no slots yet; :UI slots add …".
-- [ ] In einer Datei `:UI slots add`: "slot 1: <Dateiname>". Nochmal: "already in slot 1", **kein** zweiter Slot.
-- [ ] In einer anderen Datei `:UI slots add 5`: landet in Slot 5. `:UI slots add 5` nochmal: "slot 5 is taken; clear it first".
-- [ ] `:UI slots`: Liste, aufsteigend, Lücken (2 bis 4) stehen **nicht** drin.
-- [ ] `:UI slots 1` aus einem anderen Buffer: öffnet die Datei. Cursor in der Datei bewegen, Buffer wechseln, `:UI slots 1`: Cursor steht wieder dort.
-- [ ] Neovim in einer Slot-Datei **beenden** (`:wqa`), neu starten, `:UI slots 1`: Cursor an der letzten Stelle (nicht an der vorletzten).
-- [ ] Eine Slot-Datei löschen/umbenennen: `:UI slots` zeigt `missing`, `:UI slots <n>` meldet "file does not exist" und **legt nichts an**.
-- [ ] `:UI slots move 1 7`, `:UI slots move 5 7` (tauscht), `:UI slots clear 7`, `:UI slots clear all`.
-- [ ] Ungültig: `:UI slots 0`, `:UI slots 0x10`, `:UI slots 99999999999`, `:UI slots clear x`, `:UI slots frobnicate`: jeweils Meldung, nie ein Fehler/Stacktrace.
-- [ ] Keine Obergrenze: `:lua for i=1,30 do require("ui.slots").add({kind="yank",text="t"..i}) end`, danach `:UI slots 12` und `:UI slots 30` gehen.
+- [x] `:UI slots` in einem frischen Projekt: Meldung "no slots yet; :UI slots add …". _(auto 2026-10-29: ui.nvim/TESTS/slots_api_spec.lua grün)_
+- [x] In einer Datei `:UI slots add`: "slot 1: <Dateiname>". Nochmal: "already in slot 1", **kein** zweiter Slot. _(auto 2026-10-29: ui.nvim/TESTS/slots_api_spec.lua grün)_
+- [ ] In einer anderen Datei `:UI slots add 5`: landet in Slot 5. `:UI slots add 5` nochmal: "slot 5 is taken; clear it first". _(auto 2026-10-29: ui.nvim/TESTS/slots_api_spec.lua grün; nur teilweise: Meldungstext ungeprüft)_
+- [x] `:UI slots`: Liste, aufsteigend, Lücken (2 bis 4) stehen **nicht** drin. _(auto 2026-10-29: ui.nvim/TESTS/slots_store_spec.lua + slots_api_spec.lua grün)_
+- [x] `:UI slots 1` aus einem anderen Buffer: öffnet die Datei. Cursor in der Datei bewegen, Buffer wechseln, `:UI slots 1`: Cursor steht wieder dort. _(auto 2026-10-29: ui.nvim/TESTS/slots_kinds_spec.lua + slots_api_spec.lua grün)_
+- [x] Neovim in einer Slot-Datei **beenden** (`:wqa`), neu starten, `:UI slots 1`: Cursor an der letzten Stelle (nicht an der vorletzten). _(auto 2026-10-29: ui.nvim/TESTS/slots_api_spec.lua grün)_
+- [x] Eine Slot-Datei löschen/umbenennen: `:UI slots` zeigt `missing`, `:UI slots <n>` meldet "file does not exist" und **legt nichts an**. _(auto 2026-10-29: ui.nvim/TESTS/slots_kinds_spec.lua + slots_api_spec.lua grün)_
+- [x] `:UI slots move 1 7`, `:UI slots move 5 7` (tauscht), `:UI slots clear 7`, `:UI slots clear all`. _(auto 2026-10-29: ui.nvim/TESTS/slots_api_spec.lua grün)_
+- [x] Ungültig: `:UI slots 0`, `:UI slots 0x10`, `:UI slots 99999999999`, `:UI slots clear x`, `:UI slots frobnicate`: jeweils Meldung, nie ein Fehler/Stacktrace. _(auto 2026-10-29: ui.nvim/TESTS/slots_api_spec.lua grün)_
+- [x] Keine Obergrenze: `:lua for i=1,30 do require("ui.slots").add({kind="yank",text="t"..i}) end`, danach `:UI slots 12` und `:UI slots 30` gehen. _(auto 2026-10-29: ui.nvim/TESTS/slots_store_spec.lua + slots_panel_spec.lua grün)_
 
 **O3.2 Kopieren (`yank`)**
 
-- [ ] `:UI slots yank 1` (Datei-Slot), dann `"+p`: der Pfad. Dasselbe für einen url- und einen yank-Slot.
-- [ ] Yank-Slot mit Platzhaltern: `:lua require("ui.slots").add({kind="yank", text="{word} @ {file}:{line}"})`, Cursor auf ein Wort, `:UI slots <n>`, einfügen: Wort, Pfad, Zeile.
-- [ ] Meldung "copied N characters to …" nennt nur Register, die es wirklich gibt (ohne Clipboard-Provider **kein** `+`/`*` in der Liste).
-- [ ] Ein Slot mit `{nope}`: Warnung "unknown placeholder {nope}".
-- [ ] Datei mit Klammern im Namen (`report {line}.md`): `:UI slots add`, dann in einem anderen Buffer `:UI slots <n>`: öffnet **genau diese** Datei.
+- [x] `:UI slots yank 1` (Datei-Slot), dann `"+p`: der Pfad. Dasselbe für einen url- und einen yank-Slot. _(auto 2026-10-29: ui.nvim/TESTS/slots_api_spec.lua grün)_
+- [x] Yank-Slot mit Platzhaltern: `:lua require("ui.slots").add({kind="yank", text="{word} @ {file}:{line}"})`, Cursor auf ein Wort, `:UI slots <n>`, einfügen: Wort, Pfad, Zeile. _(auto 2026-10-29: ui.nvim/TESTS/slots_kinds_spec.lua grün)_
+- [x] Meldung "copied N characters to …" nennt nur Register, die es wirklich gibt (ohne Clipboard-Provider **kein** `+`/`*` in der Liste). _(auto 2026-10-29: ui.nvim/TESTS/slots_kinds_spec.lua grün)_
+- [x] Ein Slot mit `{nope}`: Warnung "unknown placeholder {nope}". _(auto 2026-10-29: ui.nvim/TESTS/slots_kinds_spec.lua grün)_
+- [x] Datei mit Klammern im Namen (`report {line}.md`): `:UI slots add`, dann in einem anderen Buffer `:UI slots <n>`: öffnet **genau diese** Datei. _(auto 2026-10-29: ui.nvim/TESTS/slots_kinds_spec.lua + slots_preview_spec.lua grün)_
 
 **O3.3 Tasten** (mit der `keys`-Zeile aus der Vorbereitung)
 
-- [ ] `<leader>1` bis `<leader>9` führen Slot 1 bis 9 aus; `<leader>sa` fügt die aktuelle Datei hinzu.
+- [x] `<leader>1` bis `<leader>9` führen Slot 1 bis 9 aus; `<leader>sa` fügt die aktuelle Datei hinzu. _(auto 2026-10-29: ui.nvim/TESTS/slots_api_spec.lua grün)_
 - [ ] `12<leader>S` führt Slot 12 aus; `<leader>S` ohne Zahl: Hinweis "give the slot number as a count".
-- [ ] Ohne `keys`: `:nmap <leader>1` zeigt **keine** Slot-Belegung (nichts wird ungefragt gemappt).
-- [ ] `:lua require("ui.slots").disable()`: die Belegungen sind weg, `:autocmd ui_slots` zeigt nichts; `enable()` bringt sie zurück, nicht doppelt.
-- [ ] Leader ändern (`:let mapleader=","`), dann `disable()`: `maparg("\\1","n")` ist leer (nichts bleibt hängen).
+- [x] Ohne `keys`: `:nmap <leader>1` zeigt **keine** Slot-Belegung (nichts wird ungefragt gemappt). _(auto 2026-10-29: ui.nvim/TESTS/slots_api_spec.lua grün)_
+- [x] `:lua require("ui.slots").disable()`: die Belegungen sind weg, `:autocmd ui_slots` zeigt nichts; `enable()` bringt sie zurück, nicht doppelt. _(auto 2026-10-29: ui.nvim/TESTS/slots_api_spec.lua grün)_
+- [x] Leader ändern (`:let mapleader=","`), dann `disable()`: `maparg("\\1","n")` ist leer (nichts bleibt hängen). _(auto 2026-10-29: ui.nvim/TESTS/slots_api_spec.lua grün)_
 
 **O3.4 URL (wichtig auf Windows)**
 
 - [ ] `:lua require("ui.slots").add({kind="url", url="https://neovim.io/doc/?a=1&b=2"})`, `:UI slots <n>`: der Browser öffnet die **vollständige** Adresse (`&b=2` kommt an). **Das ist der Praxistest für `rundll32`**, den ich nicht ausführen konnte.
 - [ ] Adresse mit Umlaut (`https://example.org/café`): öffnet korrekt.
-- [ ] `:lua print(pcall(require("ui.slots").add, {kind="url", url="javascript:alert(1)"}))` bzw. `add` meldet "scheme 'javascript' is not opened"; ebenso `ssh://…`, eine Adresse ohne Schema.
+- [ ] `:lua print(pcall(require("ui.slots").add, {kind="url", url="javascript:alert(1)"}))` bzw. `add` meldet "scheme 'javascript' is not opened"; ebenso `ssh://…`, eine Adresse ohne Schema. _(auto 2026-10-29: ui.nvim/TESTS/slots_kinds_spec.lua grün; nur teilweise: Meldungstext ungeprüft)_
 - [ ] `{ kind="url", url="{clip}" }` mit einer https-Adresse im Clipboard öffnet sie; mit `javascript:…` im Clipboard Meldung statt Start.
 - [ ] `?q={clip}` mit dem Text `a&b c` in der Zwischenablage (`{word}` kann kein `&` enthalten, `<cword>` hört dort auf): im Browser steht `a%26b%20c`.
 
 **O3.5 `cmd`, `lua`, `mark`** (nur per Lua; die Dateien dürfen sie nie enthalten)
 
-- [ ] `cmd`: `:lua require("ui.slots").add({kind="cmd", cmd="echo", args="'hi' '{word}'"})` — Ausführen zeigt die Ausgabe. Unbekannter Befehl: "no such command".
-- [ ] `cmd` verweigert Gefährliches: Text `a|b` in der Zwischenablage, Slot `args="{clip}"` → "refused, the value of {clip} has a | or a backtick" (`{word}` kann das nicht enthalten); ebenso Backtick, und `{clip}` mit führendem `+`/`!`. Mit `raw_values = true` geht es durch (nur für Befehle mit `<q-args>`).
-- [ ] `lua`: `add({kind="lua", fn=function(ctx) vim.notify("n="..ctx.n.." word="..ctx.word) end})`. Ein `error(...)` in der Funktion: Meldung, Neovim läuft weiter. Ein String als `fn`: abgelehnt.
-- [ ] `mark` (nur mit sessions.nvim): `add({kind="mark", index=1})`, Ausführen öffnet Mark 1. Index über das Ende: "no mark at …". Ohne sessions.nvim: "sessions.nvim is not installed".
-- [ ] Lua-/cmd-Slots überleben einen Projektwechsel (`:cd` in ein anderes Projekt und zurück) in derselben Sitzung.
+- [x] `cmd`: `:lua require("ui.slots").add({kind="cmd", cmd="echo", args="'hi' '{word}'"})` — Ausführen zeigt die Ausgabe. Unbekannter Befehl: "no such command". _(auto 2026-10-29: ui.nvim/TESTS/slots_actions_spec.lua grün)_
+- [x] `cmd` verweigert Gefährliches: Text `a|b` in der Zwischenablage, Slot `args="{clip}"` → "refused, the value of {clip} has a | or a backtick" (`{word}` kann das nicht enthalten); ebenso Backtick, und `{clip}` mit führendem `+`/`!`. Mit `raw_values = true` geht es durch (nur für Befehle mit `<q-args>`). _(auto 2026-10-29: ui.nvim/TESTS/slots_actions_spec.lua grün)_
+- [x] `lua`: `add({kind="lua", fn=function(ctx) vim.notify("n="..ctx.n.." word="..ctx.word) end})`. Ein `error(...)` in der Funktion: Meldung, Neovim läuft weiter. Ein String als `fn`: abgelehnt. _(auto 2026-10-29: ui.nvim/TESTS/slots_actions_spec.lua grün)_
+- [x] `mark` (nur mit sessions.nvim): `add({kind="mark", index=1})`, Ausführen öffnet Mark 1. Index über das Ende: "no mark at …". Ohne sessions.nvim: "sessions.nvim is not installed". _(auto 2026-10-29: ui.nvim/TESTS/slots_actions_spec.lua grün)_
+- [x] Lua-/cmd-Slots überleben einen Projektwechsel (`:cd` in ein anderes Projekt und zurück) in derselben Sitzung. _(auto 2026-10-29: ui.nvim/TESTS/slots_actions_spec.lua grün)_
 
 **O3.6 Speicherung und Projekte**
 
-- [ ] Slots anlegen, Neovim beenden, neu starten: sie sind da. `:cd` in ein anderes Projekt: **andere** Liste (leer), `:cd` zurück: die ersten wieder da.
-- [ ] `:cd` innerhalb desselben Projekts (Unterordner): die Liste bleibt, es wird nicht neu geladen.
-- [ ] Die JSON-Datei ansehen (`stdpath("data")/ui/slots/`): enthält **keinen** cmd-/lua-Slot, auch wenn welche aktiv sind.
-- [ ] Die JSON-Datei von Hand um einen Eintrag `{"n":9,"kind":"cmd","cmd":"echo","args":"x"}` ergänzen, Neovim neu starten: der Eintrag wird **nicht** geladen, einmal gemeldet ("may not hold"), nichts läuft.
-- [ ] Eine fremde Datei an den Datenpfad legen (kein `ui.slots`-Format): Meldung "not a ui.slots data file", die Datei bleibt **unverändert**, Slots arbeiten weiter im Speicher.
+- [x] Slots anlegen, Neovim beenden, neu starten: sie sind da. `:cd` in ein anderes Projekt: **andere** Liste (leer), `:cd` zurück: die ersten wieder da. _(auto 2026-10-29: ui.nvim/TESTS/slots_store_spec.lua + slots_api_spec.lua grün)_
+- [x] `:cd` innerhalb desselben Projekts (Unterordner): die Liste bleibt, es wird nicht neu geladen. _(auto 2026-10-29: ui.nvim/TESTS/slots_api_spec.lua grün)_
+- [x] Die JSON-Datei ansehen (`stdpath("data")/ui/slots/`): enthält **keinen** cmd-/lua-Slot, auch wenn welche aktiv sind. _(auto 2026-10-29: ui.nvim/TESTS/slots_store_spec.lua + slots_actions_spec.lua grün)_
+- [x] Die JSON-Datei von Hand um einen Eintrag `{"n":9,"kind":"cmd","cmd":"echo","args":"x"}` ergänzen, Neovim neu starten: der Eintrag wird **nicht** geladen, einmal gemeldet ("may not hold"), nichts läuft. _(auto 2026-10-29: ui.nvim/TESTS/slots_store_spec.lua + slots_actions_spec.lua grün)_
+- [ ] Eine fremde Datei an den Datenpfad legen (kein `ui.slots`-Format): Meldung "not a ui.slots data file", die Datei bleibt **unverändert**, Slots arbeiten weiter im Speicher. _(auto 2026-10-29: ui.nvim/TESTS/slots_store_spec.lua grün; nur teilweise: Meldungstext ungeprüft)_
 
 **O3.7 Vervollständigung**
 
-- [ ] `:UI slots <Tab>`: Unterbefehle **und** die vorhandenen Slot-Nummern, auch in einer frischen Sitzung (vor dem ersten Slot-Befehl).
-- [ ] `:UI slots clear <Tab>` bietet `all` und die Nummern; `:UI slots move <Tab>` die Nummern; `:UI slots clear all <Tab>` nichts.
-- [ ] `:UI help` zeigt die `:UI slots …`-Zeilen.
+- [x] `:UI slots <Tab>`: Unterbefehle **und** die vorhandenen Slot-Nummern, auch in einer frischen Sitzung (vor dem ersten Slot-Befehl). _(auto 2026-10-29: ui.nvim/TESTS/slots_api_spec.lua grün)_
+- [x] `:UI slots clear <Tab>` bietet `all` und die Nummern; `:UI slots move <Tab>` die Nummern; `:UI slots clear all <Tab>` nichts. _(auto 2026-10-29: ui.nvim/TESTS/slots_api_spec.lua grün)_
+- [x] `:UI help` zeigt die `:UI slots …`-Zeilen. _(auto 2026-10-29: ui.nvim/TESTS/slots_api_spec.lua grün)_
 
 **O3.8 Feste Slots aus der Config**
 
-- [ ] `require("ui").setup({ slots = { enabled = true, slots = { [3] = { kind="file", path="~/notes.md" }, [5] = { kind="cmd", cmd="Lazy" } } } })`: `:UI slots` zeigt 3 und 5 als `fixed`; `:UI slots clear 3` und `move 3 1` werden verweigert; `add` überspringt 3 und 5.
-- [ ] Ein ungültiger Wert in der Config (`layout = "tower"`, `persits = true`): Meldung beim Start mit dem Namen, Standardwert wird verwendet, Neovim startet normal.
+- [x] `require("ui").setup({ slots = { enabled = true, slots = { [3] = { kind="file", path="~/notes.md" }, [5] = { kind="cmd", cmd="Lazy" } } } })`: `:UI slots` zeigt 3 und 5 als `fixed`; `:UI slots clear 3` und `move 3 1` werden verweigert; `add` überspringt 3 und 5. _(auto 2026-10-29: ui.nvim/TESTS/slots_store_spec.lua + slots_api_spec.lua grün)_
+- [x] Ein ungültiger Wert in der Config (`layout = "tower"`, `persits = true`): Meldung beim Start mit dem Namen, Standardwert wird verwendet, Neovim startet normal. _(auto 2026-10-29: ui.nvim/TESTS/slots_api_spec.lua + slots_config_spec.lua grün)_
 
 **O3.9 Chip-Leiste** (am besten mit mindestens 6 Slots und einem zweiten Fenster)
 
 - [ ] `:UI slots toggle`: am rechten Rand erscheint ein Chip je Slot, abgerundet (`╭─╮`), mit Nummer, Icon und Label; der aktuelle Datei-Slot ist mit `•` markiert, eine Datei mit ungespeicherten Änderungen mit `+`, eine fehlende Datei mit `✗`.
-- [ ] Nochmal `:UI slots toggle`: die Leiste ist weg, nichts bleibt am Bildschirm hängen. `:UI slots open` und `close` gehen ebenso.
+- [x] Nochmal `:UI slots toggle`: die Leiste ist weg, nichts bleibt am Bildschirm hängen. `:UI slots open` und `close` gehen ebenso. _(auto 2026-10-29: ui.nvim/TESTS/slots_bar_spec.lua grün)_
 - [ ] **Linksklick** auf einen Chip (auch auf dessen Rahmenzeile) führt den Slot aus. Der Cursor im Code **unter** der Leiste bewegt sich dabei nicht, und der Fokus bleibt im Editorfenster.
 - [ ] **Rechtsklick** auf einen Chip: ein kleines Menü "slot N" mit Apply, Edit, Copy, Clear (bei Dateien zusätzlich *Open in split / vsplit / tab*). Es öffnet sich **nur dieses**, nicht zusätzlich Neovims eigenes Menü und nicht das `ui.menu` des Editors.
 - [ ] Rechtsklick im Code (nicht auf der Leiste) öffnet weiter das allgemeine Menü.
 - [ ] Ein schneller **zweiter Klick** auf denselben Chip (Doppelklick) führt den Slot ein zweites Mal aus.
 - [ ] Ziehen mit gedrückter Taste, **beginnend auf der Leiste**: keine Auswahl im Code, nichts passiert. Eine Auswahl, die im Code beginnt, funktioniert wie immer.
-- [ ] `<C-w>w` und `:windo` laufen **nie** in die Leiste (sie ist kein Fenster, das man betritt).
+- [x] `<C-w>w` und `:windo` laufen **nie** in die Leiste (sie ist kein Fenster, das man betritt). _(auto 2026-10-29: ui.nvim/TESTS/slots_bar_spec.lua + slots_bar_ui_spec.lua grün)_
 - [ ] Mehr Slots als Zeilen (`:lua for i=1,30 do require("ui.slots").add({kind="yank",text="t"..i}) end`): die Leiste zeigt so viele wie passen, unten `▼ +n`; **Mausrad** über der Leiste scrollt um einen Slot (oben fällt einer weg, unten kommt der nächste dazu), dann erscheint `▲ +n`; ein Klick auf eine Zählerzeile scrollt ebenfalls um einen. Das Rad im Code scrollt den Code, nicht die Leiste.
-- [ ] Die Leiste hält den **zuletzt ausgeführten Slot** und den **Slot der aktuellen Datei** im Bild: `:UI slots 25` bringt Slot 25 in die Leiste; das Wechseln auf die Datei von Slot 3 scrollt zu ihm zurück.
-- [ ] Ein **neuer** Slot (`:UI slots add`) erscheint sofort und ist sichtbar.
-- [ ] Fenster verkleinern/vergrößern, `:set cmdheight=3`, `:set showtabline=2`: die Leiste passt Höhe und Position an (kein Überdecken von Statusline/Cmdline, ab 2 Tabs unter der Tabline).
-- [ ] Neuer Tab (`:tabnew`) und zurück: die Leiste ist in jedem Tab da, nie doppelt. `:only` und `<C-w>o`: sie kommt mit der nächsten Änderung wieder.
+- [x] Die Leiste hält den **zuletzt ausgeführten Slot** und den **Slot der aktuellen Datei** im Bild: `:UI slots 25` bringt Slot 25 in die Leiste; das Wechseln auf die Datei von Slot 3 scrollt zu ihm zurück. _(auto 2026-10-29: ui.nvim/TESTS/slots_bar_spec.lua grün)_
+- [x] Ein **neuer** Slot (`:UI slots add`) erscheint sofort und ist sichtbar. _(auto 2026-10-29: ui.nvim/TESTS/slots_bar_spec.lua grün)_
+- [x] Fenster verkleinern/vergrößern, `:set cmdheight=3`, `:set showtabline=2`: die Leiste passt Höhe und Position an (kein Überdecken von Statusline/Cmdline, ab 2 Tabs unter der Tabline). _(auto 2026-10-29: ui.nvim/TESTS/slots_bar_spec.lua grün)_
+- [x] Neuer Tab (`:tabnew`) und zurück: die Leiste ist in jedem Tab da, nie doppelt. `:only` und `<C-w>o`: sie kommt mit der nächsten Änderung wieder. _(auto 2026-10-29: ui.nvim/TESTS/slots_bar_spec.lua grün)_
 - [ ] Stile: `require("ui.slots").setup({ style = "double" })` bzw. `"ascii"`, `"solid"` (gefüllte Blöcke), `"minimal"` (nur Text); ein einzelner Slot mit `style = "minimal"` zwischen runden Chips; `side = "left"`. Ein unbekannter Stil meldet einmal und nimmt `rounded`.
 - [ ] Farbschema wechseln (`:colorscheme …`): die Chips behalten lesbare Farben, auch im `solid`-Stil.
-- [ ] Ein sehr langer Slot-Name wird mit `…` gekürzt; ein Label mit Zeilenumbruch/Tab (`:lua require("ui.slots").add({kind="yank",text="x",label="a\nb"})`) macht keinen Fehler.
-- [ ] `show = true` in der Config: die Leiste ist nach dem Start da; `:lua require("ui.slots").disable()` entfernt sie und die Tasten.
+- [x] Ein sehr langer Slot-Name wird mit `…` gekürzt; ein Label mit Zeilenumbruch/Tab (`:lua require("ui.slots").add({kind="yank",text="x",label="a\nb"})`) macht keinen Fehler. _(auto 2026-10-29: ui.nvim/TESTS/slots_bar_spec.lua grün)_
+- [x] `show = true` in der Config: die Leiste ist nach dem Start da; `:lua require("ui.slots").disable()` entfernt sie und die Tasten. _(auto 2026-10-29: ui.nvim/TESTS/slots_bar_spec.lua grün)_
 - [ ] Kit-Menüs und andere Floats (Toasts, Auswahllisten) liegen **über** der Leiste, nicht darunter; ein Klick auf ein Menü, das über der Leiste liegt, trifft das Menü. Die Leiste lässt Tabline und Statusline frei.
 
 **O3.10 Panel** (`:UI slots panel`, am besten mit 6 und mehr Slots, einer davon eine Datei)
 
-- [ ] Das Panel öffnet sich am Rand (ein Viertel der Breite), **hat den Fokus**, zeigt eine Zeile je Slot (`Nr Icon Label`), der Cursor steht auf dem Slot der Datei, in der du bist (`•`), sonst auf dem zuletzt ausgeführten, sonst auf dem ersten.
+- [x] Das Panel öffnet sich am Rand (ein Viertel der Breite), **hat den Fokus**, zeigt eine Zeile je Slot (`Nr Icon Label`), der Cursor steht auf dem Slot der Datei, in der du bist (`•`), sonst auf dem zuletzt ausgeführten, sonst auf dem ersten. _(auto 2026-10-29: ui.nvim/TESTS/slots_panel_spec.lua + slots_panel_ui_spec.lua grün)_
 - [ ] `j`/`k`/`gg`/`G` bewegen; mit über 40 Slots scrollt das Fenster mit dem Cursor wie jedes andere.
 - [ ] `<CR>` führt den Slot aus **und schließt das Panel**; der Fokus ist danach im Editorfenster. Doppelklick auf eine Zeile ebenso.
-- [ ] **Nummer tippen:** `3` springt auf Slot 3; bei über 10 Slots `1` dann `2` auf Slot 12; eine Ziffer ohne Slot meldet "slot N is empty"; nach `j` oder einer anderen Bewegung beginnt die Nummer neu.
-- [ ] `dd` leert den Slot, die Liste schrumpft, der Cursor bleibt sinnvoll. Auf einem **festen** Slot (aus `setup`): Meldung, nichts passiert.
-- [ ] `y` kopiert, wofür der Slot steht (Pfad, Adresse, Text).
+- [x] **Nummer tippen:** `3` springt auf Slot 3; bei über 10 Slots `1` dann `2` auf Slot 12; eine Ziffer ohne Slot meldet "slot N is empty"; nach `j` oder einer anderen Bewegung beginnt die Nummer neu. _(auto 2026-10-29: ui.nvim/TESTS/slots_panel_spec.lua grün)_
+- [x] `dd` leert den Slot, die Liste schrumpft, der Cursor bleibt sinnvoll. Auf einem **festen** Slot (aus `setup`): Meldung, nichts passiert. _(auto 2026-10-29: ui.nvim/TESTS/slots_panel_spec.lua grün)_
+- [x] `y` kopiert, wofür der Slot steht (Pfad, Adresse, Text). _(auto 2026-10-29: ui.nvim/TESTS/slots_panel_spec.lua grün)_
 - [ ] `<C-j>` / `<C-k>` verschieben den Slot nach unten/oben, **der Cursor wandert mit**; am Anfang/Ende passiert nichts; ein fester Slot wird nicht verschoben.
-- [ ] `a` öffnet den Editor (siehe O3.11) mit der Datei, aus der du kamst, als Vorgabe für den Pfad; nach Speichern oder `<Esc>` ist das Panel **wieder da**, der Cursor auf dem neuen Slot.
-- [ ] `e` bearbeitet den Slot unter dem Cursor (siehe O3.11); `e` auf einem festen oder einem `cmd`/`lua`-Slot meldet den Grund.
+- [x] `a` öffnet den Editor (siehe O3.11) mit der Datei, aus der du kamst, als Vorgabe für den Pfad; nach Speichern oder `<Esc>` ist das Panel **wieder da**, der Cursor auf dem neuen Slot. _(auto 2026-10-29: ui.nvim/TESTS/slots_panel_spec.lua + slots_panel_ui_spec.lua grün)_
+- [x] `e` bearbeitet den Slot unter dem Cursor (siehe O3.11); `e` auf einem festen oder einem `cmd`/`lua`-Slot meldet den Grund. _(auto 2026-10-29: ui.nvim/TESTS/slots_panel_spec.lua grün)_
 - [ ] **Rechtsklick** auf eine Zeile: ein Menü des Slots mit Anwenden, Bearbeiten, Kopieren, bei Dateien *Öffnen in einem Split / VSplit / neuen Tab*, Leeren. **Nicht** Neovims eigenes Menü.
-- [ ] Anwenden und *Öffnen in …* aus dem Menü: der Slot läuft, **das Panel bleibt zu**. Bearbeiten öffnet das Formular, das Panel kommt erst zurück, wenn es zu ist. Kopieren/Leeren: das Panel ist gleich wieder da. `<Esc>` im Menü: das Panel ist wieder da.
+- [x] Anwenden und *Öffnen in …* aus dem Menü: der Slot läuft, **das Panel bleibt zu**. Bearbeiten öffnet das Formular, das Panel kommt erst zurück, wenn es zu ist. Kopieren/Leeren: das Panel ist gleich wieder da. `<Esc>` im Menü: das Panel ist wieder da. _(auto 2026-10-29: ui.nvim/TESTS/slots_panel_spec.lua grün)_
 - [ ] Rechtsklick **außerhalb** des Panels schließt es (wie ein Linksklick).
-- [ ] Das Panel schließt, sobald der Fokus es verlässt (Klick in den Code, `<C-w>w`); `q` und `<Esc>` schließen.
+- [x] Das Panel schließt, sobald der Fokus es verlässt (Klick in den Code, `<C-w>w`); `q` und `<Esc>` schließen. _(auto 2026-10-29: ui.nvim/TESTS/slots_panel_spec.lua + slots_panel_ui_spec.lua grün)_
 - [ ] Rechtsklick auf die **Leiste** (O3.9) zeigt dasselbe Menü wie im Panel.
-- [ ] `layout = "panel"`: `:UI slots toggle|open|close` öffnen/schließen das Panel statt der Leiste. `keys = { panel = "<leader>sp" }` öffnet es.
-- [ ] Ohne Slots steht im Panel "no slots yet -- press a to add one".
+- [x] `layout = "panel"`: `:UI slots toggle|open|close` öffnen/schließen das Panel statt der Leiste. `keys = { panel = "<leader>sp" }` öffnet es. _(auto 2026-10-29: ui.nvim/TESTS/slots_panel_spec.lua grün)_
+- [x] Ohne Slots steht im Panel "no slots yet -- press a to add one". _(auto 2026-10-29: ui.nvim/TESTS/slots_panel_spec.lua grün)_
 
 **O3.11 Editor** (`:UI slots edit`, im Panel `a`/`e`)
 
-- [ ] `:UI slots edit` fragt zuerst nach der **Art** (file, url, yank, mark; **kein** cmd/lua), dann öffnet ein Formular mit den Feldern der Art plus *Label*, *Icon*, *Style*, *Number*.
+- [x] `:UI slots edit` fragt zuerst nach der **Art** (file, url, yank, mark; **kein** cmd/lua), dann öffnet ein Formular mit den Feldern der Art plus *Label*, *Icon*, *Style*, *Number*. _(auto 2026-10-29: ui.nvim/TESTS/slots_panel_spec.lua grün)_
 - [ ] **file:** *Path* (mit Dateivervollständigung, `~` bleibt `~`), *Open in* (current, split, vsplit, tab). **url:** *Address*; `javascript:alert(1)` wird **im Feld** abgelehnt. **yank:** *Text*, optional *Register*. **mark:** *Mark number* (positive ganze Zahl).
-- [ ] *Number* steht auf der nächsten freien Nummer; eine belegte Nummer wird im Feld abgelehnt ("slot N is taken"), die eigene beim Bearbeiten nicht; 0, 1.5, abc ebenso.
-- [ ] Speichern legt den Slot an; er erscheint sofort in Leiste und Panel. Ein langer Text über dem Limit wird im Feld abgelehnt (max. 4096 Bytes).
-- [ ] **Bearbeiten (`:UI slots edit 3`):** die Felder sind mit den Werten des Slots gefüllt; nach dem Speichern gilt die Änderung; eine andere *Number* **verschiebt** den Slot.
-- [ ] Eine bearbeitete Datei-Slot behält ihre gemerkte Cursorposition, solange der Pfad derselbe bleibt; ändert sich der Pfad, ist sie weg.
-- [ ] Ein Yank-Text mit Zeilenumbrüchen bleibt unverändert, wenn du nur das Label änderst (das Formular zeigt eine Zeile, das Speichern lässt den Original-Text in Ruhe).
-- [ ] Lehnt das Speichern etwas ab, **kommt das Formular mit deinen Eingaben zurück** und nennt den Grund.
-- [ ] `<Esc>` bricht ab; nichts wird gespeichert; kommst du aus dem Panel, ist es wieder da.
-- [ ] `:UI slots edit abc` meldet "not a slot number"; `:UI slots edit 99` (leer) meldet "slot 99 is empty".
+- [x] *Number* steht auf der nächsten freien Nummer; eine belegte Nummer wird im Feld abgelehnt ("slot N is taken"), die eigene beim Bearbeiten nicht; 0, 1.5, abc ebenso. _(auto 2026-10-29: ui.nvim/TESTS/slots_panel_spec.lua grün)_
+- [x] Speichern legt den Slot an; er erscheint sofort in Leiste und Panel. Ein langer Text über dem Limit wird im Feld abgelehnt (max. 4096 Bytes). _(auto 2026-10-29: ui.nvim/TESTS/slots_panel_spec.lua grün)_
+- [x] **Bearbeiten (`:UI slots edit 3`):** die Felder sind mit den Werten des Slots gefüllt; nach dem Speichern gilt die Änderung; eine andere *Number* **verschiebt** den Slot. _(auto 2026-10-29: ui.nvim/TESTS/slots_panel_spec.lua grün)_
+- [x] Eine bearbeitete Datei-Slot behält ihre gemerkte Cursorposition, solange der Pfad derselbe bleibt; ändert sich der Pfad, ist sie weg. _(auto 2026-10-29: ui.nvim/TESTS/slots_panel_spec.lua grün)_
+- [x] Ein Yank-Text mit Zeilenumbrüchen bleibt unverändert, wenn du nur das Label änderst (das Formular zeigt eine Zeile, das Speichern lässt den Original-Text in Ruhe). _(auto 2026-10-29: ui.nvim/TESTS/slots_panel_spec.lua grün)_
+- [x] Lehnt das Speichern etwas ab, **kommt das Formular mit deinen Eingaben zurück** und nennt den Grund. _(auto 2026-10-29: ui.nvim/TESTS/slots_panel_spec.lua grün)_
+- [x] `<Esc>` bricht ab; nichts wird gespeichert; kommst du aus dem Panel, ist es wieder da. _(auto 2026-10-29: ui.nvim/TESTS/slots_panel_spec.lua + slots_panel_ui_spec.lua grün)_
+- [x] `:UI slots edit abc` meldet "not a slot number"; `:UI slots edit 99` (leer) meldet "slot 99 is empty". _(auto 2026-10-29: ui.nvim/TESTS/slots_panel_spec.lua grün)_
 
 **O3.14 Lange Liste** (nur wenn du Lust auf einen Belastungstest hast: `for i = 1, 3000 do require("ui.slots").add({ kind = "file", path = "/tmp/gone/f" .. i .. ".txt" }) end`)
 
@@ -2433,25 +2433,25 @@ zusätzlich in einer Testkonfiguration oder per `:lua`:
 
 **O3.12 Dateivorschau** (im Panel `K`; Standard `preview.mode = "key"`, `"auto"` folgt dem Cursor, `"off"` schaltet ab)
 
-- [ ] `K` im Panel öffnet neben dem Panel ein Fenster "preview" mit dem Inhalt der Datei unter dem Cursor; nochmal `K` schließt es. Das Fenster nimmt keinen Fokus und lässt sich nicht ändern.
-- [ ] Mit `j`/`k` folgt die Vorschau dem Cursor (kurze Verzögerung, `preview.delay`); wer die Taste gedrückt hält, löst nicht pro Zeile einen Dateizugriff aus.
-- [ ] Eine Lua-/Markdown-Datei ist hervorgehoben; die Vorschau steht an der Stelle, an der du die Datei zuletzt verlassen hast (oder an `line` des Slots).
-- [ ] Ein Slot mit `{dir}/TODO.md` oder `{file}` zeigt die Datei **des Fensters, aus dem du kamst**, nicht die des Panels.
-- [ ] Eine Verzeichnis-Slot zeigt die Einträge; eine fehlende Datei meldet "file does not exist"; Binärdateien zeigen `^@` statt NUL; sehr große Dateien enden mit "… cut here (limit 1536 KB, 4000 lines)", eine riesige Ein-Zeilen-Datei zeigt ihren Anfang.
-- [ ] Yank-, `cmd`- und `lua`-Slots zeigen eine Notiz "(no preview for a '…' slot)" (oder ihren Text), nie den Inhalt des Slots davor.
-- [ ] Ist neben dem Panel zu wenig Platz (schmales Fenster, breites Panel), meldet `K` "no room beside the panel for a preview" und bleibt aus.
-- [ ] Das Fenster verschwindet mit dem Panel, auch bei `:close` im Panel oder `q`; öffnest du aus dem Panel den Editor (`a`/`e`) und kehrst zurück, ist die Vorschau wieder da, wenn sie an war.
-- [ ] `preview = { mode = "off" }`: `K` meldet "the preview is switched off".
+- [x] `K` im Panel öffnet neben dem Panel ein Fenster "preview" mit dem Inhalt der Datei unter dem Cursor; nochmal `K` schließt es. Das Fenster nimmt keinen Fokus und lässt sich nicht ändern. _(auto 2026-10-29: ui.nvim/TESTS/slots_preview_spec.lua + slots_panel_ui_spec.lua grün)_
+- [x] Mit `j`/`k` folgt die Vorschau dem Cursor (kurze Verzögerung, `preview.delay`); wer die Taste gedrückt hält, löst nicht pro Zeile einen Dateizugriff aus. _(auto 2026-10-29: ui.nvim/TESTS/slots_preview_spec.lua grün)_
+- [x] Eine Lua-/Markdown-Datei ist hervorgehoben; die Vorschau steht an der Stelle, an der du die Datei zuletzt verlassen hast (oder an `line` des Slots). _(auto 2026-10-29: ui.nvim/TESTS/slots_preview_spec.lua grün)_
+- [x] Ein Slot mit `{dir}/TODO.md` oder `{file}` zeigt die Datei **des Fensters, aus dem du kamst**, nicht die des Panels. _(auto 2026-10-29: ui.nvim/TESTS/slots_preview_spec.lua grün)_
+- [x] Eine Verzeichnis-Slot zeigt die Einträge; eine fehlende Datei meldet "file does not exist"; Binärdateien zeigen `^@` statt NUL; sehr große Dateien enden mit "… cut here (limit 1536 KB, 4000 lines)", eine riesige Ein-Zeilen-Datei zeigt ihren Anfang. _(auto 2026-10-29: ui.nvim/TESTS/slots_preview_spec.lua grün)_
+- [x] Yank-, `cmd`- und `lua`-Slots zeigen eine Notiz "(no preview for a '…' slot)" (oder ihren Text), nie den Inhalt des Slots davor. _(auto 2026-10-29: ui.nvim/TESTS/slots_preview_spec.lua grün)_
+- [ ] Ist neben dem Panel zu wenig Platz (schmales Fenster, breites Panel), meldet `K` "no room beside the panel for a preview" und bleibt aus. _(auto 2026-10-29: ui.nvim/TESTS/slots_preview_spec.lua grün; nur teilweise: Meldungstext ungeprüft)_
+- [x] Das Fenster verschwindet mit dem Panel, auch bei `:close` im Panel oder `q`; öffnest du aus dem Panel den Editor (`a`/`e`) und kehrst zurück, ist die Vorschau wieder da, wenn sie an war. _(auto 2026-10-29: ui.nvim/TESTS/slots_preview_spec.lua grün)_
+- [x] `preview = { mode = "off" }`: `K` meldet "the preview is switched off". _(auto 2026-10-29: ui.nvim/TESTS/slots_preview_spec.lua grün)_
 
 **O3.13 URL-Vorschau** (im Panel `K` auf einem `url`-Slot; braucht hover.nvim, sonst nur Adresse und Host)
 
 - [ ] Mit `preview = { fetch = true }` zeigt `K` auf einem `https://`-Slot sofort die Adresse und "loading ...", kurz danach die Seite so, wie hover.nvim sie zeigt (Status, Titel, Text). Ohne die Option (Standard) bleibt es bei Adresse und Host und es geht kein Request raus.
-- [ ] Schnell mit `j`/`k` über mehrere URL-Slots: am Ende steht nur die Seite des Slots unter dem Cursor, nie die eines vorherigen.
+- [x] Schnell mit `j`/`k` über mehrere URL-Slots: am Ende steht nur die Seite des Slots unter dem Cursor, nie die eines vorherigen. _(auto 2026-10-29: ui.nvim/TESTS/slots_preview_spec.lua grün)_
 - [ ] Eine nicht erreichbare Adresse zeigt den Fehler als Text ("no answer"), keine Meldung, kein Fehler im Panel.
-- [ ] `file:`- und `mailto:`-Slots zeigen nur Adresse und Host; es geht kein Request raus.
-- [ ] Mit `h`/`l` innerhalb der Zeile bleibt die Seite stehen, sie wird weder abgebrochen noch neu geladen.
-- [ ] Ohne hover.nvim (z. B. `package.loaded.hover = nil` und aus dem Pfad nehmen): Adresse und Host, keine Fehlermeldung.
-- [ ] Die Leiste und ein bloß geöffnetes Panel lösen **keine** Anfrage aus; nur `K` (oder `preview.mode = "auto"`).
+- [x] `file:`- und `mailto:`-Slots zeigen nur Adresse und Host; es geht kein Request raus. _(auto 2026-10-29: ui.nvim/TESTS/slots_preview_spec.lua grün)_
+- [x] Mit `h`/`l` innerhalb der Zeile bleibt die Seite stehen, sie wird weder abgebrochen noch neu geladen. _(auto 2026-10-29: ui.nvim/TESTS/slots_preview_spec.lua grün)_
+- [x] Ohne hover.nvim (z. B. `package.loaded.hover = nil` und aus dem Pfad nehmen): Adresse und Host, keine Fehlermeldung. _(auto 2026-10-29: ui.nvim/TESTS/slots_preview_spec.lua grün)_
+- [x] Die Leiste und ein bloß geöffnetes Panel lösen **keine** Anfrage aus; nur `K` (oder `preview.mode = "auto"`). _(auto 2026-10-29: ui.nvim/TESTS/slots_preview_spec.lua grün)_
 
 ---
 
@@ -2459,8 +2459,8 @@ zusätzlich in einer Testkonfiguration oder per `:lua`:
 
 - [ ] `:UI` ohne Argument und `:UI help`: wie vorher, plus der `slots`-Block.
 - [ ] `:UI <Tab>` listet `slots` neben den anderen Unterbefehlen; `:UI zen <Tab>`, `:UI notify <Tab>` unverändert.
-- [ ] `ui.setup({ all = true })` schaltet die Slots **nicht** ein (explizit-only, wie `notify`).
-- [ ] `require("ui.slots")` allein erzeugt weder Befehl noch Taste noch Autocmd (`:autocmd ui_slots` leer).
+- [x] `ui.setup({ all = true })` schaltet die Slots **nicht** ein (explizit-only, wie `notify`). _(auto 2026-10-29: ui.nvim/TESTS/slots_api_spec.lua grün)_
+- [x] `require("ui.slots")` allein erzeugt weder Befehl noch Taste noch Autocmd (`:autocmd ui_slots` leer). _(auto 2026-10-29: ui.nvim/TESTS/slots_api_spec.lua grün)_
 - [ ] Die vorhandenen Tabline-/Statusline-/Kit-Funktionen verhalten sich unverändert (ui.nvim ändert dort nichts).
 - [ ] **`ui.menu` (Rechtsklick-Menü):** ändert sich nur dadurch, dass es nicht aufgeht, wenn der Zeiger auf der Slot-Leiste steht; im Code und auf Tabline/Statusline wie vorher. Ohne geladene Leiste kostet die Prüfung nichts.
 

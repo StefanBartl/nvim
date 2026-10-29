@@ -162,10 +162,10 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 - [ ] `<C-S-k>` -- Move up by screen line (through wrapped text)
 - [ ] `<C-a>` -- [General] Select all
 - [ ] `<C-c>` -- [General] Copy whole file
-- [ ] `<C-h>` -- [Text] Left
-- [ ] `<C-j>` -- [Text] Down
-- [ ] `<C-k>` -- [Text] Up
-- [ ] `<C-l>` -- [Text] Right
+- [x] `<C-h>` -- [Text] Left _(auto 2026-10-29: nvim/TESTS/bindings/insert_moves_spec.lua grün)_
+- [x] `<C-j>` -- [Text] Down _(auto 2026-10-29: nvim/TESTS/bindings/insert_moves_spec.lua grün)_
+- [x] `<C-k>` -- [Text] Up _(auto 2026-10-29: nvim/TESTS/bindings/insert_moves_spec.lua grün)_
+- [x] `<C-l>` -- [Text] Right _(auto 2026-10-29: nvim/TESTS/bindings/insert_moves_spec.lua grün)_
 - [ ] `<C-r>` -- Redo (branch-aware)
 - [ ] `<C-s>` -- [General] Save file
 - [ ] `<CR>` -- Insert blank line
@@ -246,22 +246,22 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 - [ ] `<C-y>` -- cascade: increment / cycle word
 - [ ] `<C-x>` -- cascade: decrement / cycle word
 - [ ] `-` -- cascade: decrement / cycle word
-- [ ] `<A-Left>` -- cascade: dedent (Ncount = N lines, +renumber)
+- [x] `<A-Left>` -- cascade: dedent (Ncount = N lines, +renumber) _(auto 2026-10-29: cascade.nvim/TESTS/commands_spec.lua grün)_
 - [ ] `<A-Left>` -- cascade: dedent line (insert)
-- [ ] `<leader><A-Left>` -- cascade: dedent (Ncount = N levels, +renumber)
+- [x] `<leader><A-Left>` -- cascade: dedent (Ncount = N levels, +renumber) _(auto 2026-10-29: cascade.nvim/TESTS/commands_spec.lua grün)_
 - [ ] `+` -- cascade: increment / cycle word
-- [ ] `<A-Right>` -- cascade: indent (Ncount = N lines, +renumber)
+- [x] `<A-Right>` -- cascade: indent (Ncount = N lines, +renumber) _(auto 2026-10-29: cascade.nvim/TESTS/commands_spec.lua grün)_
 - [ ] `<A-Right>` -- cascade: indent line (insert)
-- [ ] `<leader><A-Right>` -- cascade: indent (Ncount = N levels, +renumber)
+- [x] `<leader><A-Right>` -- cascade: indent (Ncount = N levels, +renumber) _(auto 2026-10-29: cascade.nvim/TESTS/commands_spec.lua grün)_
 - [ ] `<A-Down>` -- cascade: move line/selection down
 - [ ] `<A-Down>` -- cascade: move line down (insert)
 - [ ] `<A-Up>` -- cascade: move line/selection up
 - [ ] `<A-Up>` -- cascade: move line up (insert)
 - [ ] `<leader>cR` -- cascade: renumber the numbers inside the selection
-- [ ] `<leader><Left>` -- cascade: swap char with left neighbor (Ncount = N times)
-- [ ] `<leader><Right>` -- cascade: swap char with right neighbor (Ncount = N times)
+- [x] `<leader><Left>` -- cascade: swap char with left neighbor (Ncount = N times) _(auto 2026-10-29: cascade.nvim/TESTS/commands_spec.lua grün)_
+- [x] `<leader><Right>` -- cascade: swap char with right neighbor (Ncount = N times) _(auto 2026-10-29: cascade.nvim/TESTS/commands_spec.lua grün)_
 - [ ] `<leader><C-Left>` -- cascade: swap word with left neighbor word (Ncount = N times)
-- [ ] `<leader><C-Right>` -- cascade: swap word with right neighbor word (Ncount = N times)
+- [x] `<leader><C-Right>` -- cascade: swap word with right neighbor word (Ncount = N times) _(auto 2026-10-29: cascade.nvim/TESTS/commands_spec.lua grün)_
 
 ### casedesk
 
@@ -527,16 +527,16 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 
 ### :Cascade
 
-- [ ] `:Cascade cycle list` -- List the cycle groups in effect for this buffer
-- [ ] `:Cascade rotate` -- Rotate list form (range-aware; ! or 'prev' = backward)
-- [ ] `:Cascade sort` -- Sort list A-Z (range-aware; ! = Z-A)
-- [ ] `:Cascade cycle add` -- Add a cycle group at runtime: :Cascade cycle add on,off,maybe
-- [ ] `:Cascade reverse` -- Reverse list order (range-aware)
+- [x] `:Cascade cycle list` -- List the cycle groups in effect for this buffer _(auto 2026-10-29: cascade.nvim/TESTS/usrcmds_spec.lua grün)_
+- [x] `:Cascade rotate` -- Rotate list form (range-aware; ! or 'prev' = backward) _(auto 2026-10-29: cascade.nvim/TESTS/usrcmds_spec.lua grün)_
+- [x] `:Cascade sort` -- Sort list A-Z (range-aware; ! = Z-A) _(auto 2026-10-29: cascade.nvim/TESTS/usrcmds_spec.lua grün)_
+- [x] `:Cascade cycle add` -- Add a cycle group at runtime: :Cascade cycle add on,off,maybe _(auto 2026-10-29: cascade.nvim/TESTS/usrcmds_spec.lua grün)_
+- [x] `:Cascade reverse` -- Reverse list order (range-aware) _(auto 2026-10-29: cascade.nvim/TESTS/usrcmds_spec.lua grün)_
 - [ ] `:Cascade strings` -- Strings domain: on/off/toggle for this buffer, or `now` to convert the literal at the cursor
-- [ ] `:Cascade indent` -- Indent line/range (+renumber; arg = levels)
-- [ ] `:Cascade strip` -- Strip checkboxes (range-aware)
-- [ ] `:Cascade dedent` -- Dedent line/range (+renumber; arg = levels)
-- [ ] `:Cascade renumber` -- Renumber list block (range-aware; 'all' = every list in the buffer, 'selection' = numbers inside the lines)
+- [x] `:Cascade indent` -- Indent line/range (+renumber; arg = levels) _(auto 2026-10-29: cascade.nvim/TESTS/usrcmds_spec.lua grün)_
+- [x] `:Cascade strip` -- Strip checkboxes (range-aware) _(auto 2026-10-29: cascade.nvim/TESTS/usrcmds_spec.lua grün)_
+- [x] `:Cascade dedent` -- Dedent line/range (+renumber; arg = levels) _(auto 2026-10-29: cascade.nvim/TESTS/usrcmds_spec.lua grün)_
+- [x] `:Cascade renumber` -- Renumber list block (range-aware; 'all' = every list in the buffer, 'selection' = numbers inside the lines) _(auto 2026-10-29: cascade.nvim/TESTS/usrcmds_spec.lua grün, cascade.nvim/TESTS/commands_spec.lua grün)_
 
 ### :Case
 
@@ -557,15 +557,15 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 - [ ] `:Case spotlight show` -- Show the markings saved for this case: text, colour slot, match mode, origin file
 - [ ] `:Case spotlight load` -- Replace the active spotlights with the markings saved for this case, and follow it from now on; asks before replacing spotlights that are saved nowhere
 - [ ] `:Case task` -- Open Task.md of the case
-- [ ] `:Case links open` -- Open the case's Links.md (the links it uses, each with what it is for); creates it for a case that has none yet
+- [x] `:Case links open` -- Open the case's Links.md (the links it uses, each with what it is for); creates it for a case that has none yet _(auto 2026-10-29: casedesk.nvim/TESTS/case_links_spec.lua grün)_
 - [ ] `:Case insert` -- Insert a case token (number/title/company/name/snow-url/sap-number/sap-url/asset/...) at the cursor and copy it
 - [ ] `:Case route` -- Record which department the case was routed to (config.routing_targets)
-- [ ] `:Case links add` -- Add a link to the case's Links.md with what it is for: the URL (default: a URL on the clipboard), then the purpose (asked for if missing, required); --section picks tickets|docs|swarm (default: by the link), --label the link text, --case another case
+- [x] `:Case links add` -- Add a link to the case's Links.md with what it is for: the URL (default: a URL on the clipboard), then the purpose (asked for if missing, required); --section picks tickets|docs|swarm (default: by the link), --label the link text, --case another case _(auto 2026-10-29: casedesk.nvim/TESTS/case_links_spec.lua grün)_
 - [ ] `:Case reopen` -- Move a closed/solved case back into its area's open state
 - [ ] `:Case reply check` -- Pre-send gate on the current buffer: emojis, stray markdown headlines, dead links
 - [ ] `:Case otheragent` -- Move the case to OtherAgent
 - [ ] `:Case t2` -- Move the case to T2
-- [ ] `:Case checklist` -- Update the first-reply checklist in Notes.md (what applies to the case, what the case's assets/ folder already proves is done; your ticks stay) and open it; --no-open only writes
+- [x] `:Case checklist` -- Update the first-reply checklist in Notes.md (what applies to the case, what the case's assets/ folder already proves is done; your ticks stay) and open it; --no-open only writes _(auto 2026-10-29: casedesk.nvim/TESTS/checklist_spec.lua grün)_
 - [ ] `:Case ai test` -- Send one synthetic question (no customer data) to the AI provider (--provider takes any ai.nvim provider id), to check key, network and allow-list
 - [ ] `:Case ai provider` -- Choose the AI provider for this session (asks if omitted; any ai.nvim provider id works, in any case; Tab completion suggests the common ones); one outside the machine's allow-list needs a confirmation and runs in test mode
 - [ ] `:Case ai log` -- The last AI sends, metadata only (time, case, action, provider, data classes, outcome)
@@ -577,13 +577,13 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 - [ ] `:Case ai info` -- Same as :Case ai
 - [ ] `:Case ki import` -- File a pasted AI answer into Research/Replies/Notes
 - [ ] `:Case ki logs` -- Choose log files of this case (multi-select), anonymize and condense them, send them to the AI provider and file the analysis; --preview saves the anonymized prompt and sends nothing, --raw keeps the logs as they are (not anonymized, always behind a warning popup)
-- [ ] `:Case checklist draft` -- Write the first reply from the checklist's open questions into Replies/00_PSO.md (while that is still the unfilled scaffold, else onto the clipboard)
+- [x] `:Case checklist draft` -- Write the first reply from the checklist's open questions into Replies/00_PSO.md (while that is still the unfilled scaffold, else onto the clipboard) _(auto 2026-10-29: casedesk.nvim/TESTS/checklist_spec.lua grün)_
 - [ ] `:Case copy` -- Deprecated alias of :Case import
 - [ ] `:Case pdf` -- Extract the text of this case's PDF attachments into .pdf.text.md sidecar files next to each PDF, so :Cases grep finds it (needs pdftotext from poppler)
 - [ ] `:Case solution` -- Show the case's documented solution (offers to create one if there is none); --edit opens the file straight away
 - [ ] `:Case sync` -- Add missing blueprint pieces to an existing case
 - [ ] `:Case snow` -- Open (or copy) the case's ServiceNow ticket id
-- [ ] `:Case clipboard` -- Copy fields of the case to the clipboard: number, title, header (123456 - Title), snow, link, snowurl, resolveurl, path, status, summary, solution, tags, the wordings (firstResponse greets the case's contact), ... (comma- or space-separated, plus an optional case number); a multi-select if none is named; --labels prefixes each value with its name, --sep joins them, --edit also opens the file of a copied wording
+- [x] `:Case clipboard` -- Copy fields of the case to the clipboard: number, title, header (123456 - Title), snow, link, snowurl, resolveurl, path, status, summary, solution, tags, the wordings (firstResponse greets the case's contact), ... (comma- or space-separated, plus an optional case number); a multi-select if none is named; --labels prefixes each value with its name, --sep joins them, --edit also opens the file of a copied wording _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_spec.lua grün, casedesk.nvim/TESTS/clipboard_wordings_spec.lua grün)_
 - [ ] `:Case versions` -- Curated version digest from ToscaSupportInfo*.txt (EXTRACTION.md); a component copies its version, --all lists everything, --raw opens the file
 - [ ] `:Case links` -- docs.tricentis.com links (Activity Streams + Replies) pointing at a different Tosca version than the customer's own
 - [ ] `:Case anonymize` -- Best-effort PII scrub of the newest Activity Stream (actor names, emails, S-user ids, Account/Contact/Opened by) - copies the result and shows what got redacted; not a guarantee against names only mentioned in free prose
@@ -633,16 +633,16 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 - [ ] `:Cases list` -- List every case, grouped by state
 - [ ] `:Cases sla` -- SLA dashboard: every open case with a priority, sorted by what breaches next
 - [ ] `:Cases tag` -- Every case with a root-cause tag (asks, with per-tag counts, if omitted)
-- [ ] `:Cases clipboard` -- Copy standard wordings (config.wordings: firstResponse, firstResponseDelay, germanSpeaker, ...) to the clipboard as written; a picker if none is named; case fields need :Case clipboard; --edit also opens the file, --sep joins several
+- [x] `:Cases clipboard` -- Copy standard wordings (config.wordings: firstResponse, firstResponseDelay, germanSpeaker, ...) to the clipboard as written; a picker if none is named; case fields need :Case clipboard; --edit also opens the file, --sep joins several _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_wordings_spec.lua grün, casedesk.nvim/TESTS/wordings_spec.lua grün)_
 - [ ] `:Cases title` -- Filter cases by title
 - [ ] `:Cases` -- Cross-case queries (field filters, listing)
 - [ ] `:Cases sla report` -- SLA compliance report across every case (not just open): first-response quote per priority, outliers with delta. --year filters by .case.json's year
-- [ ] `:Cases wordings` -- Open a standard wording from Workflow/Templates and copy it to the clipboard (alias of :Cases clipboard KIND --edit; config.wordings and config.wording_dirs: firstResponse, firstResponseDelay, germanSpeaker, TCSupportInfo, ...)
+- [x] `:Cases wordings` -- Open a standard wording from Workflow/Templates and copy it to the clipboard (alias of :Cases clipboard KIND --edit; config.wordings and config.wording_dirs: firstResponse, firstResponseDelay, germanSpeaker, TCSupportInfo, ...) _(auto 2026-10-29: casedesk.nvim/TESTS/wordings_spec.lua grün, casedesk.nvim/TESTS/clipboard_wordings_spec.lua grün)_
 - [ ] `:Cases recent` -- Most recently touched cases first
 - [ ] `:Cases area` -- Every case of one area (asks, with per-area counts, if omitted)
 - [ ] `:Cases imp` -- Every note on file (:Case imp), expired ones marked
 - [ ] `:Cases stats` -- Counts by area / state / company / year
-- [ ] `:Cases week` -- Cases worked on in a date range (default this week; last, last 4 weeks, month, ...), sorted by priority
+- [x] `:Cases week` -- Cases worked on in a date range (default this week; last, last 4 weeks, month, ...), sorted by priority _(auto 2026-10-29: casedesk.nvim/TESTS/daterange_spec.lua grün)_
 - [ ] `:Cases company` -- Filter cases by company
 - [ ] `:Cases links check` -- Check docs.tricentis.com links for dead pages (optionally one case)
 - [ ] `:Cases notes` -- Filter cases by the Notes field of the infocard
@@ -707,7 +707,7 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 - [ ] `:ColorMyAscii fence-jump` -- Jump between a fence's opening/closing delimiter (%-style); falls back to the built-in % elsewhere
 - [ ] `:ColorMyAscii check-fences` -- Check current buffer for unmatched fenced code blocks
 - [ ] `:ColorMyAscii debug` -- Show debug information
-- [ ] `:ColorMyAscii ensure-blank-lines` -- Ensure blank lines before and after fenced code blocks
+- [ ] `:ColorMyAscii ensure-blank-lines` -- Ensure blank lines before and after fenced code blocks _(auto 2026-10-29: color_my_ascii.nvim/TESTS/bindings_spec.lua grün, nur teilweise: nur die Leerzeile vor dem Fence)_
 - [ ] `:ColorMyAscii schemes switch` -- Switch to a different color scheme
 - [ ] `:ColorMyAscii show-config` -- Show current configuration
 
@@ -1216,7 +1216,7 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 - [ ] `:Git browse file` -- Open the current file on its web host
 - [ ] `:Git conflict prev` -- Jump to the previous conflict marker in this buffer
 - [ ] `:Git conflict refresh` -- Re-scan the current buffer for conflict markers
-- [ ] `:Git plugins report` -- Report what changed in the installed plugins: the last update (--mode=updated) or what is pending (--mode=pending); reads local state only
+- [x] `:Git plugins report` -- Report what changed in the installed plugins: the last update (--mode=updated) or what is pending (--mode=pending); reads local state only _(auto 2026-10-29: gitsuite.nvim/TESTS/gitsuite/plugins_report_spec.lua grün)_
 - [ ] `:Git hunk inline` -- Toggle inline diff: invert word_diff & linehl, preview current hunk inline
 - [ ] `:Git diff history` -- Show file history (diff.nvim :DiffHistory)
 - [ ] `:Git conflict list` -- List every file with unresolved conflicts in the quickfix list
@@ -1230,7 +1230,7 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 - [ ] `:Git dashboard update` -- Update (fetch + ff-only pull) every repository in dir/$REPOS_DIR, headless
 - [ ] `:Git ui neogit` -- Open neogit
 - [ ] `:Git ui lazygit` -- Open lazygit in a floating terminal (optionally for the repo containing <dir>)
-- [ ] `:Git plugins log` -- Show the newest commits of an installed plugin (or any clone): picker with preview, --count=<n>, --out=buffer|clipboard
+- [x] `:Git plugins log` -- Show the newest commits of an installed plugin (or any clone): picker with preview, --count=<n>, --out=buffer|clipboard _(auto 2026-10-29: gitsuite.nvim/TESTS/gitsuite/plugins_log_spec.lua grün)_
 - [ ] `:Git status quickfix` -- Export repo status to the quickfix list
 - [ ] `:Git ui diffview open` -- Open diffview
 - [ ] `:Git status repo` -- Show repo status (branch, ahead/behind, dirty)
@@ -1439,7 +1439,7 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 
 ### :LastSession
 
-- [ ] `:LastSession` -- Load the session you left on exit (nvim +LastSession)
+- [x] `:LastSession` -- Load the session you left on exit (nvim +LastSession) _(auto 2026-10-29: sessions.nvim/TESTS/usercmds_spec.lua grün)_
 
 ### :LearnPlanViewer
 
@@ -2170,22 +2170,22 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 - [ ] `:Session marks import-harpoon` -- Take over a harpoon v2 list (bucket defaults to stdpath('config'))
 - [ ] `:Session marks list` -- Print the list
 - [ ] `:Session marks debug` -- Dump the list, its scope and its store into a scratch buffer
-- [ ] `:Session load` -- Load session [name] (omit for the configured default_name)
-- [ ] `:Session save-timestamp` -- Save session with timestamp suffix
-- [ ] `:Session load-layout` -- Restore a window-split layout: :Session load-layout <name>
+- [ ] `:Session load` -- Load session [name] (omit for the configured default_name) _(auto 2026-10-29: sessions.nvim/TESTS/usercmds_spec.lua grün, nur teilweise: Variante ohne Namen ungetestet)_
+- [x] `:Session save-timestamp` -- Save session with timestamp suffix _(auto 2026-10-29: sessions.nvim/TESTS/usercmds_spec.lua grün)_
+- [x] `:Session load-layout` -- Restore a window-split layout: :Session load-layout <name> _(auto 2026-10-29: sessions.nvim/TESTS/usercmds_spec.lua grün)_
 - [ ] `:Session marks` -- Open the mark list in the configured picker
 - [ ] `:Session marks menu` -- Open the mark list: auto|edit|kit|snacks|telescope|fzf
-- [ ] `:Session load-tab` -- Load a tab session into a new tab: :Session load-tab <name>
+- [x] `:Session load-tab` -- Load a tab session into a new tab: :Session load-tab <name> _(auto 2026-10-29: sessions.nvim/TESTS/usercmds_spec.lua grün)_
 - [ ] `:Session toggle-track` -- Toggle git skip-worktree on a session file
-- [ ] `:Session save-tab` -- Save only the current tab's window layout [name]
+- [x] `:Session save-tab` -- Save only the current tab's window layout [name] _(auto 2026-10-29: sessions.nvim/TESTS/usercmds_spec.lua grün)_
 - [ ] `:Session chip-toggle` -- Show/hide the corner chip on demand
 - [ ] `:Session marks add` -- Add a file to the list (default: current buffer, appended)
-- [ ] `:Session rename` -- Rename a session: :Session rename <old> <new>
-- [ ] `:Session stale` -- List saved sessions whose recorded branch no longer exists
+- [x] `:Session rename` -- Rename a session: :Session rename <old> <new> _(auto 2026-10-29: sessions.nvim/TESTS/usercmds_spec.lua grün)_
+- [x] `:Session stale` -- List saved sessions whose recorded branch no longer exists _(auto 2026-10-29: sessions.nvim/TESTS/usercmds_spec.lua grün)_
 - [ ] `:Session marks defaults sync` -- Append every missing default and pin; the rest stays
-- [ ] `:Session save-layout` -- Save the current window-split layout: :Session save-layout <name>
-- [ ] `:Session list` -- List all saved sessions
-- [ ] `:Session current` -- Print the active session name
+- [x] `:Session save-layout` -- Save the current window-split layout: :Session save-layout <name> _(auto 2026-10-29: sessions.nvim/TESTS/usercmds_spec.lua grün)_
+- [x] `:Session list` -- List all saved sessions _(auto 2026-10-29: sessions.nvim/TESTS/usercmds_spec.lua grün)_
+- [x] `:Session current` -- Print the active session name _(auto 2026-10-29: sessions.nvim/TESTS/usercmds_spec.lua grün)_
 
 ### :SessionLoad
 
@@ -2213,25 +2213,25 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 
 ### :Spotlight
 
-- [ ] `:Spotlight qf` -- Matching lines to the quickfix list (all spotlights, or just TEXT's)
-- [ ] `:Spotlight next` -- Jump to the next spotlight occurrence  (! ignores nav.scope)
+- [x] `:Spotlight qf` -- Matching lines to the quickfix list (all spotlights, or just TEXT's) _(auto 2026-10-29: spotlight.nvim/TESTS/commands_spec.lua grün)_
+- [x] `:Spotlight next` -- Jump to the next spotlight occurrence  (! ignores nav.scope) _(auto 2026-10-29: spotlight.nvim/TESTS/commands_spec.lua grün)_
 - [ ] `:Spotlight sets switch` -- Clear the active spotlights and restore a saved set
-- [ ] `:Spotlight prev` -- Jump to the previous spotlight occurrence  (! ignores nav.scope)
-- [ ] `:Spotlight map clear` -- Clear the sign-column occurrence map in the current buffer
-- [ ] `:Spotlight line` -- Toggle whole-line rendering for a spotlight (TEXT, or the cursor token)
-- [ ] `:Spotlight refresh` -- Re-apply every spotlight to every window (and redefine the palette)
+- [x] `:Spotlight prev` -- Jump to the previous spotlight occurrence  (! ignores nav.scope) _(auto 2026-10-29: spotlight.nvim/TESTS/commands_spec.lua grün)_
+- [x] `:Spotlight map clear` -- Clear the sign-column occurrence map in the current buffer _(auto 2026-10-29: spotlight.nvim/TESTS/map_spec.lua grün)_
+- [x] `:Spotlight line` -- Toggle whole-line rendering for a spotlight (TEXT, or the cursor token) _(auto 2026-10-29: spotlight.nvim/TESTS/line_spec.lua grün)_
+- [x] `:Spotlight refresh` -- Re-apply every spotlight to every window (and redefine the palette) _(auto 2026-10-29: spotlight.nvim/TESTS/commands_spec.lua grün)_
 - [ ] `:Spotlight persist` -- Per-file persistence: on / off / default (clear override) / status
-- [ ] `:Spotlight qf all` -- Matching lines across every loaded buffer to the quickfix list
+- [x] `:Spotlight qf all` -- Matching lines across every loaded buffer to the quickfix list _(auto 2026-10-29: spotlight.nvim/TESTS/qf_all_spec.lua grün)_
 - [ ] `:Spotlight sets list` -- List every saved set and how many spotlights it holds
-- [ ] `:Spotlight winopt` -- Per-window opt-out: on / off / toggle (default) / status
-- [ ] `:Spotlight yank` -- Yank matching lines to the unnamed register (all spotlights, or just TEXT's)
+- [ ] `:Spotlight winopt` -- Per-window opt-out: on / off / toggle (default) / status _(auto 2026-10-29: spotlight.nvim/TESTS/winopt_spec.lua grün, nur teilweise: `status` nur aufgerufen)_
+- [x] `:Spotlight yank` -- Yank matching lines to the unnamed register (all spotlights, or just TEXT's) _(auto 2026-10-29: spotlight.nvim/TESTS/yank_spec.lua grün)_
 - [ ] `:Spotlight list` -- Open the spotlight list (swatch + pattern + match count)  [filter]
-- [ ] `:Spotlight lock` -- Toggle whether a spotlight keeps its palette slot permanently (TEXT, or the cursor token)
-- [ ] `:Spotlight map` -- Mark every matching line in the sign column (all spotlights, or just TEXT's)
-- [ ] `:Spotlight add` -- Add a spotlight for the literal TEXT
-- [ ] `:Spotlight` -- Spotlight: persistent multi-token highlighting
-- [ ] `:Spotlight toggle` -- Toggle a spotlight (cursor token, range selection, or explicit TEXT)
-- [ ] `:Spotlight here` -- Toggle a spotlight for only this occurrence (cursor token or range selection)
+- [x] `:Spotlight lock` -- Toggle whether a spotlight keeps its palette slot permanently (TEXT, or the cursor token) _(auto 2026-10-29: spotlight.nvim/TESTS/lock_spec.lua grün)_
+- [x] `:Spotlight map` -- Mark every matching line in the sign column (all spotlights, or just TEXT's) _(auto 2026-10-29: spotlight.nvim/TESTS/map_spec.lua grün)_
+- [x] `:Spotlight add` -- Add a spotlight for the literal TEXT _(auto 2026-10-29: spotlight.nvim/TESTS/commands_spec.lua grün)_
+- [x] `:Spotlight` -- Spotlight: persistent multi-token highlighting _(auto 2026-10-29: spotlight.nvim/TESTS/commands_spec.lua grün)_
+- [x] `:Spotlight toggle` -- Toggle a spotlight (cursor token, range selection, or explicit TEXT) _(auto 2026-10-29: spotlight.nvim/TESTS/commands_spec.lua grün)_
+- [x] `:Spotlight here` -- Toggle a spotlight for only this occurrence (cursor token or range selection) _(auto 2026-10-29: spotlight.nvim/TESTS/commands_spec.lua grün)_
 
 ### :StartupCheck
 
@@ -2251,28 +2251,28 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 
 ### :Tasks
 
-- [ ] `:Tasks folderize` -- Turn a plain task file into a folder task (<slug>/<slug>.md) so assets can be attached
-- [ ] `:Tasks index` -- (Re)write ROADMAP/TASKS.md of one area (default: every area); --check writes nothing and reports rule findings and stale indexes
-- [ ] `:Tasks next` -- What to start next: the best ready task with the reason, and a dialog to jump into it; --actor=cdx asks for the AI queue instead of yours
-- [ ] `:Tasks estimate` -- Sums of effort and value of an area (default: all) or of one task and everything before it, with what is missing; --walk goes through the tasks without effort or value and asks for them one by one
-- [ ] `:Tasks new` -- Without arguments: a Markdown form (tick kind, prio, effort, category, severity, status; <C-s> submits) and the question whether to attach assets. With an area: create ROADMAP/tasks/<slug>.md in it and open it; the words after the area are the title (asked for when missing); --folder makes a folder task that can hold assets
-- [ ] `:Tasks done` -- Finish a task after confirmation: status done, moved to Backlog/FEATURES|TASKS with a date prefix, Backlog README and index updated; --yes skips the question
-- [ ] `:Tasks plan` -- The plan of the open tasks of an area (default: all) or of one task and everything before it (--for=<id>): what is ready now, decisions by leverage, stages, critical path, an estimate line; filters like list; --ready shows only what can be started
-- [ ] `:Tasks template` -- Copy the task file template to the + register (--to=buffer|file:<path> for the other targets; --with-plan adds the optional ## Plan section)
-- [ ] `:Tasks attach` -- Copy a file (screenshot, log) into the task's assets/ folder, turning a plain task into a folder task, and put the Markdown link in the + register; name=<file name> renames the copy
+- [x] `:Tasks folderize` -- Turn a plain task file into a folder task (<slug>/<slug>.md) so assets can be attached _(auto 2026-10-29: tasks.nvim/TESTS/tasks_routes_spec.lua grün, tasks.nvim/TESTS/tasks_command_spec.lua grün)_
+- [x] `:Tasks index` -- (Re)write ROADMAP/TASKS.md of one area (default: every area); --check writes nothing and reports rule findings and stale indexes _(auto 2026-10-29: tasks.nvim/TESTS/tasks_routes_spec.lua grün, tasks.nvim/TESTS/tasks_command_spec.lua grün)_
+- [x] `:Tasks next` -- What to start next: the best ready task with the reason, and a dialog to jump into it; --actor=cdx asks for the AI queue instead of yours _(auto 2026-10-29: tasks.nvim/TESTS/tasks_plan_commands_spec.lua grün)_
+- [x] `:Tasks estimate` -- Sums of effort and value of an area (default: all) or of one task and everything before it, with what is missing; --walk goes through the tasks without effort or value and asks for them one by one _(auto 2026-10-29: tasks.nvim/TESTS/tasks_plan_commands_spec.lua grün)_
+- [x] `:Tasks new` -- Without arguments: a Markdown form (tick kind, prio, effort, category, severity, status; <C-s> submits) and the question whether to attach assets. With an area: create ROADMAP/tasks/<slug>.md in it and open it; the words after the area are the title (asked for when missing); --folder makes a folder task that can hold assets _(auto 2026-10-29: tasks.nvim/TESTS/tasks_routes_spec.lua grün, tasks.nvim/TESTS/tasks_command_spec.lua grün)_
+- [x] `:Tasks done` -- Finish a task after confirmation: status done, moved to Backlog/FEATURES|TASKS with a date prefix, Backlog README and index updated; --yes skips the question _(auto 2026-10-29: tasks.nvim/TESTS/tasks_routes_spec.lua grün, tasks.nvim/TESTS/tasks_command_spec.lua grün)_
+- [x] `:Tasks plan` -- The plan of the open tasks of an area (default: all) or of one task and everything before it (--for=<id>): what is ready now, decisions by leverage, stages, critical path, an estimate line; filters like list; --ready shows only what can be started _(auto 2026-10-29: tasks.nvim/TESTS/tasks_plan_commands_spec.lua grün)_
+- [x] `:Tasks template` -- Copy the task file template to the + register (--to=buffer|file:<path> for the other targets; --with-plan adds the optional ## Plan section) _(auto 2026-10-29: tasks.nvim/TESTS/tasks_routes_spec.lua grün, tasks.nvim/TESTS/tasks_command_spec.lua grün)_
+- [x] `:Tasks attach` -- Copy a file (screenshot, log) into the task's assets/ folder, turning a plain task into a folder task, and put the Markdown link in the + register; name=<file name> renames the copy _(auto 2026-10-29: tasks.nvim/TESTS/tasks_routes_spec.lua grün, tasks.nvim/TESTS/tasks_command_spec.lua grün)_
 - [ ] `:Tasks planfile` -- Create a plan file ROADMAP/plans/<slug>.md in an area (the words after the area are the title): the undertaking that tasks join with plan=<id> phase=<word>; --areas=a,b lists the areas whose tasks belong, --phases=a,b,c names the stages in order, --gate=hard forbids starting a stage before the earlier ones are finished, --target=<task> is the task that means done
 - [ ] `:Tasks quickwins` -- The quick wins (value 4+ and effort S or less by default, both written on the task), best return first, plus the small tasks that miss a value; --report=<file> writes the Markdown
-- [ ] `:Tasks open` -- Open the file of a task (an open one, else its finished copy in Backlog/); a part of the name is enough when it points at one task, else the candidates are offered
+- [x] `:Tasks open` -- Open the file of a task (an open one, else its finished copy in Backlog/); a part of the name is enough when it points at one task, else the candidates are offered _(auto 2026-10-29: tasks.nvim/TESTS/tasks_routes_spec.lua grün, tasks.nvim/TESTS/tasks_command_spec.lua grün)_
 - [ ] `:Tasks preview` -- Show the file of a task (an open one, else its finished copy in Backlog/) rendered in the browser through mdview.nvim; the file is opened as it is, nothing is written to the vault
-- [ ] `:Tasks folder` -- Picker over the files of one folder of an area (tasks|roadmap|backlog|handover|notes|all, default all) through pickers.nvim; --action=grep|smart searches content, --list or --to= delivers the file list
-- [ ] `:Tasks list` -- List the open tasks of one area (default: all) as a Markdown table in a scratch buffer; filter with --status= --prio= --effort=S,M|<=M --kind= --category=bug|security|performance|docs|ruleset|ux|bindings|refactor|tests|ci --severity=low|medium|high|critical --tag= --stale=<days>|refs (refs: a file named in refs: changed since updated) --blocked, order with --sort=default|prio-effort|severity|frecency, deliver with --to=buffer|clipboard|qf|file:<path>|mdview (a browser preview through mdview.nvim, Markdown only) and --format=md|csv
+- [x] `:Tasks folder` -- Picker over the files of one folder of an area (tasks|roadmap|backlog|handover|notes|all, default all) through pickers.nvim; --action=grep|smart searches content, --list or --to= delivers the file list _(auto 2026-10-29: tasks.nvim/TESTS/tasks_routes_spec.lua grün, tasks.nvim/TESTS/tasks_command_spec.lua grün)_
+- [x] `:Tasks list` -- List the open tasks of one area (default: all) as a Markdown table in a scratch buffer; filter with --status= --prio= --effort=S,M|<=M --kind= --category=bug|security|performance|docs|ruleset|ux|bindings|refactor|tests|ci --severity=low|medium|high|critical --tag= --stale=<days>|refs (refs: a file named in refs: changed since updated) --blocked, order with --sort=default|prio-effort|severity|frecency, deliver with --to=buffer|clipboard|qf|file:<path>|mdview (a browser preview through mdview.nvim, Markdown only) and --format=md|csv _(auto 2026-10-29: tasks.nvim/TESTS/tasks_routes_spec.lua grün, tasks.nvim/TESTS/tasks_command_spec.lua grün)_
 
 ### :TasksVault
 
 - [ ] `:TasksVault clipboard` -- Copy the path of an area's Backlog folder (or features|tasks|roadmap|all) to the + register
 - [ ] `:TasksVault paste` -- Insert the path of an area's Backlog folder (or features|tasks|roadmap|all) at the cursor
 - [ ] `:TasksVault open` -- Open the index of an area's Backlog (or features|tasks|roadmap|all) in a buffer, else its folder in the explorer
-- [ ] `:TasksVault` -- The task vault: open, copy, paste and search the Backlog of an area, make notes, create a vault
+- [x] `:TasksVault` -- The task vault: open, copy, paste and search the Backlog of an area, make notes, create a vault _(auto 2026-10-29: tasks.nvim/TESTS/tasks_vault_cmd_spec.lua grün)_
 - [ ] `:TasksVault tree` -- Show the folder of an area's Backlog (or features|tasks|roadmap|all) in the file explorer
 - [ ] `:TasksVault link` -- Insert a Markdown link to the Backlog of an area at the cursor, relative to the current file
 - [ ] `:TasksVault find` -- Pick a file by name in the folder of an area's Backlog (or features|tasks|roadmap|all) through pickers.nvim
@@ -2360,12 +2360,12 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 ### :UI
 
 - [ ] `:UI status` -- Show the current UI configuration
-- [ ] `:UI variant` -- Show the current statusline variant, or switch to one
-- [ ] `:UI tabline-style` -- Show the current tabline style, or switch to one
+- [x] `:UI variant` -- Show the current statusline variant, or switch to one _(auto 2026-10-29: ui.nvim/TESTS/variants_spec.lua grün)_
+- [x] `:UI tabline-style` -- Show the current tabline style, or switch to one _(auto 2026-10-29: ui.nvim/TESTS/tabline_styles_spec.lua grün)_
 - [ ] `:UI themes` -- List every colorscheme, the active one marked
-- [ ] `:UI slots` -- Numbered slots: list, run, add, edit, move, clear, panel, bar
+- [x] `:UI slots` -- Numbered slots: list, run, add, edit, move, clear, panel, bar _(auto 2026-10-29: ui.nvim/TESTS/slots_api_spec.lua grün)_
 - [ ] `:UI theme` -- Show the current colorscheme, or switch to one
-- [ ] `:UI help` -- Print the long help text
+- [x] `:UI help` -- Print the long help text _(auto 2026-10-29: ui.nvim/TESTS/slots_api_spec.lua grün)_
 - [ ] `:UI tabline-styles` -- List all tabline styles
 - [ ] `:UI toggle` -- Switch between the two configured themes
 - [ ] `:UI keys` -- List the mappings under a prefix
@@ -2376,11 +2376,11 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 - [ ] `:UI zen` -- Toggle the zen box
 - [ ] `:UI winpick` -- Pick a window by letter and jump to it
 - [ ] `:UI notify` -- Toggle notify toasts, open or clear the history
-- [ ] `:UI context` -- Same command as sticky, older name
+- [x] `:UI context` -- Same command as sticky, older name _(auto 2026-10-29: ui.nvim/TESTS/context_spec.lua grün)_
 - [ ] `:UI color` -- Open the colour picker, optionally on a colour
 - [ ] `:UI screenkey` -- Toggle the screenkey HUD
-- [ ] `:UI transparency` -- Toggle transparency (on/off to set it)
-- [ ] `:UI sticky` -- The sticky context: toggle, depth, line cap, jump
+- [x] `:UI transparency` -- Toggle transparency (on/off to set it) _(auto 2026-10-29: ui.nvim/TESTS/bugfix_regressions_spec.lua grün)_
+- [x] `:UI sticky` -- The sticky context: toggle, depth, line cap, jump _(auto 2026-10-29: ui.nvim/TESTS/context_spec.lua grün)_
 
 ### :UrlView
 
@@ -2489,9 +2489,9 @@ caution, not a verdict. Read the description before triggering any of these.
 - [ ] `:Cascade cycle remove` -- Remove the runtime cycle group containing a value
 - [ ] `:Case close` -- Move the case somewhere (pick a destination, or delete)
 - [ ] `:Case ki` -- Build the AI-analysis prompt from the clipboard's activity stream and copy it back; --send sends it (anonymized) to the configured AI provider and files the answer, --preview stops after saving the anonymized prompt, --raw sends/previews it NOT anonymized (always behind a warning popup), --inline embeds the policy documents
-- [ ] `:Case clean` -- Strip AI-paste artifacts (Gemini utm_source, LaTeX leftovers) from cfile/cwd/path=.../the current buffer
+- [x] `:Case clean` -- Strip AI-paste artifacts (Gemini utm_source, LaTeX leftovers) from cfile/cwd/path=.../the current buffer _(auto 2026-10-29: casedesk.nvim/TESTS/ui_paste_cleanup_spec.lua grün)_
 - [ ] `:Case spotlight clear` -- Delete the markings saved for this case (and clear the spotlights if they are this case's active ones)
-- [ ] `:Case ai provider reset` -- Forget this session's AI provider choice and use the install spec's again
+- [x] `:Case ai provider reset` -- Forget this session's AI provider choice and use the install spec's again _(auto 2026-10-29: casedesk.nvim/TESTS/ui_ai_spec.lua grün)_
 - [ ] `:Case image getText` -- Read ONE screenshot's text and look at it before writing the sidecar (needs tesseract); --preset=log for dense structured-log screenshots
 - [ ] `:Case ocr` -- Read the text out of this case's screenshots into .ocr.md sidecar files next to each screenshot, so :Case grep finds it (needs tesseract); --preset=log tunes tesseract for dense structured-log screenshots
 - [ ] `:Case delete` -- Permanently delete a case (types the case number back to confirm)
@@ -2610,20 +2610,20 @@ caution, not a verdict. Read the description before triggering any of these.
 - [ ] `:Session marks unpin` -- Stop treating a file as a default (the list entry stays)
 - [ ] `:Session marks pin` -- Pin a file: a default that survives `defaults reset`
 - [ ] `:Session marks remove` -- Remove a file from the list (default: current buffer)
-- [ ] `:Session delete-stale` -- Delete every stale session (see :Session stale), one confirm for the whole batch
-- [ ] `:Session delete` -- Delete a session by name
-- [ ] `:Session save` -- Save session [name] (tab-complete to overwrite an existing one)
+- [x] `:Session delete-stale` -- Delete every stale session (see :Session stale), one confirm for the whole batch _(auto 2026-10-29: sessions.nvim/TESTS/usercmds_spec.lua grün)_
+- [x] `:Session delete` -- Delete a session by name _(auto 2026-10-29: sessions.nvim/TESTS/usercmds_spec.lua grün)_
+- [x] `:Session save` -- Save session [name] (tab-complete to overwrite an existing one) _(auto 2026-10-29: sessions.nvim/TESTS/usercmds_spec.lua grün)_
 - [ ] `:Spotlight sets delete` -- Delete a saved set (does not touch the active spotlights)
-- [ ] `:Spotlight sets save` -- Save the active spotlights as a named set (overwrites if it already exists)
-- [ ] `:Spotlight clear` -- Remove every spotlight
-- [ ] `:Spotlight remove` -- Remove the spotlight matching TEXT exactly
+- [x] `:Spotlight sets save` -- Save the active spotlights as a named set (overwrites if it already exists) _(auto 2026-10-29: spotlight.nvim/TESTS/sets_spec.lua grün)_
+- [x] `:Spotlight clear` -- Remove every spotlight _(auto 2026-10-29: spotlight.nvim/TESTS/commands_spec.lua grün)_
+- [x] `:Spotlight remove` -- Remove the spotlight matching TEXT exactly _(auto 2026-10-29: spotlight.nvim/TESTS/commands_spec.lua grün)_
 - [ ] `:TSParserPolicy` -- Show/set the treesitter parser install policy (off|prompt|auto|reset)
-- [ ] `:Tasks lists` -- Pick a named list (built in, saved, or from setup({ lists })) and open it as the task dashboard; save and delete lists with the dashboard key gl or `tasks lists`
-- [ ] `:Tasks set` -- Change frontmatter of an open task (key=value, a value may hold spaces, an empty value removes the key) and regenerate the index; a finished task takes remind= only (set it, or take it away)
+- [x] `:Tasks lists` -- Pick a named list (built in, saved, or from setup({ lists })) and open it as the task dashboard; save and delete lists with the dashboard key gl or `tasks lists` _(auto 2026-10-29: tasks.nvim/TESTS/tasks_routes_spec.lua grün, tasks.nvim/TESTS/tasks_command_spec.lua grün)_
+- [x] `:Tasks set` -- Change frontmatter of an open task (key=value, a value may hold spaces, an empty value removes the key) and regenerate the index; a finished task takes remind= only (set it, or take it away) _(auto 2026-10-29: tasks.nvim/TESTS/tasks_routes_spec.lua grün, tasks.nvim/TESTS/tasks_command_spec.lua grün)_
 - [ ] `:Terminal pin` -- Restart a native terminal as a pane of tmux/WezTerm so it outlives Neovim
 - [ ] `:Terminal close` -- Stop a terminal's job and remove it
 - [ ] `:Testing cache clear` -- Delete the result cache of the project (it is regenerable: costs time, never correctness)
 - [ ] `:Testing init` -- Generate .testing.lua, TESTS/minimal_init.lua, scripts/test.sh and a CI job (never overwrites)
 - [ ] `:Testing migrate` -- Plan the move of a plugin repo to testing.nvim (dry-run; `apply` writes into a clean git tree)
 - [ ] `:UI kit-presets` -- List all popup/toast presets
-- [ ] `:UI kit-preset` -- Show or switch the popup/toast border and colors
+- [x] `:UI kit-preset` -- Show or switch the popup/toast border and colors _(auto 2026-10-29: ui.nvim/TESTS/kit_preset_cmd_spec.lua grün)_

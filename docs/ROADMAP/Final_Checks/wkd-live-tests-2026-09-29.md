@@ -111,12 +111,12 @@ Build-Check, nicht zum interaktiven Durchklicken.
       lösen je eine eigene Angriffsanimation aus, danach geht der Charakter wieder
       normal in Idle/Run/Jump über (bleibt NICHT dauerhaft in der Angriffspose hängen).
   - Notiz:
-- [ ] Kein „Phantom-Treffer": Health der Gegenseite sinkt nur, wenn wirklich kurz zuvor
-      angegriffen wurde, nicht einfach beim Wieder-Annähern ohne neuen Angriff.
+- [x] Kein „Phantom-Treffer": Health der Gegenseite sinkt nur, wenn wirklich kurz zuvor
+      angegriffen wurde, nicht einfach beim Wieder-Annähern ohne neuen Angriff. _(auto 2026-10-29: wkd/tests/fight-sim.test.ts grün)_
   - Notiz:
-- [ ] **Besonders wichtig (war ein echter, vom Review gefundener Bug):** nach dem
+- [x] **Besonders wichtig (war ein echter, vom Review gefundener Bug):** nach dem
       ERSTEN kassierten Treffer kann die getroffene Seite (Spieler UND KI) weiterhin
-      normal angreifen/sich bewegen, bleibt NICHT dauerhaft in der Trefferpose hängen.
+      normal angreifen/sich bewegen, bleibt NICHT dauerhaft in der Trefferpose hängen. _(auto 2026-10-29: wkd/tests/fight-sim.test.ts grün)_
   - Notiz:
 - [ ] KI-Gegner bewegt sich Richtung Spieler, greift gelegentlich an, springt selten.
   - Notiz:

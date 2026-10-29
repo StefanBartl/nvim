@@ -45,7 +45,7 @@ Gegenlesen (z. B. `:put +` in einem Scratch-Buffer, `:enew`).
 
 ### 1b. Mit Argumenten
 
-- [ ] `:Case clipboard number,title --labels`: jeder Wert trägt seinen Namen als Präfix
+- [x] `:Case clipboard number,title --labels`: jeder Wert trägt seinen Namen als Präfix _(auto 2026-10-29: casedesk.nvim/TESTS/clipboard_spec.lua grün)_
 - [ ] `:Case clipboard number,title --sep=pipe`: die Werte sind mit dem Pipe-Zeichen verbunden
       (Erwartung laut Task: `--sep=pipe` wird als Trenner aufgelöst; wenn stattdessen der Text
       "pipe" erscheint, ist das ein Befund)
@@ -59,7 +59,7 @@ Voraussetzung: spotlight.nvim aktiv, `spotlight.follow` an (Default).
 - [ ] Nach Case B wechseln (Buffer von B fokussieren): die Markierungsliste ist **leer**
 - [ ] In B einen anderen Begriff markieren
 - [ ] Zurück nach A: A-Markierungen sind wieder da, die von B nicht
-- [ ] `:Case spotlight list`: beide Cases mit ihrer Anzahl
+- [x] `:Case spotlight list`: beide Cases mit ihrer Anzahl _(auto 2026-10-29: casedesk.nvim/TESTS/case_spotlights_spec.lua grün)_
 - [ ] `:Case spotlight show` (in A): Text, Farb-Slot, Match-Modus, Ursprungsdatei stimmen
 - [ ] Neovim beenden und in einem Case neu starten: Markierungen kommen zurück, **kein**
       Hinweis-Dauerlärm (höchstens eine Meldung beim ersten Betreten)

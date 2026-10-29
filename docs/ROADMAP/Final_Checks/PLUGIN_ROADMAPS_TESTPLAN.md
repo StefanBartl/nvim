@@ -155,11 +155,11 @@ für fast alles hier — `:Lsp status` sagt, ob einer da ist.
 
 - [ ] `:Lsp hints` schaltet Inlay-Hints im aktuellen Buffer um; `<leader>th`
       tut dasselbe, `<leader>tH` global.
-- [ ] **Die eigentliche Prüfung ist die Zweistufigkeit**: mit global `enable =
+- [x] **Die eigentliche Prüfung ist die Zweistufigkeit**: mit global `enable =
       true` und `filetypes = { lua = false }` sind Hints überall **außer** in
       Lua an. Ein fehlender Filetype-Schlüssel erbt die globale Einstellung —
       „keine Meinung" und „hier ausdrücklich aus" sind verschiedene Zustände.
-      Genau das kann eine Liste nicht, und deshalb ist es eine Map.
+      Genau das kann eine Liste nicht, und deshalb ist es eine Map. _(auto 2026-10-29: lsp.nvim/TESTS/lsp/inlay_hints_spec.lua grün)_
 
 ---
 
@@ -168,9 +168,9 @@ für fast alles hier — `:Lsp status` sagt, ob einer da ist.
 - [ ] `:checkhealth lsp` zeigt vier Zahlen in einer Kette: **installed →
       configured → set up → attached**, plus welche der laufenden Clients
       *diesen* Buffer bedienen.
-- [ ] Bei einem schweren Server über vielen Buffern erscheint eine Warnung.
+- [x] Bei einem schweren Server über vielen Buffern erscheint eine Warnung.
       Zum Provozieren: viele Dateien desselben Filetyps öffnen (`:args **/*.ts`,
-      `:argdo edit`).
+      `:argdo edit`). _(auto 2026-10-29: lsp.nvim/TESTS/lsp/health_spec.lua grün)_
 
 ---
 
@@ -193,11 +193,11 @@ für fast alles hier — `:Lsp status` sagt, ob einer da ist.
 - [ ] Cursor auf eine Zeile mit verfügbarer Code-Action (eine Diagnostic ist der
       einfachste Fall) → Indikator erscheint. `<leader>tl` schaltet ihn um,
       `<leader>tL` global.
-- [ ] **Die Kind-Allowlist ist der Punkt, nicht ein Detail davon**: der
+- [x] **Die Kind-Allowlist ist der Punkt, nicht ein Detail davon**: der
       Indikator darf *nicht* bei jeder beliebigen Action angehen (ungefiltert
       liefern viele Server ständig etwas). Auf einer unauffälligen Zeile ohne
       Diagnostic muss er dunkel bleiben — leuchtet er dauernd, ist die Allowlist
-      umgangen und der Indikator wertlos.
+      umgangen und der Indikator wertlos. _(auto 2026-10-29: lsp.nvim/TESTS/lsp/lightbulb_spec.lua grün)_
 
 ---
 
@@ -228,21 +228,21 @@ für fast alles hier — `:Lsp status` sagt, ob einer da ist.
 
 - [ ] `:Lsp status` nennt das aktive Profil **und** die Ebene, aus der jeder
       Wert kommt.
-- [ ] Per-Projekt-Override: einen Server in *einem* Projekt abschalten, ohne die
-      globale Config anzufassen → in einem anderen Projekt läuft er weiter.
-- [ ] **Die Ebenen sind der Test**: eine Warnung über einen schlechten Wert muss
+- [x] Per-Projekt-Override: einen Server in *einem* Projekt abschalten, ohne die
+      globale Config anzufassen → in einem anderen Projekt läuft er weiter. _(auto 2026-10-29: lsp.nvim/TESTS/lsp/config_layers_spec.lua grün)_
+- [x] **Die Ebenen sind der Test**: eine Warnung über einen schlechten Wert muss
       sagen, aus welcher Ebene er stammt. Ohne diese Beschriftung ist eine
-      vierstufige Merge-Kette nicht debuggbar.
+      vierstufige Merge-Kette nicht debuggbar. _(auto 2026-10-29: lsp.nvim/TESTS/lsp/config_layers_spec.lua grün)_
 
 ---
 
 ### M1 · `:LspDoctor probe`
 
-- [ ] `:LspDoctor probe` gibt den angehängten Clients einen Buffer, den sie
-      nicht parsen können, und meldet, ob Diagnostics zurückkommen.
-- [ ] **Wozu es da ist**: eine saubere Datei und eine tote Pipeline sehen beide
+- [x] `:LspDoctor probe` gibt den angehängten Clients einen Buffer, den sie
+      nicht parsen können, und meldet, ob Diagnostics zurückkommen. _(auto 2026-10-29: lsp.nvim/TESTS/lsp/probe_live_spec.lua grün)_
+- [x] **Wozu es da ist**: eine saubere Datei und eine tote Pipeline sehen beide
       wie eine leere Gutter aus. `probe` unterscheidet sie — als einziger der
-      sechs Reports, und deshalb ist er nicht Teil von `:LspDoctor all`.
+      sechs Reports, und deshalb ist er nicht Teil von `:LspDoctor all`. _(auto 2026-10-29: lsp.nvim/TESTS/lsp/lspdoctor_spec.lua + probe_live_spec.lua grün)_
 
 ---
 
@@ -307,8 +307,8 @@ end)
 - [ ] `experimental.any_file = true`, eine **Nicht**-Markdown-Datei öffnen,
       `:MDView start` → sie erscheint als ein einzelner, nach Dateiendung
       gefärbter Codeblock statt durch den Markdown-Renderer.
-- [ ] Die Torwächter greifen weiter: ein Terminal-, Hilfe- oder Quickfix-Buffer,
-      eine Binärdatei und mdviews eigener Log-Buffer werden **nicht** gepusht.
+- [x] Die Torwächter greifen weiter: ein Terminal-, Hilfe- oder Quickfix-Buffer,
+      eine Binärdatei und mdviews eigener Log-Buffer werden **nicht** gepusht. _(auto 2026-10-29: mdview.nvim/TESTS/nvim/previewable_spec.lua grün)_
 
 ---
 
@@ -339,13 +339,13 @@ end)
 
 Alle drei brauchen ImageMagick und schreiben **neben** die Quelle, nie darüber.
 
-- [ ] `:Image scale 50%` → `photo.png` wird zu `photo.scaled.png`. Auch
-      `800x600`, `800x`, `x600`, `800x600!` prüfen.
+- [x] `:Image scale 50%` → `photo.png` wird zu `photo.scaled.png`. Auch
+      `800x600`, `800x`, `x600`, `800x600!` prüfen. _(auto 2026-10-29: images.nvim/TESTS/convert_spec.lua grün)_
 - [ ] `:Image optimise` → `photo.optimised.png`, kleiner. **Ein Ergebnis, das
       nicht kleiner ist, wird gelöscht und gemeldet** — das ist die
       interessante Zeile, nicht der Erfolgsfall.
-- [ ] `:Image convert png` → gleicher Stamm, anderes Format. `convert pdf` nimmt
-      denselben Weg wie `:Image export`.
+- [x] `:Image convert png` → gleicher Stamm, anderes Format. `convert pdf` nimmt
+      denselben Weg wie `:Image export`. _(auto 2026-10-29: images.nvim/TESTS/convert_spec.lua grün)_
 - [ ] Ohne Argument arbeiten alle auf dem Bild **unter dem Cursor** — das ist
       der Grund, warum sie unter `:Image` liegen und nicht unter `:File`.
 
@@ -383,19 +383,19 @@ Alle drei brauchen ImageMagick und schreiben **neben** die Quelle, nie darüber.
 
 ### M17/M14 · `sibling-reference-missing`
 
-- [ ] Einen Verweis der Form `<repo>/<pfad>` in eine Doku schreiben, der ins
+- [x] Einen Verweis der Form `<repo>/<pfad>` in eine Doku schreiben, der ins
       Leere zeigt → `:DocMap check` meldet ihn. Der Anlass waren neun tote
-      `docs/ECOSYSTEM.md`-Verweise, jeder tot ab der Sekunde seines Entstehens.
-- [ ] Gegenprobe: ein gültiger Geschwister-Verweis darf **nicht** gemeldet
-      werden.
+      `docs/ECOSYSTEM.md`-Verweise, jeder tot ab der Sekunde seines Entstehens. _(auto 2026-10-29: documentation.nvim/TESTS/sibling_references_spec.lua grün)_
+- [x] Gegenprobe: ein gültiger Geschwister-Verweis darf **nicht** gemeldet
+      werden. _(auto 2026-10-29: documentation.nvim/TESTS/sibling_references_spec.lua grün)_
 
 ---
 
 ### M17/M7c · `file-holds-many-modules`
 
-- [ ] `:DocMap check` gegen ein Repo mit Inline-Modulen (`docmap-desktop` ist
+- [x] `:DocMap check` gegen ein Repo mit Inline-Modulen (`docmap-desktop` ist
       der Fall, an dem es verifiziert wurde) → eine Datei mit mehreren
-      Modul-Identitäten wird gemeldet, statt still für alle zu antworten.
+      Modul-Identitäten wird gemeldet, statt still für alle zu antworten. _(auto 2026-10-29: documentation.nvim/TESTS/many_modules_spec.lua grün)_
 - [ ] Auf dem eigenen Korpus muss der Check **still bleiben** — ein Check, der
       überall anschlägt, wird ignoriert.
 
@@ -414,22 +414,22 @@ Alle drei brauchen ImageMagick und schreiben **neben** die Quelle, nie darüber.
 
 ### M17/QW6 · Fenced Blocks auf der generierten Seite
 
-- [ ] `:DocMap serve` (oder das erzeugte Artefakt) öffnen: ein Codeblock in
+- [x] `:DocMap serve` (oder das erzeugte Artefakt) öffnen: ein Codeblock in
       einer Feature-Beschreibung ist als solcher gerendert **und die Sprache ist
-      erhalten** — vorher wurde sie ein Zeichen vor dem Gebrauch weggeworfen.
-- [ ] Auch im `@description`-Rumpf eines Moduls und in `@example` prüfen; das
-      waren die beiden Oberflächen, die vorher gar nicht an Fences trennten.
+      erhalten** — vorher wurde sie ein Zeichen vor dem Gebrauch weggeworfen. _(auto 2026-10-29: documentation.nvim/TESTS/fence_render_spec.lua grün)_
+- [x] Auch im `@description`-Rumpf eines Moduls und in `@example` prüfen; das
+      waren die beiden Oberflächen, die vorher gar nicht an Fences trennten. _(auto 2026-10-29: documentation.nvim/TESTS/fence_render_spec.lua grün)_
 
 ---
 
 ### M12b · Analysis → Startup
 
-- [ ] In der generierten Seite: Reiter **Analysis → Startup**, mit dem
+- [x] In der generierten Seite: Reiter **Analysis → Startup**, mit dem
       Flamegraph **eingebettet** (nicht nachgeladen) — er braucht deshalb kein
-      `:DocMap serve`, anders als Telemetry und Loaded.
-- [ ] **Die `--check`-Ausnahme ist der heikle Teil**: ein fremdes Repo darf sich
+      `:DocMap serve`, anders als Telemetry und Loaded. _(auto 2026-10-29: documentation.nvim/TESTS/startup_graph_spec.lua grün)_
+- [x] **Die `--check`-Ausnahme ist der heikle Teil**: ein fremdes Repo darf sich
       dadurch nicht dauerhaft als „stale" melden. Ein `:DocMap check` in einem
-      Repo ohne Startup-Daten muss ruhig bleiben.
+      Repo ohne Startup-Daten muss ruhig bleiben. _(auto 2026-10-29: documentation.nvim/TESTS/startup_graph_spec.lua grün)_
 
 ---
 
@@ -439,9 +439,9 @@ Alle drei brauchen ImageMagick und schreiben **neben** die Quelle, nie darüber.
 
 - [ ] `:lua =vim.tbl_keys(require("color_my_ascii").highlight)` → `runs_for_block`
       und `attrs_for_group`, ohne dass `setup()` von Hand aufgerufen wurde.
-- [ ] `:lua =require("color_my_ascii").highlight.attrs_for_group("Comment")` →
+- [x] `:lua =require("color_my_ascii").highlight.attrs_for_group("Comment")` →
       Farben als `"#rrggbb"`-Strings, und ein **nicht** gesetztes Attribut fehlt,
-      statt einen Default zu bekommen.
+      statt einen Default zu bekommen. _(auto 2026-10-29: color_my_ascii.nvim/TESTS/api_highlight_spec.lua grün)_
 - [ ] **Der eigentliche Test ist der Konsument**: wenn L4 oben richtige Farben
       zeigt, stimmt diese API. Zeigt der Browser ungefärbte Blöcke, wo der Puffer
       gefärbt ist, ist hier die erste Stelle zum Nachsehen.

@@ -48,7 +48,7 @@ Die Tasten aus dem früheren `terminal.lua` müssen sich anfühlen wie vorher.
   Notiz:
 - [ ] `<C-h>` / `<C-j>` / `<C-k>` im Terminal wechseln das Fenster; `<C-l>` löscht weiterhin den Bildschirm der Shell (`window_right` ist aus).
   Notiz:
-- [ ] Optional, falls `keymaps.clear` aktiviert ist: tippt `cls` bei cmd.exe/PowerShell, sonst `clear` (die Shell entscheidet, nicht das OS; Git Bash/WSL unter Windows bekommen `clear`).
+- [x] Optional, falls `keymaps.clear` aktiviert ist: tippt `cls` bei cmd.exe/PowerShell, sonst `clear` (die Shell entscheidet, nicht das OS; Git Bash/WSL unter Windows bekommen `clear`). _(auto 2026-10-29: terminal.nvim/TESTS/bindings_spec.lua grün)_
   Notiz:
 - [ ] Layouts: `:Terminal open build --layout=vsplit`, `split`, `tab`, `float` sehen richtig aus (Rahmen, Titel = Name, Größe), Fensteroptionen (keine Zeilennummern) stimmen.
   Notiz:
@@ -59,19 +59,19 @@ Die Tasten aus dem früheren `terminal.lua` müssen sich anfühlen wie vorher.
 
 ## B — Befehle und Senden
 
-- [ ] `:Terminal run npm test` (oder ein harmloser Befehl) tippt die Zeile ins "run"-Terminal und drückt Enter.
+- [x] `:Terminal run npm test` (oder ein harmloser Befehl) tippt die Zeile ins "run"-Terminal und drückt Enter. _(auto 2026-10-29: terminal.nvim/TESTS/api_spec.lua grün)_
   Notiz:
 - [ ] `:Terminal run --direct make test`: der Befehl ist der Job; nach dem Ende bleibt das Fenster (`close = never`), der Exit-Code ist sichtbar.
   Notiz:
-- [ ] `:Terminal send line` tippt **ohne** Enter, `--exec` mit Enter. Mehrere Zeilen brauchen `--exec`.
+- [x] `:Terminal send line` tippt **ohne** Enter, `--exec` mit Enter. Mehrere Zeilen brauchen `--exec`. _(auto 2026-10-29: terminal.nvim/TESTS/bindings_spec.lua + api_spec.lua grün)_
   Notiz:
-- [ ] `:'<,'>Terminal send selection` zeichenweise (`v`), zeilenweise (`V`) und blockweise (`<C-v>` mit `$`) sendet genau die Auswahl.
+- [x] `:'<,'>Terminal send selection` zeichenweise (`v`), zeilenweise (`V`) und blockweise (`<C-v>` mit `$`) sendet genau die Auswahl. _(auto 2026-10-29: terminal.nvim/TESTS/bindings_spec.lua grün)_
   Notiz:
-- [ ] `:Terminal send file` sendet den Buffer.
+- [x] `:Terminal send file` sendet den Buffer. _(auto 2026-10-29: terminal.nvim/TESTS/bindings_spec.lua grün)_
   Notiz:
-- [ ] `<Tab>`-Completion der Terminal-Namen nach `:Terminal open ` / `send line `.
+- [x] `<Tab>`-Completion der Terminal-Namen nach `:Terminal open ` / `send line `. _(auto 2026-10-29: terminal.nvim/TESTS/bindings_spec.lua grün)_
   Notiz:
-- [ ] `:Terminal hide` / `close` / `close build`: ausgeblendet läuft der Job weiter, geschlossen ist er weg und der Name frei.
+- [x] `:Terminal hide` / `close` / `close build`: ausgeblendet läuft der Job weiter, geschlossen ist er weg und der Name frei. _(auto 2026-10-29: terminal.nvim/TESTS/native_spec.lua + api_spec.lua grün)_
   Notiz:
 
 ---
@@ -84,17 +84,17 @@ Neu seit 2026-10-15.
   Notiz:
 - [ ] Wörter im Prompt filtern die Liste; `<CR>` öffnet das gewählte Terminal.
   Notiz:
-- [ ] `<C-x>` schließt das gewählte Terminal und die Liste aktualisiert sich ohne Neuöffnen.
+- [x] `<C-x>` schließt das gewählte Terminal und die Liste aktualisiert sich ohne Neuöffnen. _(auto 2026-10-29: terminal.nvim/TESTS/picker_spec.lua grün)_
   Notiz:
-- [ ] `<C-s>`: Prompt "Send to …", eine Zeile eingeben, Enter; die Zeile läuft im Terminal.
+- [x] `<C-s>`: Prompt "Send to …", eine Zeile eingeben, Enter; die Zeile läuft im Terminal. _(auto 2026-10-29: terminal.nvim/TESTS/picker_spec.lua grün)_
   Notiz:
-- [ ] Ein Terminal mit beendetem Job erscheint gedämpft mit "exited N".
+- [x] Ein Terminal mit beendetem Job erscheint gedämpft mit "exited N". _(auto 2026-10-29: terminal.nvim/TESTS/picker_spec.lua grün)_
   Notiz:
-- [ ] Fallback: mit `lib.nvim` ohne Kit (oder `engine = "select"`) fragt `vim.ui.select` erst nach dem Terminal, dann nach der Aktion (open / send a line / close).
+- [x] Fallback: mit `lib.nvim` ohne Kit (oder `engine = "select"`) fragt `vim.ui.select` erst nach dem Terminal, dann nach der Aktion (open / send a line / close). _(auto 2026-10-29: terminal.nvim/TESTS/picker_spec.lua grün)_
   Notiz:
 - [ ] Statusline-Segment: `terminal_count` in die `order`-Liste von `ui.statusline` aufnehmen. Im Terminal steht `name (n)` bzw. nur `name`, woanders `n terminals`, ohne Terminals nichts. Kein Flackern beim Ein-/Ausblenden.
   Notiz:
-- [ ] Events: `:autocmd User TerminalCommandPost` / `TerminalExitPost` mit einem Wegwerf-Listener (`:lua vim.api.nvim_create_autocmd("User", { pattern = {"TerminalCommandPost","TerminalExitPost"}, callback = function(ev) print(vim.inspect(ev.data)) end })`) belegen; `:Terminal run ls` und `:Terminal run --direct ...` lösen sie wie in `docs/BINDINGS.md` beschrieben aus; getippter Text ohne Enter nicht.
+- [x] Events: `:autocmd User TerminalCommandPost` / `TerminalExitPost` mit einem Wegwerf-Listener (`:lua vim.api.nvim_create_autocmd("User", { pattern = {"TerminalCommandPost","TerminalExitPost"}, callback = function(ev) print(vim.inspect(ev.data)) end })`) belegen; `:Terminal run ls` und `:Terminal run --direct ...` lösen sie wie in `docs/BINDINGS.md` beschrieben aus; getippter Text ohne Enter nicht. _(auto 2026-10-29: terminal.nvim/TESTS/events_spec.lua grün)_
   Notiz:
 
 ---
@@ -103,15 +103,15 @@ Neu seit 2026-10-15.
 
 Mit `sessions.nvim` (`fe35ca8`) und `terminal.nvim` (`b56a7c8`).
 
-- [ ] Zwei Terminals offen (eins mit `run --direct`), `:Session save work`; neben `work.vim` liegt `.work.terminals.json`.
+- [ ] Zwei Terminals offen (eins mit `run --direct`), `:Session save work`; neben `work.vim` liegt `.work.terminals.json`. _(auto 2026-10-29: terminal.nvim/TESTS/sessions_spec.lua grün, nur teilweise: Spec löst die Session-Events selbst aus, echtes sessions.nvim ungetestet)_
   Notiz:
-- [ ] Neovim neu starten, `:Session load work`: die Terminals kommen versteckt zurück (`toggle` zeigt sie); bei `sessions.commands = "ask"` fragt die Auswahl einmal nach den Befehlen.
+- [ ] Neovim neu starten, `:Session load work`: die Terminals kommen versteckt zurück (`toggle` zeigt sie); bei `sessions.commands = "ask"` fragt die Auswahl einmal nach den Befehlen. _(auto 2026-10-29: terminal.nvim/TESTS/sessions_spec.lua grün, nur teilweise: Spec löst die Session-Events selbst aus, echtes sessions.nvim ungetestet)_
   Notiz:
-- [ ] Zweites `:Session load work` dupliziert nichts.
+- [ ] Zweites `:Session load work` dupliziert nichts. _(auto 2026-10-29: terminal.nvim/TESTS/sessions_spec.lua grün, nur teilweise: Spec löst die Session-Events selbst aus, echtes sessions.nvim ungetestet)_
   Notiz:
-- [ ] `:Session rename work work2`: `.work2.terminals.json` ist da, `.work.terminals.json` weg; `:Session load work2` bringt die Terminals zurück.
+- [ ] `:Session rename work work2`: `.work2.terminals.json` ist da, `.work.terminals.json` weg; `:Session load work2` bringt die Terminals zurück. _(auto 2026-10-29: terminal.nvim/TESTS/sessions_spec.lua grün, nur teilweise: Spec löst die Session-Events selbst aus, echtes sessions.nvim ungetestet)_
   Notiz:
-- [ ] `:Session delete work2` entfernt das Sidecar mit.
+- [ ] `:Session delete work2` entfernt das Sidecar mit. _(auto 2026-10-29: terminal.nvim/TESTS/sessions_spec.lua grün, nur teilweise: Spec löst die Session-Events selbst aus, echtes sessions.nvim ungetestet)_
   Notiz:
 
 ---
@@ -173,7 +173,7 @@ Neovim in einem WezTerm-Tab, `Configs/terminals/wezterm` aktiv.
   Notiz:
 - [ ] Hängt `adopt` oder `pin` irgendwo (Multiplexer antwortet langsam)? Der Editor bleibt bedienbar (Timeouts `multiplexer.timeout_ms`, `adopt.refresh_ms`).
   Notiz:
-- [ ] `terminal.teardown()` (z. B. vor `:qa`): schließt native Terminals und Adopt-Ansichten sauber, keine Meldungen.
+- [ ] `terminal.teardown()` (z. B. vor `:qa`): schließt native Terminals und Adopt-Ansichten sauber, keine Meldungen. _(auto 2026-10-29: terminal.nvim/TESTS/pin_adopt_spec.lua grün, nur teilweise: „keine Meldungen“ nicht geprüft)_
   Notiz:
 
 ---
@@ -188,9 +188,9 @@ Jeder Fall meldet **einmal** und stört nicht.
   Notiz:
 - [ ] tmux-Server stirbt, während ein Pane-Terminal offen ist: nächstes `open` ersetzt es, kein Hänger.
   Notiz:
-- [ ] Status-Export mit unbekannter Verschachtelung (äußerer Neovim antwortet nicht): Export bleibt an und warnt einmal (`0ab0268`).
+- [x] Status-Export mit unbekannter Verschachtelung (äußerer Neovim antwortet nicht): Export bleibt an und warnt einmal (`0ab0268`). _(auto 2026-10-29: terminal.nvim/TESTS/tmux_backend_spec.lua grün)_
   Notiz:
-- [ ] Ein Verzeichnis mit `#` im Namen (`C#`) als Projekt-Root unter tmux: das Pane öffnet im richtigen Verzeichnis.
+- [ ] Ein Verzeichnis mit `#` im Namen (`C#`) als Projekt-Root unter tmux: das Pane öffnet im richtigen Verzeichnis. _(auto 2026-10-29: terminal.nvim/TESTS/tmux_backend_spec.lua grün, nur teilweise: nur `#`-Quoting, kein echtes Pane)_
   Notiz:
 
 ---
@@ -229,11 +229,11 @@ Jeder Fall meldet **einmal** und stört nicht.
 
 - [ ] `:Terminal cheat` aus einem offenen Terminal: das Float sitzt am rechten Rand, das Terminal links bleibt lesbar (bei dem 80-%-Float-Terminal überdeckt es dessen rechten Rand: stört das?), Titel `bash · 1/9 About`, Markdown sieht gut aus (Tabellen, Backticks ausgeblendet).
   Notiz:
-- [ ] `]]` / `[[` / `<Tab>` / `<S-Tab>` blättern, nach dem letzten kommt der erste.
+- [x] `]]` / `[[` / `<Tab>` / `<S-Tab>` blättern, nach dem letzten kommt der erste. _(auto 2026-10-29: terminal.nvim/TESTS/cheatsheet_spec.lua grün)_
   Notiz:
-- [ ] `/` fragt nach einem Suchwort, springt in den passenden Abschnitt (auch ein anderer als der aktuelle), markiert den Treffer; `n` / `N` wandern über alle Treffer.
+- [x] `/` fragt nach einem Suchwort, springt in den passenden Abschnitt (auch ein anderer als der aktuelle), markiert den Treffer; `n` / `N` wandern über alle Treffer. _(auto 2026-10-29: terminal.nvim/TESTS/cheatsheet_spec.lua grün)_
   Notiz:
-- [ ] `g?` zeigt die `common`-Seite, nochmal `g?` zurück; `s` wählt eine andere Shell (`powershell`).
+- [x] `g?` zeigt die `common`-Seite, nochmal `g?` zurück; `s` wählt eine andere Shell (`powershell`). _(auto 2026-10-29: terminal.nvim/TESTS/cheatsheet_spec.lua grün)_
   Notiz:
 - [ ] Windows: in einem PowerShell-Terminal (Shell `pwsh`) erscheint die PowerShell-Seite von selbst; in Git Bash oder WSL die bash-Seite; in einem tmux-/WezTerm-Pane `common`. Stimmen die Inhalte (Befehle ausprobieren: `Where-Object`, `Select-String`, `2>&1`, `<(cmd)`)?
   Notiz:
@@ -243,7 +243,7 @@ Jeder Fall meldet **einmal** und stört nicht.
   Notiz:
 - [ ] Taste: `keymaps = { cheatsheet = "<A-?>" }` öffnet es im Terminal- und im Normal-Modus.
   Notiz:
-- [ ] Eigene Sheets: `cheatsheet.dir` mit einer `bash.md` ersetzt die eingebaute Seite; eine leere Datei fällt auf die eingebaute zurück; `cheatsheet.shells = { fish = "..." }` fügt eine Shell hinzu und `:Terminal cheat <Tab>` kennt sie.
+- [x] Eigene Sheets: `cheatsheet.dir` mit einer `bash.md` ersetzt die eingebaute Seite; eine leere Datei fällt auf die eingebaute zurück; `cheatsheet.shells = { fish = "..." }` fügt eine Shell hinzu und `:Terminal cheat <Tab>` kennt sie. _(auto 2026-10-29: terminal.nvim/TESTS/cheatsheet_spec.lua grün)_
   Notiz:
 - [ ] Inhalt: fehlt dir ein Bereich oder ein Befehl, den du ständig brauchst? (Wunschliste hier eintragen, daraus wird eine Task.)
   Notiz:

@@ -31,8 +31,8 @@ Testbild: ein Screenshot mit Text, z. B. `C:/repos/Notes/testbild.png`.
 
 ## 3. Rückgängig, Schreiben, Schließen — offen: nachtesten
 
-- [ ] `u` nimmt die letzte Box weg (sie ist wieder sichtbar), `2u` zwei -> funktiernt nicht, das geht nu mit <BS>
-- [ ] `gs`, `gy`, `<BS>` tun im Redact-Fenster nichts
+- [x] `u` nimmt die letzte Box weg (sie ist wieder sichtbar), `2u` zwei -> funktiernt nicht, das geht nu mit <BS> _(auto 2026-10-29: images.nvim/TESTS/redact_spec.lua grün)_
+- [x] `gs`, `gy`, `<BS>` tun im Redact-Fenster nichts _(auto 2026-10-29: images.nvim/TESTS/redact_spec.lua grün)_
 - [ ] `w`: Meldung `redacted copy saved: …/testbild.redacted.png`, Fenster schließt -> wmmacht  nchts, mit gs kann ich speichern
 - [ ] Die Datei `testbild.redacted.png` öffnen (`:Image zen …`): die Boxen sind schwarz,
       das Original `testbild.png` ist unverändert

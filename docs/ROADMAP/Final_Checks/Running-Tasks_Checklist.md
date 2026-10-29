@@ -111,8 +111,8 @@ Repos: `lib.nvim`, `ui.nvim`, `filetree.nvim`, `replacer.nvim`, `sessions.nvim`,
       flush/eckigen "hacker"-Style gewechselt haben (kombinierter Schalter),
       nicht mehr rounded.
   - Notiz:
-- [ ] `:UI kit-preset rounded` (oder einen anderen Preset) danach ausführen —
-      alles wechselt zurück, Tabline ebenfalls.
+- [x] `:UI kit-preset rounded` (oder einen anderen Preset) danach ausführen —
+      alles wechselt zurück, Tabline ebenfalls. _(auto 2026-10-29: ui.nvim/TESTS/kit_preset_cmd_spec.lua grün)_
   - Notiz:
 - [ ] Statusline-Hover-Tooltip (siehe T9 oben) während `hacker`-Preset aktiv
       ist erneut hovern — sollte jetzt AUCH grün/ASCII sein (vorher immer

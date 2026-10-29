@@ -21,12 +21,12 @@ Task `gitsuite.nvim/dashboard-act-during-bulk-fetch-live-check`. Code: `gitsuite
 :Git dashboard $REPOS_DIR
 ```
 
-- [ ] `gf`, bestätigen: noch nicht geholte Zeilen zeigen `· fetch queued`, laufende `⟳ fetch...`
-      (jetzt bis zu **vier** gleichzeitig), der Titel zählt mit (`fetch 4/12`)
-- [ ] Auf einer schon fertigen Zeile `P` (oder `f`): läuft sofort, der Bulk-Fetch läuft weiter
-- [ ] Auf einer wartenden oder laufenden Zeile `P`: eine klare Meldung, keine Aktion
-- [ ] Ein fehlgeschlagenes Repo (z. B. ohne Netz zu seinem Host) zeigt `✗ fetch failed`; die
-      Schlussmeldung nennt die Fehler; danach ist die Anzeige wieder normal
+- [x] `gf`, bestätigen: noch nicht geholte Zeilen zeigen `· fetch queued`, laufende `⟳ fetch...`
+      (jetzt bis zu **vier** gleichzeitig), der Titel zählt mit (`fetch 4/12`) _(auto 2026-10-29: gitsuite.nvim/TESTS/gitsuite/dashboard_bulk_spec.lua grün)_
+- [x] Auf einer schon fertigen Zeile `P` (oder `f`): läuft sofort, der Bulk-Fetch läuft weiter _(auto 2026-10-29: gitsuite.nvim/TESTS/gitsuite/dashboard_bulk_spec.lua grün)_
+- [x] Auf einer wartenden oder laufenden Zeile `P`: eine klare Meldung, keine Aktion _(auto 2026-10-29: gitsuite.nvim/TESTS/gitsuite/dashboard_bulk_spec.lua grün)_
+- [x] Ein fehlgeschlagenes Repo (z. B. ohne Netz zu seinem Host) zeigt `✗ fetch failed`; die
+      Schlussmeldung nennt die Fehler; danach ist die Anzeige wieder normal _(auto 2026-10-29: gitsuite.nvim/TESTS/gitsuite/dashboard_bulk_spec.lua grün)_
 - [ ] Gefühlt schneller als vorher? Optional zum Vergleich in `setup()`
       `dashboard = { fetch_jobs = 1 }` setzen, `gf` stoppen, dann wieder 4 (Default)
 
@@ -43,9 +43,9 @@ Config `nvim-config@28fa91aa`.
       (gitsuite ist dann noch nicht geladen), `:Lazy sync`
 - [ ] Nach dem Sync erscheint genau **ein** Toast „plugins: N of M updated, K commits ->
       :Git plugins report --last“ (bzw. „the sync updated nothing“); der Fokus bleibt im Lazy-Fenster
-- [ ] `:checkhealth gitsuite` zeigt „lazy integration: toast (listening on User LazySync)“
-- [ ] `:Git plugins report --last` zeigt den gespeicherten Report — **neu:** im Report-Tab (Abschnitt 4)
-- [ ] Optional `after_sync = "open"`: nach einem Sync mit Updates öffnet sich der Report-Tab
+- [x] `:checkhealth gitsuite` zeigt „lazy integration: toast (listening on User LazySync)“ _(auto 2026-10-29: gitsuite.nvim/TESTS/gitsuite/health_spec.lua grün)_
+- [x] `:Git plugins report --last` zeigt den gespeicherten Report — **neu:** im Report-Tab (Abschnitt 4) _(auto 2026-10-29: gitsuite.nvim/TESTS/gitsuite/plugins_report_spec.lua + lazy_sync_spec.lua grün)_
+- [x] Optional `after_sync = "open"`: nach einem Sync mit Updates öffnet sich der Report-Tab _(auto 2026-10-29: gitsuite.nvim/TESTS/gitsuite/lazy_sync_spec.lua grün)_
 
 Kommt kein Toast, obwohl gitsuite geladen ist: Lazy feuert das Event vermutlich nicht in die
 benannte Gruppe nach. Bitte als Befund notieren.
@@ -81,26 +81,26 @@ Task `gitsuite.nvim/plugins-report-ui-live-check`. Code: `gitsuite.nvim@015747b`
 :Git plugins report
 ```
 
-- [ ] Ein eigener Tab öffnet sich: links (ab 140 Spalten) bzw. oben die Liste, daneben bzw. darunter
-      die Preview; oben die Legende (`<CR> open │ D digest │ …`)
-- [ ] Erste Zeile ist die Zusammenfassung; Breaking-Plugins stehen oben, jeder Zustand mit Symbol
-      **und** Wort (`! breaking`, `↑ updated`, `✗ error`)
+- [x] Ein eigener Tab öffnet sich: links (ab 140 Spalten) bzw. oben die Liste, daneben bzw. darunter
+      die Preview; oben die Legende (`<CR> open │ D digest │ …`) _(auto 2026-10-29: gitsuite.nvim/TESTS/gitsuite/plugins_report_window_spec.lua grün)_
+- [x] Erste Zeile ist die Zusammenfassung; Breaking-Plugins stehen oben, jeder Zustand mit Symbol
+      **und** Wort (`! breaking`, `↑ updated`, `✗ error`) _(auto 2026-10-29: gitsuite.nvim/TESTS/gitsuite/plugins_report_ui_spec.lua grün)_
 - [ ] Farben: Breaking rot, `updated` grün, Hashes als Zahl, Gedimmtes grau — passend zu deinem
       Farbschema; nach `:colorscheme <anderes>` noch farbig
-- [ ] `<CR>` auf einem Plugin: Detail mit BREAKING / GROUPED / OTHER; mit `j` über die Commits:
+- [x] `<CR>` auf einem Plugin: Detail mit BREAKING / GROUPED / OTHER; mit `j` über die Commits:
       Preview zeigt Nachricht und die geänderten Dateien (bei lazy-Klonen **ohne** `+/-`-Zahlen,
       mit dem Hinweis „blobless“ — das ist so gewollt); rechts in der Legende steht die Stelle
       des Commits im Update, `c 17/86` (`gitsuite.nvim@5d78497`; fehlt bei Plugins, deren Liste
-      nicht das ganze Update ist)
-- [ ] `D`: Breaking-Digest über alle Plugins; `]b` springt zum nächsten ungesehenen
-- [ ] `m` auf einem Commit, dann auf einem Plugin: „unseen“-Zähler sinkt; `q`, `:Git plugins`:
-      Marken sind noch da, Cursor steht wieder auf derselben Zeile
+      nicht das ganze Update ist) _(auto 2026-10-29: gitsuite.nvim/TESTS/gitsuite/plugins_report_ui_spec.lua + plugins_report_preview_spec.lua + plugins_report_window_spec.lua grün)_
+- [x] `D`: Breaking-Digest über alle Plugins; `]b` springt zum nächsten ungesehenen _(auto 2026-10-29: gitsuite.nvim/TESTS/gitsuite/plugins_report_window_spec.lua + plugins_report_seen_spec.lua grün)_
+- [x] `m` auf einem Commit, dann auf einem Plugin: „unseen“-Zähler sinkt; `q`, `:Git plugins`:
+      Marken sind noch da, Cursor steht wieder auf derselben Zeile _(auto 2026-10-29: gitsuite.nvim/TESTS/gitsuite/plugins_report_seen_spec.lua + plugins_report_review_spec.lua + plugins_report_window_spec.lua grün)_
 - [ ] `o` auf einem Commit: Browser öffnet die Commit-Seite; auf einem Plugin die Compare-Seite
-- [ ] `S`: Status-Popup des Klons; `C`: CHANGELOG im vorigen Tab, schreibgeschützt;
-      `Q`: Breaking-Commits in der Quickfix-Liste (im vorigen Tab); `F`: Picker springt zu Commit
+- [x] `S`: Status-Popup des Klons; `C`: CHANGELOG im vorigen Tab, schreibgeschützt;
+      `Q`: Breaking-Commits in der Quickfix-Liste (im vorigen Tab); `F`: Picker springt zu Commit _(auto 2026-10-29: gitsuite.nvim/TESTS/gitsuite/plugins_report_actions_spec.lua grün)_
 - [ ] `?`: alle Tasten, nichts abgeschnitten; `O`: Menü der Aktionen
-- [ ] `:tabonly` in einem anderen Tab, dann `:Git plugins`: Tab kommt wieder, gleiche Sicht
-- [ ] Neovim neu starten, `:Git plugins`: zeigt den letzten gespeicherten Report ohne Scan
+- [x] `:tabonly` in einem anderen Tab, dann `:Git plugins`: Tab kommt wieder, gleiche Sicht _(auto 2026-10-29: gitsuite.nvim/TESTS/gitsuite/plugins_report_window_spec.lua grün)_
+- [x] Neovim neu starten, `:Git plugins`: zeigt den letzten gespeicherten Report ohne Scan _(auto 2026-10-29: gitsuite.nvim/TESTS/gitsuite/plugins_report_review_spec.lua + plugins_report_spec.lua grün)_
 
 ---
 

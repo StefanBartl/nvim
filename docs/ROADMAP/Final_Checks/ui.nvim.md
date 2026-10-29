@@ -101,7 +101,7 @@ Neovim neu starten. Ziel ist die echte nvim-Config (dort belegt die Config
   Notiz:
 - [ ] Cheatsheet-Taste `<M-h>` — erwartet: derselbe Hilfe-Float wie bei bloßem `:UI`.
   Notiz:
-- [ ] `:UI help` — erwartet: aus den Routen erzeugte Hilfe, vollständig (jede Unterbefehls-Route kommt vor, nichts Veraltetes).
+- [x] `:UI help` — erwartet: aus den Routen erzeugte Hilfe, vollständig (jede Unterbefehls-Route kommt vor, nichts Veraltetes). _(auto 2026-10-29: ui.nvim/TESTS/usrcmd_help_spec.lua grün)_
   Notiz:
 - [ ] Float schließen (`q`/`<Esc>`) — erwartet: sauber weg, kein Fokus-Rest.
   Notiz:

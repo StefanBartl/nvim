@@ -156,7 +156,7 @@ sehr große `.md` mit einem sehr häufigen Token (Abschnitt "Deckel").
 
 - [ ] `:MDView spotlight off`: Markierungen im offenen Tab verschwinden; `:MDView spotlight on`:
       sie kommen zurück
-- [ ] Mit `browser.spotlight_sync = false` wird nie etwas markiert
+- [x] Mit `browser.spotlight_sync = false` wird nie etwas markiert _(auto 2026-10-29: mdview.nvim/TESTS/nvim/spotlight_sync_spec.lua grün)_
 
 ### Deckel bei großem Dokument
 
