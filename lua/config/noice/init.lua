@@ -173,7 +173,8 @@ M.routes = {
   },
 
   -- Generic notify route. MUST stay behind every notify skip rule above (and the
-  -- event-less "No signature help" skip): the router stops at the first match, so
+  -- event-less "No signature help" and "Error detected while processing BufReadPost
+  -- Autocommands for" skips, which also catch notifies): the router stops at the first match, so
   -- placed first it shadowed them all.
   {
     filter = { event = "notify" },
