@@ -2,8 +2,9 @@
 // Installs missing dev toolchains per profile (winget / apt / brew).
 // Idempotent: only missing tools are installed; asks before installing.
 //
-// Usage: node setup-devtools.js [--profile nvim,rust,...] [--yes] [--dry-run]
-//   Profiles: core (always), nvim, cpp, rust, web, tauri (= rust + web + webview2)
+// Usage: node setup-devtools.js [--profile nvim,rust,...|all] [--yes] [--dry-run]
+//        node setup-devtools.js --status        (what is installed, per profile; installs nothing)
+//   Profiles: core (always), nvim, cpp, rust, web, tauri (= rust + web + webview2), all (= every profile)
 //   Without --profile the profiles saved in ~/.claude/devtools.profile are used.
 
 const { execFileSync, spawnSync } = require('child_process');
@@ -31,12 +32,36 @@ function readSavedProfiles() {
   }
 }
 
-const requested = (opt('--profile') ? opt('--profile').split(',') : readSavedProfiles()).map((p) => p.trim());
-if (!requested.length) {
-  console.error('Kein Profil angegeben. Beispiel: node setup-devtools.js --profile nvim,rust,web');
-  console.error('Profile: core (immer), nvim, cpp, rust, web, tauri');
+const knownProfiles = [...new Set(table.tools.flatMap((t) => t.profiles).concat(Object.keys(table.implies)))].filter(
+  (p) => p !== 'core'
+);
+
+if (flag('--status')) {
+  for (const profile of ['core', ...knownProfiles]) {
+    const tools = table.tools.filter((t) => t.profiles.includes(profile) && (!t.osOnly || t.osOnly === PLATFORM));
+    if (!tools.length) continue;
+    console.log(`  ${profile}`);
+    for (const tool of tools) {
+      const note = tool.fallbackFor ? `  (Ersatz fuer ${tool.fallbackFor})` : '';
+      console.log(`    ${isInstalled(tool) ? 'ok   ' : 'fehlt'}  ${tool.name}${note}`);
+    }
+  }
+  process.exit(0);
+}
+
+const requestedRaw = (opt('--profile') ? opt('--profile').split(',') : readSavedProfiles()).map((p) => p.trim());
+if (!requestedRaw.length) {
+  console.error('Kein Profil angegeben. Beispiel: node setup-devtools.js --profile nvim,rust,web  (oder all)');
+  console.error(`Profile: core (immer), ${knownProfiles.join(', ')}, all (alle)`);
   process.exit(1);
 }
+const unknownProfiles = requestedRaw.filter((p) => p !== 'all' && p !== 'core' && !knownProfiles.includes(p));
+if (unknownProfiles.length) {
+  console.error(`Unbekanntes Profil: ${unknownProfiles.join(', ')}`);
+  console.error(`Bekannt: core (immer), ${knownProfiles.join(', ')}, all (alle)`);
+  process.exit(1);
+}
+const requested = requestedRaw.includes('all') ? knownProfiles : requestedRaw;
 
 const profiles = new Set(['core']);
 for (const p of requested) {
@@ -153,7 +178,7 @@ function ask(question) {
 
   if (!flag('--dry-run') && opt('--profile')) {
     fs.mkdirSync(path.dirname(profileFile), { recursive: true });
-    fs.writeFileSync(profileFile, `${requested.join(',')}\n`, 'utf8');
+    fs.writeFileSync(profileFile, `${requestedRaw.join(',')}\n`, 'utf8');
     console.log(`\nProfil gemerkt in ${profileFile}`);
   }
 })();

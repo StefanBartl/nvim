@@ -7,6 +7,12 @@
 - Immer ausgeben, was gerade gemacht wird / ob es etwas Interessantes gab – damit ich Bescheid weiß.
 - Wenn Chip-Tasks angelegt werden, diese bitte ebenfalls auf Deutsch verfassen.
 
+## Maschine: du bist auf der Workstation
+
+- Hier gilt `NVIM_MACHINE_ROLE=workstation` (lesen mit `$env:NVIM_MACHINE_ROLE`; nicht aus dem Rechnernamen raten, bei Zweifel nachfragen).
+- Tasks mit Tag `not-on-workstation` hier nicht ausführen, auch nicht „nur testen“ (native Programme bauen, installieren oder starten, Runner, Tests und Builds der nativen Apps): nur vorbereiten und mir Bescheid geben. Sie laufen auf dem privaten Rechner (`STEVESPC`).
+- Tasks mit Tag `on-workstation` gehören hierher (Handläufe, Messungen). Fällt ein Workstation-Bezug auf, den die Task nicht kennzeichnet, den Tag nachziehen.
+
 ## Tasks und Pläne (tasks.nvim)
 
 Tasks sind Markdown-Dateien im Vault `$REPOS_DIR/tasks-vault/` (Repo `tasks-vault`, nicht WKDBooks): Frontmatter (Pflicht nur `title`, `status`) + Body (`## Kontext` / `## Akzeptanz` / `## Notizen`; mit `--lang=en` `Context` / `Acceptance` / `Notes`). Eine Task = ein Ergebnis.
@@ -31,7 +37,7 @@ Begriffe: `status` = open, doing, blocked, decision (wartet auf mich), parked (z
 ### Task bearbeiten
 
 1. `show <id>` und die Datei komplett lesen (`blocked_by`, `refs`, `## Plan`-Schritte). Ohne ID („nächste Task“): `next <area-des-Repos> --actor=cdx --n=1`; meldet es `empty:`, mir das sagen, keine fremden Tasks nehmen.
-2. Nicht selbst starten, sondern Stand melden und nachfragen bei `actor=me`, `status=decision`, `parked`, offenem Blocker oder `doing` (arbeitet jemand daran?). `actor=pair`: Entwurf liefern, Antwort abwarten. Nennt der Auftrag die ID ausdrücklich und `actor` ist leer oder `cdx`, starten. `set status=doing` verweigert nichts, es warnt nur (`warn: … is for you`): Warnung ernst nehmen, zurücksetzen und melden.
+2. Nicht selbst starten, sondern Stand melden und nachfragen bei `actor=me`, `status=decision`, `parked`, offenem Blocker oder `doing` (arbeitet jemand daran?). `actor=pair`: Entwurf liefern, Antwort abwarten. Nennt der Auftrag die ID ausdrücklich und `actor` ist leer oder `cdx`, starten. `set status=doing` verweigert nichts, es warnt nur (`warn: … is for you`): Warnung ernst nehmen, zurücksetzen und melden. Trägt die Task `on-workstation` oder `not-on-workstation`: vorher die Maschine prüfen (Abschnitt „Maschine“); passt sie nicht, nicht starten, nur vorbereiten und melden.
 3. `set <id> status=doing`. Arbeiten; Body (Notizen, Akzeptanz abhaken) und Plan-Datei darfst du editieren, Frontmatter nur per `set`.
 4. Code committen/pushen, dann `done <id> --commits=<repo>@<sha>,<repo>@<sha>` mit **allen** Commits, die für die Task entstanden sind (auch in anderen Repos und Fix-Commits nach einem Review; `<sha>` 7–40 Hex; die Vault-Commits der Task selbst gehören nicht dazu). `commits` ist ein Listenfeld: Commits schon während der Arbeit mit `set <id> "commits=[repo@sha,repo@sha]"` mitführen (ersetzt die Liste), `done --commits` ergänzt sie. `--done-in=` bleibt Freitext (z. B. „siehe Notizen“). Ohne Code: `--commits` weglassen, Ergebnis in `Notizen`. Nie `status=done` setzen oder Dateien von Hand verschieben. `done` meldet `freed:` (frei gewordene Tasks) und `next:`/`cdx:` (was als Nächstes ansteht): mir beides nennen. Waren frei gewordene Tasks noch `status=blocked`, `--unblock` nutzen oder `set <id> status=open`.
 5. Vault-Änderungen (Task, Plan, `done`) sofort auf main committen und pushen (vorher pullen, kein PR), unabhängig vom Code-Commit; steht dann in der Commit-Liste mit Repo `tasks-vault`. Meldet `done` „changed while it was being finished“: Datei neu lesen, wiederholen.
@@ -120,7 +126,7 @@ Der Rechner `TRI-70ZBFB4` mit User: `AzureAD/StefanBartl` ist eine Tricentis-Wor
   - Netzwerk-Aufklärung: Port- oder Netz-Scans (`nmap`, `Test-NetConnection`-Schleifen), AD- oder Domänen-Enumeration (`net user /domain`, `nltest`, BloodHound-artige Abfragen);
   - Spurenverwischen und Masseneingriffe: Event-Logs leeren, Schattenkopien löschen (`vssadmin`), massenhaft Dateien umbenennen, verschlüsseln oder überschreiben (sieht aus wie Ransomware);
   - Prozess-Manipulation: Injection, Debugger an fremde Prozesse hängen, Prozesse anderer Benutzer beenden.
-- **Unbedenklich bleibt** die normale Entwicklungsarbeit: git, gh, nvim/headless-CLI, Builds und Tests (cargo, npm, luacheck, stylua), Lesen und Schreiben in den eigenen Repos sowie die dokumentierten Skripte (`runners.ps1`, `setup-claude-code.ps1`).
+- **Unbedenklich bleibt** die normale Entwicklungsarbeit: git, gh, nvim/headless-CLI, Builds und Tests (cargo, npm, luacheck, stylua; nicht die nativen Apps der Tasks mit `not-on-workstation`), Lesen und Schreiben in den eigenen Repos sowie die dokumentierten Skripte (`runners.ps1`, `setup-claude-code.ps1`).
 - **Im Zweifel nicht ausführen, sondern nachfragen.** Das gilt für jeden Befehl, der sich nach „Admin/Security/Netzwerk“ anfühlt, und für Skripte aus fremden Quellen (Pastes, Issues, Downloads).
 - **Wird ein Befehl blockiert oder in Quarantäne genommen** (Falcon-Meldung, „Access denied“ aus unerklärlichem Grund, Datei verschwindet): sofort stoppen und mir melden. **Keine Umgehung versuchen**, also nicht umformulieren, nicht kodieren und kein anderes Tool nehmen.
 

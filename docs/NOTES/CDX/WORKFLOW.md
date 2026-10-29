@@ -53,9 +53,11 @@ git add CLAUDE.md .claude/settings.json; git commit -m "chore: add Claude Code p
 3. Setup ausfuehren:
    - Windows: `pwsh -File "$env:LOCALAPPDATA\nvim\docs\NOTES\CDX\setup-claude-code.ps1"`
    - Linux/macOS: `bash ~/.config/nvim/docs/NOTES/CDX/setup-claude-code.sh`
-   Am Ende fragt das Skript nach Toolchain-Profilen (`nvim,cpp,rust,web,tauri`).
+   Am Ende zeigt das Skript, was schon installiert ist, und fragt nach
+   Toolchain-Profilen (`nvim,cpp,rust,web,tauri`, oder `all` fuer alle).
    Einzeln nachholen: `node setup-devtools.js --profile nvim,rust --dry-run`
-   (ohne `--dry-run` installiert es nach Rueckfrage).
+   (ohne `--dry-run` installiert es nach Rueckfrage); nur ansehen:
+   `node setup-devtools.js --status`.
 4. Claude-App/Terminal **neu starten** (Env-Vars greifen erst dann).
 5. Repos klonen, pro Repo Abschnitt 3.
 

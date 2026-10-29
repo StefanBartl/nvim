@@ -19,7 +19,7 @@ Ordner muesste man Regeln/Settings auf jedem Rechner von Hand nachpflegen.
 | `check-hook.js`              | Vom PostToolUse-Hook aufgerufener Dispatcher: prueft je nach Endung `.lua` (stylua+luacheck), `.rs` (rustfmt), C/C++ (clang-format, nur mit `.clang-format`), `.ts/.js/.css/.json` (projektlokales prettier) |
 | `check-stop.js`              | Stop-Hook: bei geaenderten Dateien `cargo clippy -D warnings` (Rust) bzw. `tsc --noEmit` (TS) |
 | `WORKFLOW.md`                | Anleitung: neuer Chat, neues Repo, neue Maschine |
-| `setup-devtools.js` + `tools.json` | Installiert fehlende Toolchains pro Profil (`nvim`, `cpp`, `rust`, `web`, `tauri`) via winget/apt/brew. `node setup-devtools.js --profile nvim,rust --dry-run` |
+| `setup-devtools.js` + `tools.json` | Installiert fehlende Toolchains pro Profil (`nvim`, `cpp`, `rust`, `web`, `tauri`, oder `all` für alle) via winget/apt/brew. `node setup-devtools.js --profile nvim,rust --dry-run`; `node setup-devtools.js --status` zeigt je Profil, was schon installiert ist, und installiert nichts |
 | `new-project-claude.js`      | Kopiert die Projekt-Vorlage aus `templates/<stack>/` (`CLAUDE.md` + `.claude/settings.json`) in ein Repo: `node new-project-claude.js rust [zielordner]` |
 | `templates/`                 | Vorlagen je Stack: `nvim-plugin`, `rust`, `cpp`, `tauri`, `web` |
 | `KONZEPT-multi-stack.md`     | Begruendung/Architektur der drei Schichten |
@@ -46,6 +46,11 @@ Ordner muesste man Regeln/Settings auf jedem Rechner von Hand nachpflegen.
   dieses Skripts ermittelt. `$REPOS_DIR` ist pro Maschine unterschiedlich
   (z. B. `B:\repos` hier, ggf. andere Pfade auf Heim-PC/Workstation) und wird
   beim ersten Lauf interaktiv abgefragt, danach wiederverwendet.
+  `$NVIM_MACHINE_ROLE` (`workstation` auf der Tricentis-Workstation, sonst
+  nicht gesetzt) setzt das Skript nicht; sie wird von `lua/machine.lua` der
+  nvim-Config und von den Claude-Regeln (Abschnitt „Maschine“ in
+  `CLAUDE.global.md`) gelesen und steht in den Prompt-Vorlagen
+  (`templates/PROMPT/`) für die Task-Tags `on-workstation` / `not-on-workstation`.
   - **Windows**: als User-Env-Var gesetzt
     (`[Environment]::SetEnvironmentVariable(..., 'User')`) - gilt in neu
     gestarteten Shells/der Claude-Code-App.

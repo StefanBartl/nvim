@@ -7,14 +7,7 @@
 
 .USAGE
   pwsh -File setup-claude-code.ps1
-  pwsh -File setup-claude-code.ps1 -Workstation   # IS_WORKSTATION=1 ohne Rueckfrage
-  pwsh -File setup-claude-code.ps1 -Private       # IS_WORKSTATION=0 ohne Rueckfrage
 #>
-
-param(
-    [switch]$Workstation,
-    [switch]$Private
-)
 
 $ErrorActionPreference = 'Stop'
 
@@ -81,22 +74,10 @@ if (-not $tasksVault) {
     Write-Host "  TASKS_VAULT bereits gesetzt: $tasksVault"
 }
 
-# IS_WORKSTATION: 1 = Tricentis-Workstation (kein unsigniertes Programm bauen, installieren oder starten, EDR), 0 =
-# privater Rechner. Wird einmal pro Maschine festgelegt und nie aus dem Rechnernamen erraten; Code und Regeln lesen nur
-# diese Variable. Ist sie nicht gesetzt, gilt die Maschine als unbekannt (dann nachfragen).
-$isWorkstation = [Environment]::GetEnvironmentVariable('IS_WORKSTATION', 'User')
-if ($Workstation -and $Private) {
-    Write-Error '-Workstation und -Private schliessen sich aus.'
-} elseif ($Workstation) {
-    Set-UserEnvVar -name 'IS_WORKSTATION' -value '1'
-} elseif ($Private) {
-    Set-UserEnvVar -name 'IS_WORKSTATION' -value '0'
-} elseif ($isWorkstation -in @('0', '1')) {
-    Write-Host "  IS_WORKSTATION bereits gesetzt: $isWorkstation"
-} else {
-    $answer = Read-Host '  Ist das die Tricentis-Workstation? (j = ja, n = privater Rechner)'
-    Set-UserEnvVar -name 'IS_WORKSTATION' -value $(if ($answer -match '^(j|ja|y|yes)$') { '1' } else { '0' })
-}
+# NVIM_MACHINE_ROLE (workstation | unset = privater Rechner) wird hier nicht gesetzt: lua/machine.lua der nvim-Config
+# liest sie schon, und die Claude-Regeln (CLAUDE.global.md, Abschnitt Maschine) lesen dieselbe Variable.
+$machineRole = [Environment]::GetEnvironmentVariable('NVIM_MACHINE_ROLE', 'User')
+Write-Host "  Maschine: $(if ($machineRole) { $machineRole } else { 'privater Rechner (NVIM_MACHINE_ROLE nicht gesetzt)' })"
 
 Write-Host "  Hinweis: neu gesetzte User-Env-Vars gelten erst in neuen Shells/Sessions."
 
@@ -147,7 +128,9 @@ $mergeScript = Join-Path $PSScriptRoot 'merge-claude-settings.js'
 node $mergeScript $templatePath $settingsPath $nvimConfig
 
 Write-Host "`n[optional] Dev-Toolchains (nvim/cpp/rust/web/tauri) per winget installieren?"
-$profileAnswer = Read-Host '  Profile kommagetrennt eingeben (z.B. nvim,rust,web) oder leer lassen zum Ueberspringen'
+Write-Host "  Was auf dieser Maschine schon da ist:"
+node (Join-Path $PSScriptRoot 'setup-devtools.js') --status
+$profileAnswer = Read-Host '  Profile kommagetrennt (nvim,cpp,rust,web,tauri), all = alle, leer = ueberspringen'
 if ($profileAnswer) {
     node (Join-Path $PSScriptRoot 'setup-devtools.js') --profile $profileAnswer
 }

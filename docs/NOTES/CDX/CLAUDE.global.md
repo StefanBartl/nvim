@@ -37,23 +37,25 @@ Werden von `setup-claude-code.ps1` pro Maschine gesetzt (User-Scope):
   mit `regeln/`, `gates/`, `belege/`, `nachschlagen/` und `rulesets/native`). Wird
   gesetzt, wenn `$REPOS_DIR/rules-vault` existiert; sonst Repo klonen und das
   Setup-Skript erneut laufen lassen.
-- `$IS_WORKSTATION` - `1` auf der Tricentis-Workstation, `0` auf dem privaten
-  Rechner; das Setup-Skript fragt einmal (oder `-Workstation` / `-Private`).
+- `$NVIM_MACHINE_ROLE` - `workstation` auf der Tricentis-Workstation, sonst
+  nicht gesetzt (= privater Rechner). Dieselbe Variable liest `lua/machine.lua`
+  der nvim-Config; sie ist bereits eingerichtet, das Setup-Skript fasst sie nicht an.
 
 ## Maschine: Workstation oder privater Rechner
 
-- `$IS_WORKSTATION` (vom Setup-Skript, einmal pro Maschine): `1` = Tricentis-
-  Workstation (dort darf nichts Unsigniertes gebaut, installiert oder
-  gestartet werden, EDR/Falcon; auch kein Runner), `0` = privater Rechner
-  (`STEVESPC`: Builds, Tests, Runner). Nicht gesetzt = unbekannt: nachfragen,
-  nicht aus dem Rechnernamen raten.
+- `$NVIM_MACHINE_ROLE` (dieselbe Variable wie in `lua/machine.lua` der
+  nvim-Config): `workstation` = Tricentis-Workstation (dort darf nichts
+  Unsigniertes gebaut, installiert oder gestartet werden, EDR/Falcon; auch kein
+  Runner); nicht gesetzt oder `default` = privater Rechner (`STEVESPC`: Builds,
+  Tests, Runner). Lesen mit `$env:NVIM_MACHINE_ROLE`; nicht aus dem Rechnernamen
+  raten.
 - Tags an Tasks: `on-workstation` = nur dort ausführbar (Handläufe,
   Messungen auf der Workstation); `not-on-workstation` = nie dort (native
   Programme bauen/installieren/starten, Runner, Tests und Builds der nativen
   Apps). Ohne Tag: Code-Arbeit, läuft auf dem privaten Rechner.
 - Vor dem Bearbeiten einer Task mit einem dieser Tags (und bei Aufträgen, die
-  Workstation, Falcon oder EDR betreffen) zuerst `$env:IS_WORKSTATION` lesen und
-  in einer Zeile nennen („Maschine: privat“ bzw. „Workstation“). Passt der
+  Workstation, Falcon oder EDR betreffen) zuerst `$env:NVIM_MACHINE_ROLE` lesen
+  und in einer Zeile nennen („Maschine: privat“ bzw. „Workstation“). Passt der
   Rechner nicht zum Tag: nichts ausführen, nur vorbereiten und mir Bescheid
   geben. Fällt beim Arbeiten ein Workstation-Bezug auf, den die Task nicht
   kennzeichnet, den Tag nachziehen.

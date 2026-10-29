@@ -10,6 +10,12 @@ Ich stelle das reasoning auf hoch oder mehr, damit du es gleich grün abhaken ka
 - Immer ausgeben, was gerade gemacht wird / ob es etwas Interessantes gab – damit ich Bescheid weiß.
 - Wenn Chip-Tasks angelegt werden, diese bitte ebenfalls auf Deutsch verfassen.
 
+## Maschine (Workstation oder privater Rechner)
+
+- Erkennen: `$env:NVIM_MACHINE_ROLE` (dieselbe Variable wie `lua/machine.lua` der nvim-Config): `workstation` = Tricentis-Workstation, nicht gesetzt oder `default` = privater Rechner (`STEVESPC`). Nicht aus dem Rechnernamen raten.
+- Tags an Tasks: `on-workstation` = nur dort ausführbar (Handläufe, Messungen); `not-on-workstation` = nie dort (native Programme bauen, installieren oder starten, Runner, Tests und Builds der nativen Apps). Ohne Tag: Code-Arbeit, läuft auf dem privaten Rechner.
+- Vor dem Bearbeiten einer Task mit einem dieser Tags (und bei Aufträgen zu Workstation, Falcon oder EDR) die Maschine lesen und in einer Zeile nennen. Passt sie nicht zum Tag: nichts ausführen, nur vorbereiten und mir Bescheid geben. Fällt ein Workstation-Bezug auf, den die Task nicht kennzeichnet, den Tag nachziehen.
+
 ## Tasks und Pläne (tasks.nvim)
 
 Tasks sind Markdown-Dateien im Vault `$REPOS_DIR/tasks-vault/` (Repo `tasks-vault`, nicht WKDBooks): Frontmatter (Pflicht nur `title`, `status`) + Body (`## Kontext` / `## Akzeptanz` / `## Notizen`; mit `--lang=en` `Context` / `Acceptance` / `Notes`). Eine Task = ein Ergebnis.
@@ -34,7 +40,7 @@ Begriffe: `status` = open, doing, blocked, decision (wartet auf mich), parked (z
 ### Task bearbeiten
 
 1. `show <id>` und die Datei komplett lesen (`blocked_by`, `refs`, `## Plan`-Schritte). Ohne ID („nächste Task“): `next <area-des-Repos> --actor=cdx --n=1`; meldet es `empty:`, mir das sagen, keine fremden Tasks nehmen.
-2. Nicht selbst starten, sondern Stand melden und nachfragen bei `actor=me`, `status=decision`, `parked`, offenem Blocker oder `doing` (arbeitet jemand daran?). `actor=pair`: Entwurf liefern, Antwort abwarten. Nennt der Auftrag die ID ausdrücklich und `actor` ist leer oder `cdx`, starten. `set status=doing` verweigert nichts, es warnt nur (`warn: … is for you`): Warnung ernst nehmen, zurücksetzen und melden.
+2. Nicht selbst starten, sondern Stand melden und nachfragen bei `actor=me`, `status=decision`, `parked`, offenem Blocker oder `doing` (arbeitet jemand daran?). `actor=pair`: Entwurf liefern, Antwort abwarten. Nennt der Auftrag die ID ausdrücklich und `actor` ist leer oder `cdx`, starten. `set status=doing` verweigert nichts, es warnt nur (`warn: … is for you`): Warnung ernst nehmen, zurücksetzen und melden. Trägt die Task `on-workstation` oder `not-on-workstation`: vorher die Maschine prüfen (Abschnitt „Maschine“); passt sie nicht, nicht starten, nur vorbereiten und melden.
 3. `set <id> status=doing`. Arbeiten; Body (Notizen, Akzeptanz abhaken) und Plan-Datei darfst du editieren, Frontmatter nur per `set`.
 4. Code committen/pushen, dann `done <id> --commits=<repo>@<sha>,<repo>@<sha>` mit **allen** Commits, die für die Task entstanden sind (auch in anderen Repos und Fix-Commits nach einem Review; `<sha>` 7–40 Hex; die Vault-Commits der Task selbst gehören nicht dazu). `commits` ist ein Listenfeld: Commits schon während der Arbeit mit `set <id> "commits=[repo@sha,repo@sha]"` mitführen (ersetzt die Liste), `done --commits` ergänzt sie. `--done-in=` bleibt Freitext (z. B. „siehe Notizen“). Ohne Code: `--commits` weglassen, Ergebnis in `Notizen`. Nie `status=done` setzen oder Dateien von Hand verschieben. `done` meldet `freed:` (frei gewordene Tasks) und `next:`/`cdx:` (was als Nächstes ansteht): mir beides nennen. Waren frei gewordene Tasks noch `status=blocked`, `--unblock` nutzen oder `set <id> status=open`.
 5. Vault-Änderungen (Task, Plan, `done`) sofort auf main committen und pushen (vorher pullen, kein PR), unabhängig vom Code-Commit; steht dann in der Commit-Liste mit Repo `tasks-vault`. Meldet `done` „changed while it was being finished“: Datei neu lesen, wiederholen.
