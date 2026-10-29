@@ -62,9 +62,8 @@ return {
   -- `folke/zen-mode.nvim` (`:ZenMode`, pure defaults) left on 2026-09-19:
   -- ui.nvim's `ui.zen` is the distraction-free box now -- `:UI zen [on|off]`.
 
-  {
-    "MunifTanjim/nui.nvim",
-  },
+  -- `MunifTanjim/nui.nvim` has no entry of its own: noice and neo-tree both
+  -- declare it as a dependency, which keeps it installed and lazy-loaded.
 
   -- `nvzone/minty` (and its `nvzone/volt` dependency) left on 2026-09-19:
   -- the right-click menu's "Color Picker" entry opens ui.nvim's
