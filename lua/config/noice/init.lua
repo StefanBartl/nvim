@@ -110,11 +110,6 @@ M.views.notify = {
 
 M.routes = {
   {
-    filter = { event = "notify" },
-    view = "mini",
-  },
-
-  {
     view = "mini",
     filter = { event = "msg_showmode" },
   },
@@ -175,6 +170,14 @@ M.routes = {
       find = "Buffer is not modifiable",
     },
     opts = { skip = true },
+  },
+
+  -- Generic notify route. MUST stay behind every notify skip rule above (and the
+  -- event-less "No signature help" skip): the router stops at the first match, so
+  -- placed first it shadowed them all.
+  {
+    filter = { event = "notify" },
+    view = "mini",
   },
 
   -- Catch-all: anything else on `msg_show` goes to the compact view. MUST stay
