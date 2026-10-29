@@ -66,6 +66,16 @@ package.path = table.concat({
   package.path,
 }, ";")
 
+-- Opt-in keymap audit (`NVIM_KEYMAP_TAP=1 nvim`): records every keymap set/del with its source from
+-- here on, before any plugin binds one, so `:LibKeymapConflicts!` can name a binding that a later
+-- one overwrote (the live table only shows the winner). Off by default; costs one wrapper call per
+-- binding. See lib.nvim's bindings/keymap/README.md ("The two scopes of conflicts()").
+if vim.env.NVIM_KEYMAP_TAP and vim.env.NVIM_KEYMAP_TAP ~= "" and vim.env.NVIM_KEYMAP_TAP ~= "0" then
+  pcall(function()
+    require("lib.nvim.bindings.keymap.tap").install()
+  end)
+end
+
 -- Setup lazy.nvim with plugins
 local lazy_config = require("config.lazy")
 
