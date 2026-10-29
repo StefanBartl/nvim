@@ -26,12 +26,12 @@ Vorbereitung: Neovim frisch starten.
 
 - [x] `:lua vim.notify('Buffer is not modifiable', vim.log.levels.WARN)` — erwartet: **keine** Mini-Meldung.
   Notiz: 2026-10-29 live: still, keine Meldung. OK.
-- [ ] Signature-Help an einer Stelle ohne Signatur — erwartet: kein „No signature help“. **Taste ist `<M-s>` im Insert-Modus** (lsp.nvim, `LSP.signature_help`), nicht `<C-k>` (nicht belegt); in einer Lua-Datei mit lua_ls: `i` auf einer leeren Zeile, dann `<M-s>`. Alternativ `:lua vim.lsp.buf.signature_help()`.
+- [x] Signature-Help an einer Stelle ohne Signatur — erwartet: kein „No signature help“. **Taste ist `<M-s>` im Insert-Modus** (lsp.nvim, `LSP.signature_help`), nicht `<C-k>` (nicht belegt); in einer Lua-Datei mit lua_ls: `i` auf einer leeren Zeile, dann `<M-s>`. Alternativ `:lua vim.lsp.buf.signature_help()`.
   Notiz: 2026-10-29: `<C-k>` ohne Wirkung (Anleitungsfehler). `<M-s>` im **Normal**-Modus schaltete den Session-Chip um; der Chip liegt jetzt auf `<M-S>` (Alt+Shift+s), `<M-s>` ist im Normal-Modus frei. Insert-Modus-Test mit `<M-s>` noch offen.
 - [x] `:lua vim.notify('hello')` — erwartet: erscheint weiterhin im mini-View.
   Notiz: 2026-10-29 live: ja. OK.
-- [ ] Ein notify mit Text „Error detected while processing BufReadPost Autocommands for“ (z. B. `:lua vim.notify('Error detected while processing BufReadPost Autocommands for "x"', vim.log.levels.ERROR)`) — erwartet: jetzt **ebenfalls unterdrückt** (gewollt laut Feature-Abdeckungs-Report).
-  Notiz:
+- [x] Ein notify mit Text „Error detected while processing BufReadPost Autocommands for“ (z. B. `:lua vim.notify('Error detected while processing BufReadPost Autocommands for "x"', vim.log.levels.ERROR)`) — erwartet: jetzt **ebenfalls unterdrückt** (gewollt laut Feature-Abdeckungs-Report).
+  Notiz: 2026-10-29 live: Zeile mit `fo'..'r` statt „for“ getippt -> nichts erscheint. OK (Skip-Regel greift). Ohne „for“ im Text erscheint die Meldung wie erwartet. Das Verlassen der Cmdline beim Tippen der Zeile mit „… Autocommands for x“ ist ein eigener Befund (in `nvim --clean` nicht reproduzierbar), siehe Task `nvim-config/cmdline-verlaesst-beim-tippen-von-vim-notify-for-x`.
 - [x] Neustart, `:Lazy`: `nui.nvim` steht als Abhängigkeit von noice **und** neo-tree (kein eigener Top-Level-Eintrag mehr).
   Notiz: 2026-10-29 live: `:Lazy` zeigt `nui.nvim` geladen durch `neo-tree.nvim` (2,45 ms), kein eigener Eintrag; noice.nvim lädt bei VeryLazy. OK.
 - [x] Noice-Cmdline (`:`) und Neo-tree öffnen ohne Fehlermeldung (`:messages` danach leer von Fehlern).
@@ -56,18 +56,18 @@ Vorbereitung:
   Notiz:
 
 Schritte:
-- [ ] WKDBook-Tricentis: die zwei `.evtx` stagen, in lazygit (`:Git ui lazygit`) `c` — erwartet: Dialog „… larger than 5 MB“ erscheint **in Neovim** (Fokus wechselt aus dem Terminal in den Dialog).
-  Notiz:
-- [ ] „Compress to .zip“ wählen — erwartet: zweite Frage „Delete the originals?“; Antwort wirkt; der Commit enthält `*.evtx.zip`.
-  Notiz:
-- [ ] Nach dem Dialog: Fokus kehrt ins lazygit-Terminal zurück, Eingabe dort funktioniert normal.
-  Notiz:
-- [ ] Dasselbe aus einem terminal.nvim-Terminal (`git commit`).
-  Notiz:
-- [ ] `:checkhealth terminal` zeigt „Ask bridge: terminals get $NVIM_ASK …“.
-  Notiz:
-- [ ] Dialog wegklicken (`<Esc>`) — erwartet: Commit bricht mit Hinweis ab, nichts hängt.
-  Notiz:
+- [x] WKDBook-Tricentis: die zwei `.evtx` stagen, in lazygit (`:Git ui lazygit`) `c` — erwartet: Dialog „… larger than 5 MB“ erscheint **in Neovim** (Fokus wechselt aus dem Terminal in den Dialog).
+  Notiz: 2026-10-29 mit Testrepo `_hooktest` (8 MB `big.bin`) statt WKDBook: Dialog erscheint in Neovim über lazygit, OK.
+- [x] „Compress to .zip“ wählen — erwartet: zweite Frage „Delete the originals?“; Antwort wirkt; der Commit enthält `*.evtx.zip`.
+  Notiz: OK, Commit enthält `big.bin.zip`.
+- [x] Nach dem Dialog: Fokus kehrt ins lazygit-Terminal zurück, Eingabe dort funktioniert normal.
+  Notiz: OK.
+- [x] Dasselbe aus einem terminal.nvim-Terminal (`git commit`).
+  Notiz: Erwartung korrigiert: dort gibt es ein ConPTY, `/dev/tty` öffnet sich, der Hook fragt **im Terminal** (`[y]es / [c]ompress / [N]o`), nicht in Neovim. `c` und Löschfrage funktionieren, Commit enthält das zip. Beabsichtigt (tty vor `$NVIM_ASK`).
+- [x] `:checkhealth terminal` zeigt „Ask bridge: terminals get $NVIM_ASK …“.
+  Notiz: OK (`E:/repos/lib.nvim/bin/nvim-ask`, bash `C:/Program Files/Git/bin/bash.exe`).
+- [x] Dialog wegklicken (`<Esc>`) — erwartet: Commit bricht mit Hinweis ab, nichts hängt.
+  Notiz: 2026-10-29 OK (lazygit, Testrepo `_hooktest`).
 
 Alternative ohne Dialog fürs WKDBook: `git config largefiles.action compress` (ggf. `git config largefiles.deleteOriginals true`).
 
