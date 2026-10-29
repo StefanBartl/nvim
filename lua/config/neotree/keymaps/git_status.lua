@@ -52,5 +52,5 @@ return {
   ["<CR>"] = "noop",
   ["<S-CR>"] = "noop",
   ["<C-s>"] = "noop",
-  ["<M-s>"] = "noop",
+  ["<M-S>"] = "noop",
 }

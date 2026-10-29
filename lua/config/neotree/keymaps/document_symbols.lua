@@ -67,7 +67,7 @@ return {
   ["<C-c>"] = "noop",
   ["<C-f>"] = "noop",
   ["<C-s>"] = "noop",
-  ["<M-s>"] = "noop",
+  ["<M-S>"] = "noop",
   ["<Tab>"] = "noop",
 
   -- leader keys

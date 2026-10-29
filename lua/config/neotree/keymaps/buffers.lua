@@ -49,6 +49,6 @@ return {
 
   -- control / modifier keys (grouped)
   ["<C-s>"] = "noop",
-  ["<M-s>"] = "noop",
+  ["<M-S>"] = "noop",
   ["<S-CR>"] = "noop",
 }

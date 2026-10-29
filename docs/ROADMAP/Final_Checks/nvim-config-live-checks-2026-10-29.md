@@ -24,18 +24,18 @@ Task `nvim-config/live-check-noice-skip-regeln-und-start-ohne-standalone-nui`. C
 
 Vorbereitung: Neovim frisch starten.
 
-- [ ] `:lua vim.notify('Buffer is not modifiable', vim.log.levels.WARN)` — erwartet: **keine** Mini-Meldung.
-  Notiz:
-- [ ] Signature-Help (`<C-k>`) an einer Stelle ohne Signatur — erwartet: kein „No signature help“.
-  Notiz:
-- [ ] `:lua vim.notify('hello')` — erwartet: erscheint weiterhin im mini-View.
-  Notiz:
+- [x] `:lua vim.notify('Buffer is not modifiable', vim.log.levels.WARN)` — erwartet: **keine** Mini-Meldung.
+  Notiz: 2026-10-29 live: still, keine Meldung. OK.
+- [ ] Signature-Help an einer Stelle ohne Signatur — erwartet: kein „No signature help“. **Taste ist `<M-s>` im Insert-Modus** (lsp.nvim, `LSP.signature_help`), nicht `<C-k>` (nicht belegt); in einer Lua-Datei mit lua_ls: `i` auf einer leeren Zeile, dann `<M-s>`. Alternativ `:lua vim.lsp.buf.signature_help()`.
+  Notiz: 2026-10-29: `<C-k>` ohne Wirkung (Anleitungsfehler). `<M-s>` im **Normal**-Modus schaltete den Session-Chip um; der Chip liegt jetzt auf `<M-S>` (Alt+Shift+s), `<M-s>` ist im Normal-Modus frei. Insert-Modus-Test mit `<M-s>` noch offen.
+- [x] `:lua vim.notify('hello')` — erwartet: erscheint weiterhin im mini-View.
+  Notiz: 2026-10-29 live: ja. OK.
 - [ ] Ein notify mit Text „Error detected while processing BufReadPost Autocommands for“ (z. B. `:lua vim.notify('Error detected while processing BufReadPost Autocommands for "x"', vim.log.levels.ERROR)`) — erwartet: jetzt **ebenfalls unterdrückt** (gewollt laut Feature-Abdeckungs-Report).
   Notiz:
-- [ ] Neustart, `:Lazy`: `nui.nvim` steht als Abhängigkeit von noice **und** neo-tree (kein eigener Top-Level-Eintrag mehr).
-  Notiz:
-- [ ] Noice-Cmdline (`:`) und Neo-tree öffnen ohne Fehlermeldung (`:messages` danach leer von Fehlern).
-  Notiz:
+- [x] Neustart, `:Lazy`: `nui.nvim` steht als Abhängigkeit von noice **und** neo-tree (kein eigener Top-Level-Eintrag mehr).
+  Notiz: 2026-10-29 live: `:Lazy` zeigt `nui.nvim` geladen durch `neo-tree.nvim` (2,45 ms), kein eigener Eintrag; noice.nvim lädt bei VeryLazy. OK.
+- [x] Noice-Cmdline (`:`) und Neo-tree öffnen ohne Fehlermeldung (`:messages` danach leer von Fehlern).
+  Notiz: 2026-10-29 live: `:Noice` (Verlauf im Split) und Filetree öffnen ohne Problem. OK.
 
 Falls rot: genaue Meldung und Auslöser notieren; Skip-Regel greift nicht = Task `kind: bug` (Bereich noice-Routing, Recherche-Task `noice-routing-and-nui-usage-recheck`); `nui` fehlt oder Ladefehler = Task `kind: bug` mit `:Lazy`-Ausschnitt.
 

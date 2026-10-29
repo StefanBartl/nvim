@@ -405,7 +405,7 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 - [ ] `<M-7>` -- [Session] Preview mark 7 (full screen)
 - [ ] `<M-8>` -- [Session] Preview mark 8 (full screen)
 - [ ] `<M-9>` -- [Session] Preview mark 9 (full screen)
-- [ ] `<M-s>` -- [Session] Toggle chip visibility
+- [ ] `<M-S>` -- [Session] Toggle chip visibility
 - [ ] `_` -- [Slots] Toggle slot bar (counted: built-in _ motion)
 
 ### spotlight

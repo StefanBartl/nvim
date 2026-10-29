@@ -50,7 +50,7 @@ function M.setup()
   -- pickers.nvim's tabbed search, formerly search.nvim) -- forcing a full timeoutlen wait on every plain <leader>s
   -- press before Neovim could tell the two apart. Same bug class as the
   -- <leader>ffk/<leader>ff and <leader>hE/<leader>help fixes elsewhere in
-  -- this config. <M-s> ("session") shares no prefix with anything and is
+  -- this config. <M-S> ("Session", Alt+Shift+s) shares no prefix with anything and is
   -- already deliberately kept a no-op inside neo-tree's own buffer-local
   -- keymaps (lua/config/neotree/keymaps/*.lua) -- this buffer-local noop
   -- still wins over this global mapping while focus is inside a neo-tree
@@ -58,7 +58,7 @@ function M.setup()
   -- <C-e>/<M-%d> above already accept for their own hardcoded keys.
   map.set(
     "n",
-    "<M-s>",
+    "<M-S>",
     "<cmd>Session chip-toggle<cr>",
     { desc = "[Session] Toggle chip visibility" }
   )

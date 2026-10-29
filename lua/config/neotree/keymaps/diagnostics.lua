@@ -70,7 +70,7 @@ return {
   -- control / modifier keys (grouped by base key)
   ["<S-CR>"] = "noop",
   ["<C-s>"] = "noop",
-  ["<M-s>"] = "noop",
+  ["<M-S>"] = "noop",
   ["<S-o>"] = "noop",
 
   -- leader keys
