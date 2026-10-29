@@ -19,7 +19,7 @@ Regeln dabei:
 | Datei | abgehakt |
 |---|---|
 | Checks-Blocker_0610.md | 204 |
-| BINDINGS-RUNTIME-CHECKLIST.md | 85 |
+| BINDINGS-RUNTIME-CHECKLIST.md | 140 (85 + 55 nach den Nachtrag-Specs, siehe unten) |
 | terminal.nvim.md | 17 |
 | PLUGIN_ROADMAPS_TESTPLAN.md | 18 |
 | gitsuite-live-checks-2026-10-22.md | 15 |
@@ -61,3 +61,33 @@ Specs decken das Kästchen nur teilweise.
   „funktioniert nicht“ stammt vermutlich aus einem normalen Zen-Fenster. Bitte gegenlesen.
 - **docmap Junction-Traceback:** `docmap.nvim/TESTS/out_dir_links_spec.lua` zeigt die saubere
   Verweigerung über `cli.run`. Mit dem gebauten Binary ist das noch nicht geprüft, das Kästchen ist offen.
+
+## Nachtrag: Specs, die Tasten wirklich drücken (2026-10-29)
+
+Die Lücke "Specs prüfen nur die Registrierung" wurde in einer zweiten Runde geschlossen. Die neuen
+Specs lösen jede Taste per `nvim_feedkeys(..., "mx")` aus und prüfen die Wirkung; jede wurde
+sabotage-verifiziert (Mapping kaputt oder vertauscht, Spec wird rot):
+
+| Repo | Commit | Abgedeckt |
+|---|---|---|
+| spotlight.nvim | `70846b0`, `20da506` | alle 8 Keymaps |
+| ui.nvim | `2e01e56`, `6a739fd` | Tabs, Buffer schließen/pinnen/sortieren, Theme, Sticky |
+| casedesk.nvim | `98c1db8`, `6ea6f72` | `cf`/`cF`/`cg`/`cG`/`cm` bis zur Picker-Grenze, `--sep=pipe` |
+| sessions.nvim | `fbde5e6` | alle `<leader>h*` |
+| cmdlog.nvim | `840d8a6` | jeder `:Cmdlog`-Unterbefehl getippt, Katalog-Tasten |
+| ai.nvim | `b50f894` | `<Tab>`/`<C-]>`; **fand einen echten Bug** (accept unter textlock, E565) |
+| lsp.nvim | `4930484`, `5c6a455`, `f277bdf` | `:Lsp stop`/`restart` gehen an den Supervisor; K12-Waiver |
+| cascade.nvim | `22cad85` | **Fix** `:Cascade cycle remove` mit Leerzeichen-Wert |
+| nvim | `e29f968a6`, `e5813f7a4` | `:BindingsRuntimeChecklistDrift` (tote/neue Einträge, zählt Doppelte) |
+
+**Bewusst offen geblieben** (Spec deckt die Aussage des Kästchens nicht): `<leader>bq` (Flash),
+`<C-\><C-a>` (Trigger), `:Lsp stop`/`restart` (echter Neustart gegen Stub-Supervisor, `stop` ohne Namen).
+
+## Offene Produkt-Befunde aus dem Review (als Tasks im Vault)
+
+- `spotlight.nvim/back-jump-mid-line`: `[k` mitten in der Zeile überspringt das Vorkommen links vom
+  Cursor (`z`-Flag der Rückwärtssuche).
+- `ai.nvim/completion-tab-fallback-snippet-und-fremde-imap`: der `<Tab>`-Fallback ersetzt Neovims
+  Snippet-Sprung und fremde `imap <Tab>`.
+- `ai.nvim/completion-accept-dot-repeat`: Dot-Repeat lässt den angenommenen Text weg.
+- `cascade.nvim/cycle-remove-first-vs-last-gruppe`: Doku sagt "first group", Code entfernt die letzte.

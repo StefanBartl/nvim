@@ -21,8 +21,8 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 
 ### Ai/completion
 
-- [ ] `<Tab>` -- Ai: Accept the shown completion suggestion
-- [ ] `<C-]>` -- Ai: Dismiss the shown completion suggestion
+- [x] `<Tab>` -- Ai: Accept the shown completion suggestion _(auto 2026-10-29: ai.nvim/TESTS/ai/completion_keys_spec.lua grün)_
+- [x] `<C-]>` -- Ai: Dismiss the shown completion suggestion _(auto 2026-10-29: ai.nvim/TESTS/ai/completion_keys_spec.lua grün)_
 - [ ] `<C-\><C-a>` -- Ai: Request a completion suggestion at the cursor
 
 ### DAP
@@ -130,22 +130,22 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 
 ### Session
 
-- [ ] `<leader>ha` -- Session: mark this file
-- [ ] `<leader>hA` -- Session: mark this file first
-- [ ] `<leader>hD` -- Session: dump the mark list
-- [ ] `<leader>hE` -- Session: marks (edit list)
-- [ ] `<leader>hm` -- Session: marks (picker)
-- [ ] `<leader>hp` -- Session: pin this file
-- [ ] `<leader>h1` -- Session: jump to mark 1
-- [ ] `<leader>h2` -- Session: jump to mark 2
-- [ ] `<leader>h3` -- Session: jump to mark 3
-- [ ] `<leader>h4` -- Session: jump to mark 4
-- [ ] `<leader>h5` -- Session: jump to mark 5
-- [ ] `<leader>h6` -- Session: jump to mark 6
-- [ ] `<leader>h7` -- Session: jump to mark 7
-- [ ] `<leader>h8` -- Session: jump to mark 8
-- [ ] `<leader>h9` -- Session: jump to mark 9
-- [ ] `<leader>hs` -- Session: add missing default marks
+- [x] `<leader>ha` -- Session: mark this file _(auto 2026-10-29: sessions.nvim/TESTS/keymaps_press_spec.lua grün)_
+- [x] `<leader>hA` -- Session: mark this file first _(auto 2026-10-29: sessions.nvim/TESTS/keymaps_press_spec.lua grün)_
+- [x] `<leader>hD` -- Session: dump the mark list _(auto 2026-10-29: sessions.nvim/TESTS/keymaps_press_spec.lua grün)_
+- [x] `<leader>hE` -- Session: marks (edit list) _(auto 2026-10-29: sessions.nvim/TESTS/keymaps_press_spec.lua grün)_
+- [x] `<leader>hm` -- Session: marks (picker) _(auto 2026-10-29: sessions.nvim/TESTS/keymaps_press_spec.lua grün)_
+- [x] `<leader>hp` -- Session: pin this file _(auto 2026-10-29: sessions.nvim/TESTS/keymaps_press_spec.lua grün)_
+- [x] `<leader>h1` -- Session: jump to mark 1 _(auto 2026-10-29: sessions.nvim/TESTS/keymaps_press_spec.lua grün)_
+- [x] `<leader>h2` -- Session: jump to mark 2 _(auto 2026-10-29: sessions.nvim/TESTS/keymaps_press_spec.lua grün)_
+- [x] `<leader>h3` -- Session: jump to mark 3 _(auto 2026-10-29: sessions.nvim/TESTS/keymaps_press_spec.lua grün)_
+- [x] `<leader>h4` -- Session: jump to mark 4 _(auto 2026-10-29: sessions.nvim/TESTS/keymaps_press_spec.lua grün)_
+- [x] `<leader>h5` -- Session: jump to mark 5 _(auto 2026-10-29: sessions.nvim/TESTS/keymaps_press_spec.lua grün)_
+- [x] `<leader>h6` -- Session: jump to mark 6 _(auto 2026-10-29: sessions.nvim/TESTS/keymaps_press_spec.lua grün)_
+- [x] `<leader>h7` -- Session: jump to mark 7 _(auto 2026-10-29: sessions.nvim/TESTS/keymaps_press_spec.lua grün)_
+- [x] `<leader>h8` -- Session: jump to mark 8 _(auto 2026-10-29: sessions.nvim/TESTS/keymaps_press_spec.lua grün)_
+- [x] `<leader>h9` -- Session: jump to mark 9 _(auto 2026-10-29: sessions.nvim/TESTS/keymaps_press_spec.lua grün)_
+- [x] `<leader>hs` -- Session: add missing default marks _(auto 2026-10-29: sessions.nvim/TESTS/keymaps_press_spec.lua grün)_
 
 ### bindings
 
@@ -265,10 +265,10 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 
 ### casedesk
 
-- [ ] `<leader>cf` -- casedesk: find files in this case
-- [ ] `<leader>cF` -- casedesk: find files across every case
-- [ ] `<leader>cg` -- casedesk: grep this case
-- [ ] `<leader>cG` -- casedesk: grep across every case
+- [x] `<leader>cf` -- casedesk: find files in this case _(auto 2026-10-29: casedesk.nvim/TESTS/keymaps_spec.lua grün, bis zur Picker-Grenze: Picker mit Roots und Prompt aufgerufen)_
+- [x] `<leader>cF` -- casedesk: find files across every case _(auto 2026-10-29: casedesk.nvim/TESTS/keymaps_spec.lua grün, bis zur Picker-Grenze: Picker mit Roots und Prompt aufgerufen)_
+- [x] `<leader>cg` -- casedesk: grep this case _(auto 2026-10-29: casedesk.nvim/TESTS/keymaps_spec.lua grün, bis zur Picker-Grenze: Picker mit Roots und Prompt aufgerufen)_
+- [x] `<leader>cG` -- casedesk: grep across every case _(auto 2026-10-29: casedesk.nvim/TESTS/keymaps_spec.lua grün, bis zur Picker-Grenze: Picker mit Roots und Prompt aufgerufen)_
 
 ### config
 
@@ -410,14 +410,14 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 
 ### spotlight
 
-- [ ] `<leader>sC` -- spotlight: clear all spotlights
-- [ ] `<leader>sW` -- spotlight: toggle whole-line rendering for the token under cursor
-- [ ] `<leader>sL` -- spotlight: open the spotlight list
-- [ ] `]k` -- spotlight: next occurrence (×count)
-- [ ] `[k` -- spotlight: previous occurrence (×count)
-- [ ] `<leader>sq` -- spotlight: matching lines to quickfix
-- [ ] `<leader>sK` -- spotlight: toggle every occurrence of the token under cursor (dot-repeatable)
-- [ ] `<leader>sk` -- spotlight: toggle this occurrence only
+- [x] `<leader>sC` -- spotlight: clear all spotlights _(auto 2026-10-29: spotlight.nvim/TESTS/keymaps_press_spec.lua grün)_
+- [x] `<leader>sW` -- spotlight: toggle whole-line rendering for the token under cursor _(auto 2026-10-29: spotlight.nvim/TESTS/keymaps_press_spec.lua grün)_
+- [x] `<leader>sL` -- spotlight: open the spotlight list _(auto 2026-10-29: spotlight.nvim/TESTS/keymaps_press_spec.lua grün)_
+- [x] `]k` -- spotlight: next occurrence (×count) _(auto 2026-10-29: spotlight.nvim/TESTS/keymaps_press_spec.lua grün)_
+- [x] `[k` -- spotlight: previous occurrence (×count) _(auto 2026-10-29: spotlight.nvim/TESTS/keymaps_press_spec.lua grün, [k nur ab Startzeile ohne Treffer belegt)_
+- [x] `<leader>sq` -- spotlight: matching lines to quickfix _(auto 2026-10-29: spotlight.nvim/TESTS/keymaps_press_spec.lua grün)_
+- [x] `<leader>sK` -- spotlight: toggle every occurrence of the token under cursor (dot-repeatable) _(auto 2026-10-29: spotlight.nvim/TESTS/keymaps_press_spec.lua grün)_
+- [x] `<leader>sk` -- spotlight: toggle this occurrence only _(auto 2026-10-29: spotlight.nvim/TESTS/keymaps_press_spec.lua grün)_
 
 ### terminal
 
@@ -430,18 +430,18 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 
 ### ui.nvim
 
-- [ ] `<leader>bc` -- ui.nvim: close buffer(s), count-aware
+- [x] `<leader>bc` -- ui.nvim: close buffer(s), count-aware _(auto 2026-10-29: ui.nvim/TESTS/keymaps_feedkeys_spec.lua grün)_
 - [ ] `<leader>bq` -- ui.nvim: close every listed buffer in the current tab, flashed first
-- [ ] `<leader>tl` -- ui.nvim: move buffer one position left in the tabline
-- [ ] `<leader>tr` -- ui.nvim: move buffer one position right in the tabline
-- [ ] `<leader>tt` -- ui.nvim: move current buffer into a new tab
-- [ ] `<Tab>` -- ui.nvim: next buffer
-- [ ] `<S-Tab>` -- ui.nvim: previous buffer
-- [ ] `<leader>bu` -- ui.nvim: reopen the most recently closed tab
-- [ ] `<leader>uP` -- ui.nvim: open the visual theme picker (live preview)
-- [ ] `<leader>bp` -- ui.nvim: pin/unpin the current buffer's tab
-- [ ] `<M-p>` -- ui.nvim: toggle the sticky code context
-- [ ] `<leader>ut` -- ui.nvim: toggle between the two configured themes
+- [x] `<leader>tl` -- ui.nvim: move buffer one position left in the tabline _(auto 2026-10-29: ui.nvim/TESTS/keymaps_feedkeys_spec.lua grün)_
+- [x] `<leader>tr` -- ui.nvim: move buffer one position right in the tabline _(auto 2026-10-29: ui.nvim/TESTS/keymaps_feedkeys_spec.lua grün)_
+- [x] `<leader>tt` -- ui.nvim: move current buffer into a new tab _(auto 2026-10-29: ui.nvim/TESTS/keymaps_feedkeys_spec.lua grün)_
+- [x] `<Tab>` -- ui.nvim: next buffer _(auto 2026-10-29: ui.nvim/TESTS/keymaps_feedkeys_spec.lua grün)_
+- [x] `<S-Tab>` -- ui.nvim: previous buffer _(auto 2026-10-29: ui.nvim/TESTS/keymaps_feedkeys_spec.lua grün)_
+- [x] `<leader>bu` -- ui.nvim: reopen the most recently closed tab _(auto 2026-10-29: ui.nvim/TESTS/keymaps_feedkeys_spec.lua grün)_
+- [x] `<leader>uP` -- ui.nvim: open the visual theme picker (live preview) _(auto 2026-10-29: ui.nvim/TESTS/keymaps_feedkeys_spec.lua grün, Float auf aktuellem Theme geprüft, Live-Vorschau nicht)_
+- [x] `<leader>bp` -- ui.nvim: pin/unpin the current buffer's tab _(auto 2026-10-29: ui.nvim/TESTS/keymaps_feedkeys_spec.lua grün)_
+- [x] `<M-p>` -- ui.nvim: toggle the sticky code context _(auto 2026-10-29: ui.nvim/TESTS/keymaps_feedkeys_spec.lua grün)_
+- [x] `<leader>ut` -- ui.nvim: toggle between the two configured themes _(auto 2026-10-29: ui.nvim/TESTS/keymaps_feedkeys_spec.lua grün)_
 
 ## Usercmds
 
@@ -683,19 +683,19 @@ Checkbox convention: `- [ ]` open, `- [x]` verified.
 
 ### :Cmdlog
 
-- [ ] `:Cmdlog` -- Command history pickers
-- [ ] `:Cmdlog favorites` -- Favorited commands
-- [ ] `:Cmdlog full` -- All commands, including duplicates
-- [ ] `:Cmdlog import` -- Import favorites from a JSON file, merging with the current list
-- [ ] `:Cmdlog project` -- Command history for the current Git project
-- [ ] `:Cmdlog risky test` -- Show which risky_patterns match a command (tune the list without guessing)
-- [ ] `:Cmdlog nvim` -- Neovim command-line history, deduplicated
-- [ ] `:Cmdlog export` -- Export favorites to a JSON file (default: favorites path + .export.json)
-- [ ] `:Cmdlog lua` -- Lua-mode command history, deduplicated
-- [ ] `:Cmdlog stats` -- Commands sorted by usage frequency
-- [ ] `:Cmdlog nvim-full` -- Neovim command-line history, including duplicates
-- [ ] `:Cmdlog shell` -- Shell command history, deduplicated
-- [ ] `:Cmdlog shell-full` -- Shell command history, including duplicates
+- [x] `:Cmdlog` -- Command history pickers _(auto 2026-10-29: cmdlog.nvim/TESTS/smoke_spec.lua grün, Befehl getippt, Picker-Funktion als Recorder)_
+- [x] `:Cmdlog favorites` -- Favorited commands _(auto 2026-10-29: cmdlog.nvim/TESTS/smoke_spec.lua grün, Befehl getippt, Picker-Funktion als Recorder)_
+- [x] `:Cmdlog full` -- All commands, including duplicates _(auto 2026-10-29: cmdlog.nvim/TESTS/smoke_spec.lua grün, Befehl getippt, Picker-Funktion als Recorder)_
+- [x] `:Cmdlog import` -- Import favorites from a JSON file, merging with the current list _(auto 2026-10-29: cmdlog.nvim/TESTS/smoke_spec.lua grün, getippt, merged dedupliziert)_
+- [x] `:Cmdlog project` -- Command history for the current Git project _(auto 2026-10-29: cmdlog.nvim/TESTS/smoke_spec.lua grün, Befehl getippt, Picker-Funktion als Recorder)_
+- [x] `:Cmdlog risky test` -- Show which risky_patterns match a command (tune the list without guessing) _(auto 2026-10-29: cmdlog.nvim/TESTS/smoke_spec.lua grün, getippt, Treffer-Muster im Bericht)_
+- [x] `:Cmdlog nvim` -- Neovim command-line history, deduplicated _(auto 2026-10-29: cmdlog.nvim/TESTS/smoke_spec.lua grün, Befehl getippt, Picker-Funktion als Recorder)_
+- [x] `:Cmdlog export` -- Export favorites to a JSON file (default: favorites path + .export.json) _(auto 2026-10-29: cmdlog.nvim/TESTS/smoke_spec.lua grün, getippt mit explizitem Pfad)_
+- [x] `:Cmdlog lua` -- Lua-mode command history, deduplicated _(auto 2026-10-29: cmdlog.nvim/TESTS/smoke_spec.lua grün, Befehl getippt, Picker-Funktion als Recorder)_
+- [x] `:Cmdlog stats` -- Commands sorted by usage frequency _(auto 2026-10-29: cmdlog.nvim/TESTS/smoke_spec.lua grün, Befehl getippt, Picker-Funktion als Recorder)_
+- [x] `:Cmdlog nvim-full` -- Neovim command-line history, including duplicates _(auto 2026-10-29: cmdlog.nvim/TESTS/smoke_spec.lua grün, Befehl getippt, Picker-Funktion als Recorder)_
+- [x] `:Cmdlog shell` -- Shell command history, deduplicated _(auto 2026-10-29: cmdlog.nvim/TESTS/smoke_spec.lua grün, Befehl getippt, Picker-Funktion als Recorder)_
+- [x] `:Cmdlog shell-full` -- Shell command history, including duplicates _(auto 2026-10-29: cmdlog.nvim/TESTS/smoke_spec.lua grün, Befehl getippt, Picker-Funktion als Recorder)_
 
 ### :ColorMyAscii
 
@@ -2486,7 +2486,7 @@ caution, not a verdict. Read the description before triggering any of these.
 - [ ] `:Ai key` -- Choose the API-key profile for this session (reset = back to the configured one)
 - [ ] `:AstroDevStop` -- Stop Astro dev server
 - [ ] `:BindingsRuntimeChecklist` -- Write the runtime checklist (lib.nvim.bindings.audit.checklist_lines) to docs/ROADMAP/Final_Checks/BINDINGS-RUNTIME-CHECKLIST.md; ! to overwrite
-- [ ] `:Cascade cycle remove` -- Remove the runtime cycle group containing a value
+- [x] `:Cascade cycle remove` -- Remove the runtime cycle group containing a value _(auto 2026-10-29: cascade.nvim/TESTS/usrcmds_spec.lua grün, inkl. Wert mit Leerzeichen)_
 - [ ] `:Case close` -- Move the case somewhere (pick a destination, or delete)
 - [ ] `:Case ki` -- Build the AI-analysis prompt from the clipboard's activity stream and copy it back; --send sends it (anonymized) to the configured AI provider and files the answer, --preview stops after saving the anonymized prompt, --raw sends/previews it NOT anonymized (always behind a warning popup), --inline embeds the policy documents
 - [x] `:Case clean` -- Strip AI-paste artifacts (Gemini utm_source, LaTeX leftovers) from cfile/cwd/path=.../the current buffer _(auto 2026-10-29: casedesk.nvim/TESTS/ui_paste_cleanup_spec.lua grün)_
