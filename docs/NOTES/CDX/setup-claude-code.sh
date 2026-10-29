@@ -9,11 +9,12 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# CDX -> NOTES -> docs -> nvim-config-root
-NVIM_CONFIG="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+# CDX -> NOTES -> docs -> nvim-config-root. Always derived from this script's location, never taken
+# from the environment (an inherited NVIM_CONFIG_DIR may point at another checkout).
+NVIM_CONFIG_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 
-echo "NVIM_CONFIG = $NVIM_CONFIG_DIR"
+echo "NVIM_CONFIG_DIR = $NVIM_CONFIG_DIR"
 
 # --- 1. Env-Variablen -------------------------------------------------------
 
@@ -42,10 +43,22 @@ fi
 
 cat > "$ENV_FILE" <<EOF
 # Generiert von setup-claude-code.sh - nicht von Hand editieren.
+export NVIM_CONFIG_DIR="$NVIM_CONFIG_DIR"
+# Alter Name, fuer aeltere Skripte/Notizen weiter gesetzt.
 export NVIM_CONFIG="$NVIM_CONFIG_DIR"
 export REPOS_DIR="$REPOS_DIR_VALUE"
 EOF
 echo "  $ENV_FILE geschrieben."
+
+# NVIM_MACHINE_ROLE (workstation | nicht gesetzt = privater Rechner) wird hier nicht gesetzt, nur angezeigt:
+# lua/machine.lua der nvim-Config und die Claude-Regeln lesen sie. Gleiche Auswertung wie machine.lua (lower()).
+MACHINE_ROLE="$(printf '%s' "${NVIM_MACHINE_ROLE:-}" | tr '[:upper:]' '[:lower:]')"
+case "$MACHINE_ROLE" in
+  workstation) echo "  Maschine: workstation (NVIM_MACHINE_ROLE)" ;;
+  "") echo "  Maschine: privater Rechner (NVIM_MACHINE_ROLE nicht gesetzt)" ;;
+  default) echo "  Maschine: privater Rechner (NVIM_MACHINE_ROLE=default)" ;;
+  *) echo "  Maschine: unbekannte NVIM_MACHINE_ROLE '$NVIM_MACHINE_ROLE' - nvim nimmt 'default'; Tippfehler?" ;;
+esac
 
 SOURCE_LINE="[ -f \"$ENV_FILE\" ] && . \"$ENV_FILE\""
 for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do

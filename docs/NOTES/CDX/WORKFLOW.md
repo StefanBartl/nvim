@@ -12,7 +12,8 @@ tun musst. Hintergrund und Dateien: [README.md](README.md),
 | `~/.claude/settings.json`                | Allowlist + Hooks (`check-hook.js`, `check-stop.js`)| Merge aus `settings.global.json`|
 | `<repo>/CLAUDE.md`                       | Stack-Regeln (Lua, Rust, C++, Web, Tauri)          | `templates/<stack>/`            |
 | `<repo>/.claude/settings.json`           | Stack-Allowlist (cargo, pnpm, cmake ...)           | `templates/<stack>/`            |
-| Env-Vars `NVIM_CONFIG`, `REPOS_DIR`      | Pfade fuer Docs/Repos                              | `setup-claude-code`             |
+| Env-Vars `NVIM_CONFIG_DIR`, `REPOS_DIR`  | Pfade fuer Docs/Repos                              | `setup-claude-code`             |
+| Env-Var `NVIM_MACHINE_ROLE`              | Workstation oder privater Rechner                  | von Hand (Abschnitt 4)          |
 
 Deshalb: **keine Regeln mehr in den Chat pasten.** Aendern sich Regeln, dann
 in der jeweiligen Datei anpassen, committen, pushen.
@@ -35,7 +36,7 @@ in der jeweiligen Datei anpassen, committen, pushen.
 
 ```powershell
 cd B:\repos\<repo>
-node "$env:NVIM_CONFIG\docs\NOTES\CDX\new-project-claude.js" <nvim-plugin|rust|cpp|tauri|web>
+node "$env:NVIM_CONFIG_DIR\docs\NOTES\CDX\new-project-claude.js" <nvim-plugin|rust|cpp|tauri|web>
 git add CLAUDE.md .claude/settings.json; git commit -m "chore: add Claude Code project config"
 ```
 
@@ -50,11 +51,16 @@ git add CLAUDE.md .claude/settings.json; git commit -m "chore: add Claude Code p
 1. Nvim-Config-Repo klonen bzw. pullen (Windows: `%LOCALAPPDATA%\nvim`).
 2. Node.js installieren (Voraussetzung fuer Setup und Hooks), Claude
    Code/Desktop-App installieren und mit dem Account anmelden.
+   **Nur auf einer Tricentis-Workstation:** vorher die Maschinenrolle von Hand
+   setzen, das Setup-Skript tut es nie: `setx NVIM_MACHINE_ROLE workstation`,
+   dann Terminal/App neu starten. Auf privaten Rechnern nichts setzen.
 3. Setup ausfuehren:
    - Windows: `pwsh -File "$env:LOCALAPPDATA\nvim\docs\NOTES\CDX\setup-claude-code.ps1"`
    - Linux/macOS: `bash ~/.config/nvim/docs/NOTES/CDX/setup-claude-code.sh`
+   Es zeigt die Maschinenrolle an (Workstation: muss dort `workstation` sein).
    Am Ende zeigt das Skript, was schon installiert ist, und fragt nach
-   Toolchain-Profilen (`nvim,cpp,rust,web,tauri`, oder `all` fuer alle).
+   Toolchain-Profilen (`nvim,cpp,rust,web,tauri`, oder `all` fuer alle). Auf
+   der Workstation im Zweifel leer lassen (unsignierte Pakete, Falcon).
    Einzeln nachholen: `node setup-devtools.js --profile nvim,rust --dry-run`
    (ohne `--dry-run` installiert es nach Rueckfrage); nur ansehen:
    `node setup-devtools.js --status`.
@@ -64,7 +70,7 @@ git add CLAUDE.md .claude/settings.json; git commit -m "chore: add Claude Code p
 ## 5. Schnelltest, ob alles greift
 
 Im neuen Chat in einem Repo fragen: "Welche Regeln aus CLAUDE.md gelten hier,
-und was sind NVIM_CONFIG und REPOS_DIR?" Claude sollte die globalen und die
+und was sind NVIM_CONFIG_DIR, REPOS_DIR und NVIM_MACHINE_ROLE?" Claude sollte die globalen und die
 Repo-Regeln nennen und die richtigen Pfade kennen. Hooks pruefst du, indem
 eine `.lua`-Datei absichtlich falsch formatiert wird: Claude bekommt dann den
 stylua-Fehler zurueck.

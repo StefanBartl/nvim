@@ -6,6 +6,7 @@
 //        node setup-devtools.js --status        (what is installed, per profile; installs nothing)
 //   Profiles: core (always), nvim, cpp, rust, web, tauri (= rust + web + webview2), all (= every profile)
 //   Without --profile the profiles saved in ~/.claude/devtools.profile are used.
+//   On the workstation (NVIM_MACHINE_ROLE=workstation) it warns and always asks, --yes included.
 
 const { execFileSync, spawnSync } = require('child_process');
 const fs = require('fs');
@@ -14,6 +15,9 @@ const path = require('path');
 const readline = require('readline');
 
 const PLATFORM = process.platform;
+// Same reading as lua/machine.lua (case-insensitive). The workstation runs CrowdStrike Falcon: nothing unsigned
+// may be installed there, and several packages below are unsigned portable binaries (ripgrep, fd, stylua, ...).
+const ON_WORKSTATION = (process.env.NVIM_MACHINE_ROLE || '').toLowerCase() === 'workstation';
 const profileFile = path.join(os.homedir(), '.claude', 'devtools.profile');
 const table = JSON.parse(fs.readFileSync(path.join(__dirname, 'tools.json'), 'utf8'));
 
@@ -124,6 +128,10 @@ function ask(question) {
 
 (async () => {
   console.log(`Profile: ${[...profiles].join(', ')}  (Plattform: ${PLATFORM})\n`);
+  if (ON_WORKSTATION) {
+    console.log('ACHTUNG Workstation (NVIM_MACHINE_ROLE=workstation, CrowdStrike Falcon): nichts Unsigniertes installieren.');
+    console.log('Mehrere Pakete sind unsignierte portable Binaries (u. a. ripgrep, fd, stylua); --yes fragt hier trotzdem.\n');
+  }
 
   const relevant = table.tools.filter(
     (t) => t.profiles.some((p) => profiles.has(p)) && (!t.osOnly || t.osOnly === PLATFORM)
@@ -158,7 +166,7 @@ function ask(question) {
     for (const { cmd } of todo) console.log(`  ${cmd.join(' ')}`);
     if (flag('--dry-run')) {
       console.log('\n(--dry-run: nichts ausgefuehrt)');
-    } else if (flag('--yes') || (await ask('\nJetzt installieren? [j/N] '))) {
+    } else if ((flag('--yes') && !ON_WORKSTATION) || (await ask('\nJetzt installieren? [j/N] '))) {
       for (const { tool, cmd } of todo) {
         console.log(`\n== ${tool.name} ==`);
         const res = spawnSync(cmd[0], cmd.slice(1), { stdio: 'inherit' });

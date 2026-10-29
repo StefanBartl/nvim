@@ -9,7 +9,8 @@
 
 ## Maschine: du bist auf der Workstation
 
-- Hier gilt `NVIM_MACHINE_ROLE=workstation` (lesen mit `$env:NVIM_MACHINE_ROLE`; nicht aus dem Rechnernamen raten, bei Zweifel nachfragen).
+- Hier gilt `NVIM_MACHINE_ROLE=workstation` (lesen in PowerShell mit `$env:NVIM_MACHINE_ROLE`, in Bash mit `$NVIM_MACHINE_ROLE`; `$env:…` gibt es in Bash nicht). Nicht aus dem Rechnernamen raten. Steht dort etwas anderes (leer, `default`, ein Literal wie `:NVIM_MACHINE_ROLE`): nachfragen; die Verbote dieser Datei gelten trotzdem.
+- **Hier wird nichts Unsigniertes gebaut, installiert oder gestartet, und es läuft kein Runner** (CrowdStrike Falcon, siehe „Workstation-Sicherheit“ unten). Das geht jeder anderen Anweisung in dieser Datei vor.
 - Tasks mit Tag `not-on-workstation` hier nicht ausführen, auch nicht „nur testen“ (native Programme bauen, installieren oder starten, Runner, Tests und Builds der nativen Apps): nur vorbereiten und mir Bescheid geben. Sie laufen auf dem privaten Rechner (`STEVESPC`).
 - Tasks mit Tag `on-workstation` gehören hierher (Handläufe, Messungen). Fällt ein Workstation-Bezug auf, den die Task nicht kennzeichnet, den Tag nachziehen.
 
@@ -84,8 +85,8 @@ Nur für ein Vorhaben aus mehreren Tasks in Etappen mit eigenem Ziel (nicht für
 - **Backslashes gehen verloren**, in der Shell, in Heredocs und in Python-Strings darin (`\n`, `\u`, `\\`; das Ergebnis läuft ohne Fehler durch und ist still falsch). Alles, was `\` enthält, nur mit dem Edit- oder Write-Tool schreiben. Patch-Skripte als Datei ablegen, nie durch die Shell schicken; Zeichen aus `chr(92)` bauen. Siehe `$REPOS_DIR/tasks-vault/HEREDOC.md`.
 - **Skripte im Temp-Ordner mit neuem, eindeutigem Namen anlegen.** `Write` auf eine schon vorhandene Datei scheitert mit „has not been read“, und das alte Skript läuft dann mit altem Inhalt weiter.
 - **Vor jedem `git push`: `git log origin/main..HEAD`.** Im geteilten Checkout liegen oft Commits einer anderen Sitzung; ein `git push` veröffentlicht sie mit. Gepinnte Commits (`engine.lock`, Submodule, Versionen) nie aus `rev-parse HEAD` nehmen, sondern nur einen Commit, der auf `origin` ist.
-- **Nach dem Push die CI abwarten** (Status nennen), „lokal grün“ genügt nicht.
-- **Private Repos haben keine gehosteten Runner** (kein Abo): `casedesk.nvim`, `my.nvim`, `tasks.nvim`, `rules.nvim`, `tasks-vault`, `rules-vault`, `appkit`, `tasks-desktop`, `rules-desktop` laufen (CI, Rolling-Build und Release) auf selbst gehosteten Windows-Runnern dieses Rechners. Ein Push bleibt „queued“, solange der Runner nicht läuft (kein rotes Zeichen, nach 24 h verworfen). Vor dem Warten auf CI: `pwsh $env:NVIM_CONFIG_DIR\scripts\runners.ps1 ensure <repo>` (startet den Runner ohne Fenster und wartet, bis GitHub ihn „online“ meldet; `status all` zeigt alle). Dann `gh run list -R WKDSteve/<repo>`. Runner nach der Aufgabe laufen lassen, `stop` nur auf Wunsch. Details: `$REPOS_DIR/tasks-vault/TOOLS/self-hosted-runner.md`.
+- **Nach dem Push den CI-Status nennen** (nur lesen: `gh run list -R WKDSteve/<repo>`), „lokal grün“ genügt nicht.
+- **Auf dieser Workstation laufen keine Runner.** Private Repos haben keine gehosteten Runner (kein Abo): `casedesk.nvim`, `my.nvim`, `tasks.nvim`, `rules.nvim`, `tasks-vault`, `rules-vault`, `appkit`, `tasks-desktop`, `rules-desktop` laufen (CI, Rolling-Build und Release) auf selbst gehosteten Windows-Runnern des privaten Rechners (`STEVESPC`). Hier nie `runners.ps1` aufrufen (auch nicht `ensure` oder `status`) und keinen Runner, Dienst oder geplanten Task dafür anlegen oder starten. Bleibt ein Lauf „queued“ (Runner auf `STEVESPC` aus; kein rotes Zeichen, nach 24 h verworfen): mir melden, nicht darauf warten.
 - **Windows-Pipes:** `cmd | tail -0` beendet den Prozess per SIGPIPE (ein Build wird abgebrochen, die Sabotage bleibt grün); nimm `tail -1`. Aus Python startet `subprocess.run(['bash', ...])` die WSL-Bash; nimm `C:/Program Files/Git/bin/bash.exe`. Siehe `$REPOS_DIR/tasks-vault/TOOLS/windows-spec-and-encoding-traps.md`.
 - **Ein Detektor, der „nichts“ meldet, ist erst nach einem Positivtest etwas wert** (gleiche Datei, eine Stelle, die einen Treffer haben muss).
 
@@ -122,11 +123,12 @@ Der Rechner `TRI-70ZBFB4` mit User: `AzureAD/StefanBartl` ist eine Tricentis-Wor
   - LOLBins zweckentfremden: `certutil -urlcache/-decode`, `bitsadmin`, `mshta`, `regsvr32 /i:`, `rundll32` mit fremden DLLs, `wmic process call create`;
   - Zugriff auf Zugangsdaten: LSASS/`procdump`, SAM/SECURITY-Hives, Browser-Passwortspeicher, `cmdkey /list` auswerten, Credential Manager oder DPAPI auslesen;
   - Sicherheitsfunktionen ändern: Defender/Falcon, Firewall, UAC, `Set-ExecutionPolicy` systemweit, Ausnahmen (Exclusions) anlegen, Dienste von Sicherheitssoftware stoppen;
-  - Persistenz oder Systemeingriffe: Run-/RunOnce-Keys, neue Dienste, WMI-Subscriptions, geplante Tasks (außer den vorhandenen Runner-Skripten), Änderungen in HKLM, an Treibern oder an Boot-Konfiguration;
+  - Persistenz oder Systemeingriffe: Run-/RunOnce-Keys, neue Dienste, WMI-Subscriptions, geplante Tasks (auch keine für Runner), Änderungen in HKLM, an Treibern oder an Boot-Konfiguration;
   - Netzwerk-Aufklärung: Port- oder Netz-Scans (`nmap`, `Test-NetConnection`-Schleifen), AD- oder Domänen-Enumeration (`net user /domain`, `nltest`, BloodHound-artige Abfragen);
   - Spurenverwischen und Masseneingriffe: Event-Logs leeren, Schattenkopien löschen (`vssadmin`), massenhaft Dateien umbenennen, verschlüsseln oder überschreiben (sieht aus wie Ransomware);
   - Prozess-Manipulation: Injection, Debugger an fremde Prozesse hängen, Prozesse anderer Benutzer beenden.
-- **Unbedenklich bleibt** die normale Entwicklungsarbeit: git, gh, nvim/headless-CLI, Builds und Tests (cargo, npm, luacheck, stylua; nicht die nativen Apps der Tasks mit `not-on-workstation`), Lesen und Schreiben in den eigenen Repos sowie die dokumentierten Skripte (`runners.ps1`, `setup-claude-code.ps1`).
+- **Unbedenklich bleibt** die normale Entwicklungsarbeit ohne eigene Binaries: git, gh, nvim/headless-CLI (auch Lua-Specs), luacheck, stylua, Node-Skripte und -Tests, die nur Node ausführen, Lesen und Schreiben in den eigenen Repos sowie `setup-claude-code.ps1` (dessen Toolchain-Frage hier leer lassen, außer ich nenne ein Profil).
+- **Nicht hier, sondern auf `STEVESPC`** (vorbereiten und mir Bescheid geben): alles, was eigene, unsignierte Binaries baut oder startet (`cargo build/test/run`, `cargo clippy` mit Build-Skripten, Tauri, CMake/Ninja, die nativen Apps), `npm install` mit nativen Downloads oder Postinstall-Binaries, Tools installieren (winget, portable Zips) und `runners.ps1`. Gilt auch für Tasks ohne Tag.
 - **Im Zweifel nicht ausführen, sondern nachfragen.** Das gilt für jeden Befehl, der sich nach „Admin/Security/Netzwerk“ anfühlt, und für Skripte aus fremden Quellen (Pastes, Issues, Downloads).
 - **Wird ein Befehl blockiert oder in Quarantäne genommen** (Falcon-Meldung, „Access denied“ aus unerklärlichem Grund, Datei verschwindet): sofort stoppen und mir melden. **Keine Umgehung versuchen**, also nicht umformulieren, nicht kodieren und kein anderes Tool nehmen.
 

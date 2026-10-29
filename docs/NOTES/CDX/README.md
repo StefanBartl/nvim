@@ -47,7 +47,8 @@ Ordner muesste man Regeln/Settings auf jedem Rechner von Hand nachpflegen.
   (z. B. `B:\repos` hier, ggf. andere Pfade auf Heim-PC/Workstation) und wird
   beim ersten Lauf interaktiv abgefragt, danach wiederverwendet.
   `$NVIM_MACHINE_ROLE` (`workstation` auf der Tricentis-Workstation, sonst
-  nicht gesetzt) setzt das Skript nicht; sie wird von `lua/machine.lua` der
+  nicht gesetzt) setzt das Skript nicht (auf der Workstation einmal von Hand:
+  `setx NVIM_MACHINE_ROLE workstation`, siehe `WORKFLOW.md` Abschnitt 4); sie wird von `lua/machine.lua` der
   nvim-Config und von den Claude-Regeln (Abschnitt „Maschine“ in
   `CLAUDE.global.md`) gelesen und steht in den Prompt-Vorlagen
   (`templates/PROMPT/`) für die Task-Tags `on-workstation` / `not-on-workstation`.
@@ -97,7 +98,7 @@ Windows:
 pwsh -File "$env:LOCALAPPDATA\nvim\docs\NOTES\CDX\setup-claude-code.ps1"
 ```
 
-Linux/macOS (Pfad je nach `NVIM_CONFIG`-Ort anpassen, z. B.
+Linux/macOS (Pfad je nach Ort des nvim-Config-Repos anpassen, z. B.
 `~/.config/nvim` oder `~/.local/share/nvim` - wo auch immer dieses Repo dort
 liegt):
 
@@ -107,12 +108,19 @@ bash ~/.config/nvim/docs/NOTES/CDX/setup-claude-code.sh
 
 Ablauf (beide Skripte, gleiches Prinzip):
 
-1. Setzt/prueft `NVIM_CONFIG` (automatisch) und `REPOS_DIR` (fragt beim
-   ersten Mal nach, validiert dass der Pfad existiert).
+1. Setzt/prueft `NVIM_CONFIG_DIR` (automatisch aus dem Skript-Pfad; der alte
+   Name `NVIM_CONFIG` bekommt denselben Wert) und `REPOS_DIR` (fragt beim
+   ersten Mal nach, validiert dass der Pfad existiert). Zeigt die
+   Maschinenrolle `NVIM_MACHINE_ROLE` an (setzt sie nie; unbekannte Werte und
+   ein AzureAD-/`TRI-`-Rechner ohne Rolle werden gemeldet).
 2. Verlinkt/kopiert `CLAUDE.global.md` nach `~/.claude/CLAUDE.md` (mit
    Backup, falls dort schon etwas anderes liegt).
 3. Merged `settings.global.json` in `~/.claude/settings.json` (mit Backup,
    ueber `merge-claude-settings.js`).
+4. Optional: zeigt mit `node setup-devtools.js --status`, was schon
+   installiert ist, und fragt nach Toolchain-Profilen (`nvim,cpp,rust,web,tauri`,
+   `all` = alle, leer = ueberspringen). Auf der Workstation warnen Skript und
+   `setup-devtools.js` vor unsignierten Paketen und fragen immer (auch mit `--yes`).
 
 Danach Claude-Code-App/Terminal neu starten, damit die Env-Vars gezogen
 werden.

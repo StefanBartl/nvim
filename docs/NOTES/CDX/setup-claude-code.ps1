@@ -15,7 +15,7 @@ $ErrorActionPreference = 'Stop'
 $nvimConfig = (Get-Item $PSScriptRoot).Parent.Parent.Parent.FullName
 $claudeDir  = Join-Path $HOME '.claude'
 
-Write-Host "NVIM_CONFIG = $nvimConfig"
+Write-Host "NVIM_CONFIG_DIR = $nvimConfig"
 
 # --- 1. Env-Variablen (User-Scope) -----------------------------------------
 
@@ -30,6 +30,8 @@ function Set-UserEnvVar($name, $value) {
 }
 
 Write-Host "`n[1/3] Env-Variablen"
+Set-UserEnvVar -name 'NVIM_CONFIG_DIR' -value $nvimConfig
+# Alter Name, fuer aeltere Skripte/Notizen weiter gesetzt.
 Set-UserEnvVar -name 'NVIM_CONFIG' -value $nvimConfig
 
 $reposDir = [Environment]::GetEnvironmentVariable('REPOS_DIR', 'User')
@@ -75,9 +77,36 @@ if (-not $tasksVault) {
 }
 
 # NVIM_MACHINE_ROLE (workstation | unset = privater Rechner) wird hier nicht gesetzt: lua/machine.lua der nvim-Config
-# liest sie schon, und die Claude-Regeln (CLAUDE.global.md, Abschnitt Maschine) lesen dieselbe Variable.
-$machineRole = [Environment]::GetEnvironmentVariable('NVIM_MACHINE_ROLE', 'User')
-Write-Host "  Maschine: $(if ($machineRole) { $machineRole } else { 'privater Rechner (NVIM_MACHINE_ROLE nicht gesetzt)' })"
+# liest sie schon, und die Claude-Regeln (CLAUDE.global.md, Abschnitt Maschine) lesen dieselbe Variable. Gelesen wie
+# machine.lua: Prozess-Umgebung, lower(), nur bekannte Rollen. Ist sie dort leer, aber im User- oder Machine-Scope
+# gesetzt, kennt diese Shell sie nur noch nicht (Neustart noetig).
+# BEGIN machine-role
+$roleRaw = $env:NVIM_MACHINE_ROLE
+$roleNote = ''
+if (-not $roleRaw) {
+    foreach ($scope in 'User', 'Machine') {
+        $scopeValue = [Environment]::GetEnvironmentVariable('NVIM_MACHINE_ROLE', $scope)
+        if ($scopeValue) {
+            $roleRaw = $scopeValue
+            $roleNote = " (nur im $scope-Scope; diese Shell/App kennt sie erst nach einem Neustart)"
+            break
+        }
+    }
+}
+$machineRole = if ($roleRaw) { $roleRaw.ToLowerInvariant() } else { '' }
+$isWorkstation = $machineRole -eq 'workstation'
+if ($isWorkstation) {
+    Write-Host "  Maschine: workstation (NVIM_MACHINE_ROLE)$roleNote" -ForegroundColor Yellow
+} elseif ($machineRole -eq '' -or $machineRole -eq 'default') {
+    Write-Host "  Maschine: privater Rechner (NVIM_MACHINE_ROLE$(if ($machineRole) { '=default' } else { ' nicht gesetzt' }))$roleNote"
+    if (-not $machineRole -and ($env:USERDOMAIN -eq 'AzureAD' -or $env:COMPUTERNAME -like 'TRI-*')) {
+        Write-Host "  Achtung: AzureAD-/TRI-Rechner ohne NVIM_MACHINE_ROLE. Ist das die Workstation, zuerst von Hand setzen:" -ForegroundColor Yellow
+        Write-Host "    setx NVIM_MACHINE_ROLE workstation   (dann Terminal/App neu starten und dieses Skript erneut ausfuehren)" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Maschine: unbekannte NVIM_MACHINE_ROLE '$roleRaw'$roleNote - nvim nimmt 'default'; Tippfehler?" -ForegroundColor Yellow
+}
+# END machine-role
 
 Write-Host "  Hinweis: neu gesetzte User-Env-Vars gelten erst in neuen Shells/Sessions."
 
@@ -130,6 +159,10 @@ node $mergeScript $templatePath $settingsPath $nvimConfig
 Write-Host "`n[optional] Dev-Toolchains (nvim/cpp/rust/web/tauri) per winget installieren?"
 Write-Host "  Was auf dieser Maschine schon da ist:"
 node (Join-Path $PSScriptRoot 'setup-devtools.js') --status
+if ($isWorkstation) {
+    Write-Host "  Workstation (CrowdStrike Falcon): nichts Unsigniertes installieren. Mehrere winget-Pakete sind" -ForegroundColor Yellow
+    Write-Host "  unsignierte portable Binaries (u. a. ripgrep, fd, stylua). Im Zweifel leer lassen." -ForegroundColor Yellow
+}
 $profileAnswer = Read-Host '  Profile kommagetrennt (nvim,cpp,rust,web,tauri), all = alle, leer = ueberspringen'
 if ($profileAnswer) {
     node (Join-Path $PSScriptRoot 'setup-devtools.js') --profile $profileAnswer
