@@ -121,11 +121,22 @@ switch ($Action) {
         $problems | ForEach-Object { Write-Output "  $_" }
       }
     }
-    foreach ($n in $toStart) {
-      # (the list from above: asking the process table again for every runner is a CIM query each)
-      # The runner takes the PATH of this process: scoop shims (stylua, luacheck, gh), Git and nvim must be on it.
-      Start-Process -FilePath (Join-Path $Root "$n\run.cmd") -WorkingDirectory (Join-Path $Root $n) -WindowStyle Hidden
-      Write-Output "$n started"
+    # The runner also inherits the user's dependency overrides (LIB_NVIM_DIR=<local checkout>), and scripts/test.sh
+    # lets a set override win over .deps/, so CI would test the working tree instead of ci-verified. Take them out of
+    # this process for the start only (user environment untouched), put them back afterwards.
+    $overrides = @{}
+    foreach ($e in Get-ChildItem Env: | Where-Object { $_.Name -match '^[A-Z0-9_]+_NVIM_DIR$' }) { $overrides[$e.Name] = $e.Value }
+    try {
+      foreach ($k in @($overrides.Keys)) { Remove-Item "Env:$k" }
+      foreach ($n in $toStart) {
+        # (the list from above: asking the process table again for every runner is a CIM query each)
+        # The runner takes the PATH of this process: scoop shims (stylua, luacheck, gh), Git and nvim must be on it.
+        Start-Process -FilePath (Join-Path $Root "$n\run.cmd") -WorkingDirectory (Join-Path $Root $n) -WindowStyle Hidden
+        Write-Output "$n started"
+      }
+    }
+    finally {
+      foreach ($k in $overrides.Keys) { Set-Item "Env:$k" $overrides[$k] }
     }
     if ($Action -eq 'ensure') {
       $deadline = (Get-Date).AddSeconds($WaitSeconds)
