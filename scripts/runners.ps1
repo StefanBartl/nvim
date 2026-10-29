@@ -40,7 +40,12 @@ if ($Action -eq 'check') {
   & (Join-Path $PSScriptRoot 'runner_tools_check.ps1') -Owner $Owner
   exit $LASTEXITCODE
 }
-if (-not (Test-Path $Root)) { Write-Output "no runners: $Root does not exist"; exit 2 }
+if (-not (Test-Path $Root)) {
+  # No runner on THIS machine; the CI may still run on another machine's runner (one per machine and repo).
+  Write-Output "no runners on this machine: $Root does not exist"
+  Write-Output "  runners of other machines: gh api repos/$Owner/<repo>/actions/runners -q '.runners[] | .name + `" `" + .status'"
+  exit 2
+}
 
 $names = if ($Repo -contains 'all') { Get-ChildItem $Root -Directory | Select-Object -ExpandProperty Name } else { $Repo }
 foreach ($n in $names) {
