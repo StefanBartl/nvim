@@ -4,6 +4,7 @@
 
   - [Sichtprüfung im echten Fenster](#sichtprüfung-im-echten-fenster)
   - [Sichtprüfung ui.slots](#sichtprüfung-uislots)
+  - [Neue Live-Checks (Stand 2026-10-29)](#neue-live-checks-stand-2026-10-29)
 
 ---
 
@@ -74,3 +75,43 @@ setzen; Auffälliges als eigenen Task anlegen (R9), nicht hier sammeln.
    (anderes Projekt = andere Slots): in Ordnung?
 6. Zusammenspiel mit Tabline und Statusline: überdeckt die Leiste etwas, springt
    etwas beim Öffnen und Schließen?
+
+---
+
+## Neue Live-Checks (Stand 2026-10-29)
+
+Hinweis zu `ui.nvim/slots-live-check`: unverändert offen, die Checkliste steht
+oben im Abschnitt „Sichtprüfung ui.slots“ (dort abarbeiten; Task nach
+Durchlauf mit `done` schließen, Plan `ui-slots` auf `done`). Neu ist nur der
+folgende Abschnitt.
+
+### Option-Float von `:UI` in einer echten Sitzung
+
+Task `ui.nvim/try-the-ui-option-float-in-a-real-session` (Code `ui.nvim@c5ab2ba`;
+`:UI help` jetzt aus den Routen erzeugt, `ui.nvim@fd16dda`). Der Float war bisher
+nur durch Specs gedeckt (Routen, Texte, Completion, Dispatch), nie angesehen.
+
+Vorbereitung: `ui.nvim` gepullt (mindestens `c5ab2ba`, besser `fd16dda`),
+Neovim neu starten. Ziel ist die echte nvim-Config (dort belegt die Config
+`<M-h>` als Cheatsheet-Taste; das Plugin selbst hat keine Default-Taste).
+
+- [ ] `:UI` ohne Argument — erwartet: der Option-Float öffnet sich; Zeilen und Texte sind lesbar und sinnvoll.
+  Notiz:
+- [ ] `:UI sticky` (und `:UI sticky <Tab>`) — erwartet: Ausgabe bzw. Completion mit den Sticky-Wörtern; Zeilen lesen sich gut.
+  Notiz:
+- [ ] Cheatsheet-Taste `<M-h>` — erwartet: derselbe Hilfe-Float wie bei bloßem `:UI`.
+  Notiz:
+- [ ] `:UI help` — erwartet: aus den Routen erzeugte Hilfe, vollständig (jede Unterbefehls-Route kommt vor, nichts Veraltetes).
+  Notiz:
+- [ ] Float schließen (`q`/`<Esc>`) — erwartet: sauber weg, kein Fokus-Rest.
+  Notiz:
+- [ ] Urteil: Lesen sich Zeilen und Texte gut? Was wirkt seltsam (Ausrichtung, Umbrüche, Icons, Farben)?
+  Notiz:
+
+Falls rot oder auffällig: jede Beobachtung als eigener Task (Regel R9), nicht hier
+sammeln; Task kurz mit Befund referenzieren.
+
+Offene Frage: Die Task nennt keine Soll-Optik; Maßstab ist dein Urteil
+("rows and texts read well").
+
+Danach: Task `ui.nvim/try-the-ui-option-float-in-a-real-session` mit `done` schließen.

@@ -119,3 +119,67 @@ Danach manuell die restlichen 6 gelöscht, inkl. Bestätigungsdialog bei einer D
 ein späterer, offenbar wieder aufgewachter Lauf der ursprünglichen Kette meldete für
 die bereits manuell gelöschten Dateien `path does not exist` — konsistent mit der
 Root-Cause-Erklärung in Abschnitt 2.
+
+---
+
+# Neue Live-Checks (Stand 2026-10-29)
+
+Ergänzung zu Abschnitt 4 oben, ohne ihn zu ändern. Task `filetree.nvim/test-trash-batch-linux-macos`
+(Prio 2, Aufwand S, Tags `needs-live-test`, `linux`, `macos`). Die Checkliste im Vault
+(`Backlog/TASKS/2026-09-26-test-trash-batch-linux-macos.md`) steht noch auf „Offen“ und wird nach dem
+Lauf mit abgehakt. Haken hier und in Abschnitt 4 setzen; Befunde als Zeile unter „Falls rot“, daraus
+wird eine `kind: bug`-Task. Code: `lua/filetree/features/fileops/trash/platform.lua`
+(`run_mac_batch`, `run_linux_batch`, `M.send_batch`), Commit `filetree.nvim@ecd4dfd`.
+
+**Vorher:** `filetree.nvim` auf allen Zielmaschinen aktuell (Commit notieren: ______); Neovim mit
+neo-tree-Backend. Wegwerf-Dateien anlegen (nichts Echtes markieren): eine Handvoll Dateien, dazu eine
+mit Leerzeichen, `"` und `\` im Namen (nur macOS-Test). Bedienung: Dateien mit `m` markieren, `d`,
+im Dialog **Delete all at once**; `U` stellt wieder her. Prüfen, wo etwas landet: Linux
+`~/.local/share/Trash/files` bzw. `gio list trash://`, macOS der Papierkorb im Finder.
+Hinweis zur Beobachtung des „ein Aufruf für den ganzen Batch“: Aufrufe z. B. über eine temporäre
+Wrapper-Skript-Kette auf `PATH` oder `strace -f -e execve` mitschneiden (Vorschlag, die Task nennt
+kein Verfahren).
+
+## Ubuntu (nativ) — offen
+
+- [ ] Mehrere Dateien markieren, `d`, Delete all at once, **mit `gio`**: alle landen im Trash, laut
+      Mitschnitt ein `gio trash p1 p2 ...`-Aufruf (nicht N)
+- [ ] dasselbe **nur mit `trash-put`** (`gio` aus dem `PATH`): ein `trash-put`-Aufruf, alle im Trash
+- [ ] dasselbe **mit keinem von beiden**: XDG-`mv`-Fallback nach `~/.local/share/Trash/files`
+      (bzw. `$XDG_DATA_HOME/Trash/files`)
+- [ ] Randfall: eine markierte Datei mitten im Batch sperren (Rechte entziehen): nur genau diese wird
+      als Fehler gemeldet, der Rest wird nicht blockiert
+
+Bekannt und akzeptiert, **nicht** als Bug melden: im XDG-`mv`-Fallback überschreibt bei gleichnamigen
+Dateien aus verschiedenen Ordnern die zweite die erste (galt schon vor dem Batching).
+
+## Arch Linux unter WSL — offen
+
+- [ ] normales Löschen funktioniert weiter (dieser Pfad bleibt sequenziell über den Windows-Weg mit
+      `wslpath` und PowerShell, `run_linux_batch` wird hier bewusst **nicht** angesprungen); Regressions-
+      Check für den Fix des Bestätigungsdialogs, kein Dialog, der hängt
+
+## macOS (VM) — offen
+
+- [ ] mit der `trash`-CLI (`brew install trash`): ein `trash p1 p2 ...`-Aufruf für den ganzen Batch,
+      alle Dateien im Papierkorb
+- [ ] ohne die CLI (AppleScript-Fallback über Finder): alle im Papierkorb, mit Dateinamen, die
+      Leerzeichen, `"` und `\` enthalten
+- [ ] Randfall wie bei Linux: gesperrte bzw. nicht vorhandene Datei mitten im Batch
+
+## Falls rot
+
+- [ ] Plattform, Variante (`gio` / `trash-put` / `mv` / `trash` / AppleScript), Dateiname, Meldung
+      von Neovim (`:messages`) festhalten; `kind: bug` in `filetree.nvim` mit `refs:` auf die Zeile
+
+## Danach
+
+- [ ] Ergebnis und eventuellen Fix-Commit in der Task festhalten, Task
+      `test-trash-batch-linux-macos` mit `done` schließen, die Vault-Checkliste abhaken
+
+Offene Fragen: Die Task sagt „Ubuntu (native)“ und „macOS (VM)“ ohne zu klären, welche Maschinen du
+dafür hast (laut Task: „needs machines the author may not have at hand“). Fehlt eine Plattform, bewusst
+als „nicht testbar“ notieren und die Task offen lassen oder aufteilen?
+
+Verwandt, gleiche Area, andere Sitzung: `filetree-live-checks-2026-10-29.md` (Blink, Badges,
+Handle-Guard).

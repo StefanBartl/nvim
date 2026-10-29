@@ -21,6 +21,7 @@ Konvention: `- [ ]` offen, `- [x]` verifiziert. Unter jedem Punkt eine Zeile `No
   - [K2 — Cheatsheet](#k2--cheatsheet)
   - [L — Skripte (`TESTS/live/*`)](#l--skripte-testslive)
   - [M — Abschluss](#m--abschluss)
+  - [Neue Live-Checks (Stand 2026-10-29)](#neue-live-checks-stand-2026-10-29)
 
 ---
 
@@ -267,3 +268,16 @@ Kommentar im Kopf der Dateien nennt jeweils den Aufruf; jedes Skript endet in `R
 - [ ] Jeder Befund ist ein Task (`kind: bug`, `refs: terminal.nvim/live-check`).
 - [ ] Wenn alles passt: Punkte hier streichen, Task `live-check` erledigen (`tasks.lua done terminal.nvim/live-check`), Plan `terminal-build` auf `done` setzen und nach `Backlog/FEATURES/` verschieben (Regel R6).
 - [ ] Danach Tag setzen (Task `release-docs`, Vorschlag `v0.1.0`) und `README` von "Beta" lösen oder bewusst lassen.
+
+---
+
+## Neue Live-Checks (Stand 2026-10-29)
+
+Task `terminal.nvim/live-check` ist unverändert offen (Plan `terminal-build`, Phase `abnahme`, `effort: M`); die Abschnitte 0 bis M oben tragen die Akzeptanz der Task vollständig (alte Gewohnheiten, WezTerm, zwei Instanzen, tmux, Pin/adopt, Fehlerfälle, Last). Seit dem Stand vom 2026-10-15 sind zwei terminal.nvim-Funktionen dazugekommen, die in A bis M nicht vorkommen und in derselben Sitzung mitgeprüft werden sollten; ihre Schritte stehen in `nvim-config-live-checks-2026-10-29.md` (gleicher Ordner):
+
+- [ ] Ask-Bridge `$NVIM_ASK` (Task `terminal.nvim/nvim-ask-bridge`): Large-files-Dialog aus lazygit und aus einem terminal.nvim-Terminal, `:checkhealth terminal` zeigt „Ask bridge: terminals get $NVIM_ASK …“ — dort Abschnitt 2.
+  Notiz:
+- [ ] Build-Terminal `build:<repo>` über `B` in `:MyPlugins machine` (Float, `direct`, `cwd` = Repo; `:Terminal list` zeigt es) — dort Abschnitt 4.
+  Notiz:
+
+Danach (zusätzlich zu M): beide Verweise hier abhaken, sobald die Abschnitte dort durch sind.
