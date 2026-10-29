@@ -49,7 +49,9 @@ if (flag('--status')) {
   process.exit(0);
 }
 
-const requestedRaw = (opt('--profile') ? opt('--profile').split(',') : readSavedProfiles()).map((p) => p.trim());
+const requestedRaw = (opt('--profile') ? opt('--profile').split(',') : readSavedProfiles())
+  .map((p) => p.trim().toLowerCase())
+  .filter(Boolean);
 if (!requestedRaw.length) {
   console.error('Kein Profil angegeben. Beispiel: node setup-devtools.js --profile nvim,rust,web  (oder all)');
   console.error(`Profile: core (immer), ${knownProfiles.join(', ')}, all (alle)`);

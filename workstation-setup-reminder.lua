@@ -62,17 +62,24 @@ local function open_terminal()
   end, 600)
 end
 
-vim.api.nvim_create_autocmd("VimEnter", {
-  once = true,
-  callback = function()
-    vim.defer_fn(function()
-      vim.notify(
-        "[setup] Workstation: run `"
-          .. command
-          .. "` once (typed in the terminal below, press Enter). Done: :WorkstationSetupDone",
-        vim.log.levels.WARN
-      )
-      open_terminal()
-    end, 800)
-  end,
-})
+local function remind()
+  vim.defer_fn(function()
+    -- Headless runs (tools, tests, hooks that start nvim with this config) must not open a shell.
+    if #vim.api.nvim_list_uis() == 0 then
+      return
+    end
+    vim.notify(
+      "[setup] Workstation: run `"
+        .. command
+        .. "` once (typed in the terminal below, press Enter). Done: :WorkstationSetupDone",
+      vim.log.levels.WARN
+    )
+    open_terminal()
+  end, 800)
+end
+
+if vim.v.vim_did_enter == 1 then
+  remind()
+else
+  vim.api.nvim_create_autocmd("VimEnter", { once = true, callback = remind })
+end

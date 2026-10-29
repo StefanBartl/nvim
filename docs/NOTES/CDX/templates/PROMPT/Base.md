@@ -9,7 +9,7 @@
 
 ## Maschine (Workstation oder privater Rechner)
 
-- Erkennen: `$env:NVIM_MACHINE_ROLE` (dieselbe Variable wie `lua/machine.lua` der nvim-Config): `workstation` = Tricentis-Workstation, nicht gesetzt oder `default` = privater Rechner (`STEVESPC`). Nicht aus dem Rechnernamen raten.
+- Erkennen: `$env:NVIM_MACHINE_ROLE` (dieselbe Variable wie `lua/machine.lua` der nvim-Config): `workstation` = Tricentis-Workstation, nicht gesetzt oder `default` = privater Rechner (`STEVESPC`). Nicht aus dem Rechnernamen raten. Ist sie nicht gesetzt, aber `$env:USERDOMAIN` ist `AzureAD` oder der Rechnername beginnt mit `TRI-`: unklar, nachfragen, bevor etwas gebaut oder gestartet wird (die App kennt eine neu gesetzte Variable erst nach einem Neustart).
 - Tags an Tasks: `on-workstation` = nur dort ausführbar (Handläufe, Messungen); `not-on-workstation` = nie dort (native Programme bauen, installieren oder starten, Runner, Tests und Builds der nativen Apps). Ohne Tag: Code-Arbeit, läuft auf dem privaten Rechner.
 - Vor dem Bearbeiten einer Task mit einem dieser Tags (und bei Aufträgen zu Workstation, Falcon oder EDR) die Maschine lesen und in einer Zeile nennen. Passt sie nicht zum Tag: nichts ausführen, nur vorbereiten und mir Bescheid geben. Fällt ein Workstation-Bezug auf, den die Task nicht kennzeichnet, den Tag nachziehen.
 

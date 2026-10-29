@@ -48,7 +48,10 @@ Werden von `setup-claude-code.ps1` pro Maschine gesetzt (User-Scope):
   Unsigniertes gebaut, installiert oder gestartet werden, EDR/Falcon; auch kein
   Runner); nicht gesetzt oder `default` = privater Rechner (`STEVESPC`: Builds,
   Tests, Runner). Lesen mit `$env:NVIM_MACHINE_ROLE`; nicht aus dem Rechnernamen
-  raten.
+  raten. Ist sie nicht gesetzt, aber `$env:USERDOMAIN` ist `AzureAD` oder der
+  Rechnername beginnt mit `TRI-`: unklar, nachfragen, bevor etwas gebaut oder
+  gestartet wird (die App kennt eine neu gesetzte Variable erst nach einem
+  Neustart).
 - Tags an Tasks: `on-workstation` = nur dort ausführbar (Handläufe,
   Messungen auf der Workstation); `not-on-workstation` = nie dort (native
   Programme bauen/installieren/starten, Runner, Tests und Builds der nativen
