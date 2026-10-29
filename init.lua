@@ -72,7 +72,10 @@ package.path = table.concat({
 -- binding. See lib.nvim's bindings/keymap/README.md ("The two scopes of conflicts()").
 if vim.env.NVIM_KEYMAP_TAP and vim.env.NVIM_KEYMAP_TAP ~= "" and vim.env.NVIM_KEYMAP_TAP ~= "0" then
   pcall(function()
-    require("lib.nvim.bindings.keymap.tap").install()
+    local tap = require("lib.nvim.bindings.keymap.tap")
+    -- runtime-analysis' telemetry wraps functions and would be named as the source of every binding.
+    tap.skip = { "/runtime%-analysis%.nvim/lua/runtime%-analysis/telemetry/" }
+    tap.install()
   end)
 end
 
