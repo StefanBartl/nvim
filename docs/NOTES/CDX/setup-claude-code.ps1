@@ -7,7 +7,14 @@
 
 .USAGE
   pwsh -File setup-claude-code.ps1
+  pwsh -File setup-claude-code.ps1 -Workstation   # IS_WORKSTATION=1 ohne Rueckfrage
+  pwsh -File setup-claude-code.ps1 -Private       # IS_WORKSTATION=0 ohne Rueckfrage
 #>
+
+param(
+    [switch]$Workstation,
+    [switch]$Private
+)
 
 $ErrorActionPreference = 'Stop'
 
@@ -72,6 +79,23 @@ if (-not $tasksVault) {
     }
 } else {
     Write-Host "  TASKS_VAULT bereits gesetzt: $tasksVault"
+}
+
+# IS_WORKSTATION: 1 = Tricentis-Workstation (kein unsigniertes Programm bauen, installieren oder starten, EDR), 0 =
+# privater Rechner. Wird einmal pro Maschine festgelegt und nie aus dem Rechnernamen erraten; Code und Regeln lesen nur
+# diese Variable. Ist sie nicht gesetzt, gilt die Maschine als unbekannt (dann nachfragen).
+$isWorkstation = [Environment]::GetEnvironmentVariable('IS_WORKSTATION', 'User')
+if ($Workstation -and $Private) {
+    Write-Error '-Workstation und -Private schliessen sich aus.'
+} elseif ($Workstation) {
+    Set-UserEnvVar -name 'IS_WORKSTATION' -value '1'
+} elseif ($Private) {
+    Set-UserEnvVar -name 'IS_WORKSTATION' -value '0'
+} elseif ($isWorkstation -in @('0', '1')) {
+    Write-Host "  IS_WORKSTATION bereits gesetzt: $isWorkstation"
+} else {
+    $answer = Read-Host '  Ist das die Tricentis-Workstation? (j = ja, n = privater Rechner)'
+    Set-UserEnvVar -name 'IS_WORKSTATION' -value $(if ($answer -match '^(j|ja|y|yes)$') { '1' } else { '0' })
 }
 
 Write-Host "  Hinweis: neu gesetzte User-Env-Vars gelten erst in neuen Shells/Sessions."
