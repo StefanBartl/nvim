@@ -63,6 +63,7 @@ local specs = {
   "native_repos/native_repos_spec.lua",
   "dialogs_spec.lua",
   "noice/routes_spec.lua",
+  "plugins_nui_spec.lua",
   "plugin_repos/usrcmds_help_spec.lua",
   "bindings_explorer/usrcmds_help_spec.lua",
   "bindings_explorer/report_dir_spec.lua",
