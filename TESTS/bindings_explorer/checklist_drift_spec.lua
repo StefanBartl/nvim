@@ -70,15 +70,41 @@ return function(H)
   local reset = drift.entries({ "### Old", "## Next", "- [ ] `x` -- y" })
   H.eq(reset[1].group, "", "## clears the previous ### group")
 
-  -- Spans with a backtick: the generator writes the backtick key as ```, Markdown as `` x ``.
+  -- Spans with a backtick, in the format the generator really writes (lib.nvim bindings.audit:
+  -- "- [ ] `%s` -- %s", the lhs is not escaped; risky ones: "`%s` (%s) -- %s").
   local ticks = drift.entries({
     "- [ ] ``` -- Surround selection with backticks (`)",
-    "- [ ] `` a`b `` -- a span that contains a backtick",
+    "- [ ] `a` -- a plain lhs",
+    "- [ ] `a`` -- a lhs that ends in a backtick",
+    "- [ ] ``a` -- a lhs that starts with one",
+    "- [ ] `<leader>`` -- leader plus backtick",
+    "- [ ] `g`b` -- a backtick in the middle",
+    "- [ ] `<M-x>` (Core) -- a risky one with its surface",
+    "- [x] `:Open` _(auto 2026-10-29: x grün)_",
     "- [ ] no span -- not an entry",
   })
-  H.eq(#ticks, 2, "both backtick forms are entries, a box without a span is not")
-  H.eq(ticks[1].span, "`", "``` is the backtick key")
-  H.eq(ticks[2].span, "a`b", "`` x `` is read as x")
+  local spans = vim.tbl_map(function(e)
+    return e.span
+  end, ticks)
+  H.eq(
+    spans,
+    { "`", "a", "a`", "`a", "<leader>`", "g`b", "<M-x>", ":Open" },
+    "every generator form keeps its backticks; a box without a span is not an entry"
+  )
+
+  -- Occurrences count: the generator writes a normal and an insert variant of the same lhs in
+  -- one group, so a missing second variant (or a new one) is drift, not a match.
+  local two =
+    { "## Keymaps", "### cascade", "- [ ] `<A-Left>` -- normal", "- [ ] `<A-Left>` -- insert" }
+  local one = { "## Keymaps", "### cascade", "- [ ] `<A-Left>` -- normal" }
+  local lost = drift.diff(two, one)
+  H.eq(#lost.gone, 1, "the second variant of a doubled lhs is gone when only one is generated")
+  H.eq(lost.gone[1].lnum, 4, "and it is the later one")
+  H.eq(#lost.new, 0, "nothing is new")
+  local gained = drift.diff(one, two)
+  H.eq(#gained.new, 1, "a second variant that is generated but not in the file is new")
+  H.eq(#gained.gone, 0, "nothing is gone")
+  H.eq(#drift.diff(two, two).gone + #drift.diff(two, two).new, 0, "equal doubles are no drift")
 
   -- diff(): ticks, notes and descriptions are not drift.
   local d = drift.diff(file, generated)
