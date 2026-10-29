@@ -1,0 +1,71 @@
+# Lernplan Software Engineering
+
+Stand: 2026-10-29. Ziel: in der Breite Bachelor-Niveau (Stufe 4) und in der Tiefe Master-Niveau (Stufe 5)
+in Systemen und Programmiersprachen. Die Stufen und den aktuellen Stand zeigt die
+[Kompetenzmatrix](Kompetenzmatrix.md); fehlende Bücher stehen in der
+[Beschaffungsliste]($REPOS_DIR/Literatur/Beschaffungsliste.md).
+
+Annahme: 8–10 Stunden pro Woche neben dem Job. Zwei Spuren laufen parallel: die **Hauptspur**
+(Phasen 0–7, Informatik und Handwerk) und die **Mathe- und Theorie-Spur** (M1–M4, T1–T2).
+
+## Grundregeln
+
+1. **Ein Buch pro Thema.** Die Sammlung hat zu fast jedem Thema mehrere Bücher; die anderen nur
+   nachschlagen.
+2. **Jedes Kapitel endet mit Code oder gelösten Aufgaben, ohne KI geschrieben.** KI ist danach zum
+   Review erlaubt. Siehe die Regel zur Praxis-Stufe in der Kompetenzmatrix.
+3. **Feynman-Test:** Nach jedem Kapitel eine Notiz in WKDBooks, die das Thema ohne Nachschlagen erklärt.
+4. **Phase abgeschlossen = Nachweis erbracht**, nicht „Buch zu Ende gelesen“. Danach die
+   Kompetenzmatrix aktualisieren.
+
+## Hauptspur
+
+| Phase | Monate | Lesen | Selbst bauen (Nachweis) | Hebt in der Matrix |
+|---|---|---|---|---|
+| **0** | 0–2 | [Stallings OS (9th)]($REPOS_DIR/Literatur/01_Fundamentals/Operating_Systems/W_Stallings_OS/William_Stallings_Operating_Systems_Internals_and_Design_Principles_9th.pdf) abschließen: Kap. 9 (Uniprocessor-Scheduling), 11 (I/O), 12 (Dateisysteme) | Shell in C mit Pipes, `fork`/`exec`, Umleitungen | Betriebssysteme T 3→4 |
+| **1** | 2–6 | **CS:APP** Kap. 1–9 (Beschaffungsliste). Daneben [Modern C]($REPOS_DIR/Literatur/02_Programming/C/Modern%20C%20-%202019%20-%20Jens-Gustedt.pdf), Level 1 und 2. Alternative aus dem Bestand: [Patterson/Hennessy RISC-V]($REPOS_DIR/Literatur/01_Fundamentals/Computer_Architecture/Computer%20Organization%20and%20Design%20-%20The%20HW_SW%20Interface%20%28RISCV-Edition%29%20-%20%20David%20A.%20Patterson%20%26%20John%20L.%20Hennessy.pdf) Kap. 1–5 | CS:APP-Labs: Data Lab, Bomb Lab, Attack Lab, Malloc Lab | Rechnerarchitektur, C, Betriebssysteme P |
+| **2** | 6–10 | [Crafting Interpreters]($REPOS_DIR/Literatur/01_Fundamentals/Compilers_Interpreters_etc/Crafting-Interpreters_2025-2020_Robert%20Nystrom.pdf), beide Teile komplett; danach [Implementation of Lua 5.0]($REPOS_DIR/Literatur/02_Programming/Lua/Implementation-of-Lua-5.pdf) | jlox (Java oder Go), dann clox in C | Compiler 1→4, Lua T 3→4 |
+| **3** | 10–14 | **CLRS** Teil I–VI (Beschaffungsliste) oder aus dem Bestand [Weiss]($REPOS_DIR/Literatur/01_Fundamentals/Data_Structures_Algorithms/Data_Structures_and_Algorithm_Analysis_in_C.pdf) Kap. 1–10 | Jede Datenstruktur in C oder Rust; ~100 Aufgaben (LeetCode, Codeforces) | Algorithmen 2→4 |
+| **4** | 14–18 | Ousterhout *A Philosophy of Software Design*, Fowler *Refactoring*, Khorikov *Unit Testing*, Starke *Effektive Softwarearchitekturen*; aus dem Bestand [Westphal: Testgetriebene Entwicklung]($REPOS_DIR/Literatur/Deutsch/Java/Westphal_Testgetriebene_Entwicklung.pdf) | Ein eigenes Plugin mit Tests komplett refaktorieren, Entscheidungen als ADRs | Architektur, Testing 3→4 |
+| **5** | 18–22 | Kemper/Eickler *Datenbanksysteme* Kap. 1–9, dann Kleppmann *Designing Data-Intensive Applications* | Key-Value-Store mit WAL und LSM-Tree in Rust | Datenbanken 1→4, Rust |
+| **6** | 22–26 | [Kerrisk TLPI]($REPOS_DIR/Literatur/01_Fundamentals/Operating_Systems/Linux/System_Programming/the_linux_programming_interface_a_linux_and_unix__kerrisk_m_.pdf) Kap. 56–61 (Sockets); [Tanenbaum Computer Networks]($REPOS_DIR/Literatur/01_Fundamentals/Networking_Protocols/Andrew%20S.%20Tanenbaum%20-%20Computer%20Networks.pdf) Kap. 1, 5, 6; danach van Steen/Tanenbaum *Distributed Systems* (kostenlos) | HTTP-Server direkt auf Sockets; Raft nach den MIT-6.5840-Labs | Netze, Verteilte Systeme →3–4 |
+| **7** | ab 24 | Pierce *Types and Programming Languages*; [SICP (deutsch)]($REPOS_DIR/Literatur/02_Programming/SICP/struktur-und-interpretation-von-computerprogrammen.pdf) komplett | Typchecker für Lox | PL-Theorie →3 |
+
+## Mathe- und Theorie-Spur (parallel, ca. 3 Stunden pro Woche)
+
+Alle Bücher stehen in der [Beschaffungsliste]($REPOS_DIR/Literatur/Beschaffungsliste.md) mit derselben
+Phasen-Kennung.
+
+| Phase | Monate | Inhalt | Nachweis |
+|---|---|---|---|
+| **M1** | 2–6 | Beweisen (Beutelspacher, Velleman), Diskrete Mathematik (MCS Teil I–II, Teschl Band 1 diskreter Teil) | Klausur MIT 6.042J |
+| **M2** | 6–10 | Lineare Algebra (Teschl Band 1, Strang mit MIT 18.06) | Klausur MIT 18.06 |
+| **M3** | 10–14 | Analysis (Teschl Band 2) | Alte Klausur „Analysis für Informatik“ |
+| **M4** | 14–18 | Stochastik (Henze, Blitzstein & Hwang) | Alte Klausur Stochastik |
+| **T1** | 18–24 | Theoretische Informatik (Schöning oder Hromkovič, dazu Sipser), Logik (Schöning) | Alte Klausur Theoretische Informatik |
+| **T2** | ab 24 | Master-Niveau nach Wahl: Arora/Barak, Concrete Mathematics, Axler, Forster | Ausgewählte Kapitel mit allen Übungen |
+
+## Nur nachschlagen, nicht durcharbeiten
+
+Aus dem Bestand: Holub, Terry, Louden, CS 132 und Morgan (Compiler; das Dragon Book nur als Referenz),
+Knuth TAOCP (Referenz, frühestens nach Concrete Mathematics), alle Docker-Bücher außer Poulton,
+React- und Node-Bücher außer dem jeweils neuesten, die Pentest-Bücher von 2004 und 2014.
+
+## Fortschritt
+
+| Phase | Begonnen | Abgeschlossen | Nachweis (Link) |
+|---|---|---|---|
+| 0 | 2025-10 | | |
+| 1 | | | |
+| 2 | | | |
+| 3 | | | |
+| 4 | | | |
+| 5 | | | |
+| 6 | | | |
+| 7 | | | |
+| M1 | | | |
+| M2 | | | |
+| M3 | | | |
+| M4 | | | |
+| T1 | | | |
+| T2 | | | |
