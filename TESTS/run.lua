@@ -67,6 +67,7 @@ local specs = {
   "plugin_repos/usrcmds_help_spec.lua",
   "bindings_explorer/usrcmds_help_spec.lua",
   "bindings_explorer/report_dir_spec.lua",
+  "bindings_explorer/checklist_drift_spec.lua",
   "bindings/insert_moves_spec.lua",
   "profile/profile_spec.lua",
   "repo_backup/repo_backup_spec.lua",

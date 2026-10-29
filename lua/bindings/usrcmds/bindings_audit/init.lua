@@ -32,6 +32,12 @@
 --- overwrite an existing file without `!` — the checklist is meant to be
 --- hand-edited over time (boxes ticked, findings noted), and a silent
 --- regeneration would erase that.
+---
+--- `:BindingsRuntimeChecklistDrift` is the read-only counterpart: it compares
+--- the file with what this session would generate (`drift.lua`) and lists
+--- the entries that are gone (with their line in the file) and the new ones
+--- in the quickfix list, so the file can be updated by hand without losing
+--- ticks. Same lazy-loading caveat: `:Lazy load all` first.
 
 local M = {}
 
@@ -63,6 +69,44 @@ function M.enable()
   end, {
     bang = true,
     desc = "Write the runtime checklist (lib.nvim.bindings.audit.checklist_lines) to docs/ROADMAP/Final_Checks/BINDINGS-RUNTIME-CHECKLIST.md; ! to overwrite",
+  })
+
+  -- Read-only counterpart: what regenerating would change, without resetting the ticks. A
+  -- lazy-loaded plugin that has not loaded yet registered nothing, so its entries show up as
+  -- gone; `:Lazy load all` first gives the full picture.
+  usercmd.create("BindingsRuntimeChecklistDrift", function()
+    local report_dir = require("bindings.usrcmds.bindings_explorer.config").report_dir()
+    local path = vim.fs.joinpath(report_dir, "BINDINGS-RUNTIME-CHECKLIST.md")
+    local ok, file_lines = pcall(vim.fn.readfile, path)
+    if not ok or #file_lines == 0 then
+      notify.warn(("cannot read %s -- run :BindingsRuntimeChecklist first"):format(path))
+      return
+    end
+
+    local drift = require("bindings.usrcmds.bindings_audit.drift").diff(
+      file_lines,
+      require("lib.nvim.bindings.audit").checklist_lines()
+    )
+    local items = {}
+    for _, e in ipairs(drift.gone) do
+      items[#items + 1] = { filename = path, lnum = e.lnum, text = "gone: " .. e.text }
+    end
+    for _, e in ipairs(drift.new) do
+      local where = e.group ~= "" and (e.section .. " / " .. e.group) or e.section
+      items[#items + 1] =
+        { filename = path, lnum = 0, valid = 0, text = ("new (%s): %s"):format(where, e.text) }
+    end
+    vim.fn.setqflist({}, " ", { title = "Bindings checklist drift", items = items })
+
+    local msg = ("%d gone, %d new -> quickfix"):format(#drift.gone, #drift.new)
+    if #items == 0 then
+      notify.info("checklist matches this session")
+    else
+      notify.info(msg .. " (lazy plugins not loaded yet count as gone: :Lazy load all first)")
+      vim.cmd("copen")
+    end
+  end, {
+    desc = "Compare BINDINGS-RUNTIME-CHECKLIST.md with what this session would generate; gone and new entries to the quickfix list, the file is not touched",
   })
 end
 
