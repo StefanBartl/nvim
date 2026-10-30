@@ -20,7 +20,7 @@ when one fails, 2 when lib.nvim cannot be found. lib.nvim is looked up in
 `$LIB_NVIM_DIR`, `$LIB_NVIM_PATH`, `$REPOS_DIR/lib.nvim`, then lazy.nvim's data
 folder (the same order `scripts/tasks.lua` uses).
 
-Runtime: the whole suite takes about 2.5 minutes on Windows, almost all of it in
+Runtime: the whole suite takes about 3.5 minutes on Windows, almost all of it in
 the `sync/` specs, which work on real git repositories and kill real process
 trees (measured 2026-10-17: `sync_integration` ~58 s, `sync_assist` ~50 s,
 `sync_dash` ~19 s, `sync_busy` a few seconds). A spec prints its line only when
@@ -42,6 +42,8 @@ The specs of the task system (engine, CLI, editor front ends) moved with it into
 | `bindings_explorer/report_dir_spec.lua` | `config.report_dir()` (target of `:Bindings report` and `:BindingsRuntimeChecklist`) names a folder this checkout has, and `BINDINGS-RUNTIME-CHECKLIST.md` sits in it |
 | `neotree/event_handlers_spec.lua` | the `neo_tree_window_after_open` handler: the tree window gets `foldmethod=manual` / `foldenable` off window-locally (no leak into buffers shown there later or windows split off the editor), also when the tree window is not the current one; hostile arguments do not throw |
 | `neotree/job_handle_close_spec.lua` | `config.neotree.job_handle_close`: neo-tree's `utils.job` leaves one open uv process handle per finished job (shown on a fake with the upstream shape); patched, none stays open (also without callback and, when installed, with the real neo-tree module), callbacks get code and stdout, install is idempotent |
+| `native_repos/native_repos_spec.lua` | `:MyNative` (`bindings.usrcmds.native_repos`): staleness rule, the natives registry, toolchain plan/split/ensure, what a build/install/uninstall run covers, the routes; a run that throws or an open uninstall question never leaves the command blocked, and every run the spec starts is driven to its end (a later spec in the same process finds `running` free); replaced functions and env are restored on failure too |
+| `native_repos/workstation_spec.lua` | `machine_guard` (`lua/machine_guard.lua`, the workstation block) with a simulated workstation: `:MyNative build`/`install`/`deps` and `B` of `:MyPlugins machine` refuse with a message, `uninstall` goes on, the lazy `build` hooks of telescope-fzf-native and mdview.nvim leave out the native compile step, `config.telescope` skips `fzf` there; off the workstation all of it goes on. Uses the `:MyNative` module as `native_repos_spec` left it (no fresh copy) |
 | `noice/routes_spec.lua` | the generic notify route sits behind the notify skip rules (first match wins); every route (skip or view) names `filter.event`, and one that includes `cmdline` needs a `cmdline_reason` |
 | `ui_open/debug_export_spec.lua` | `config.ui_open`: after `setup()` (Windows) no `_`-prefixed function field is exported (runtime-analysis' telemetry wraps those); the original sits in `_debug.orig_open`, is the pre-setup `vim.ui.open` and is defined in `vim/ui.lua` |
 | `startup/heartbeat_spec.lua` | `startup.heartbeat`: stalls (> 60 ms, boundary) and busy time per second from synthetic beat times (jitter boundary, a gap split over two seconds, idle seconds, empty input); `start()` honours `vim.g.startup_heartbeat = false`, is idempotent and stops after its window; the `:StartupReport` section (`report.heartbeat_lines`): summary, longest stall first, "… n more", busy seconds, recording state, and `report.lines()` carries it |

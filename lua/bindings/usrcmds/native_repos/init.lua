@@ -21,14 +21,14 @@
 ---
 --- On the workstation (`require("machine").is("workstation")`, from NVIM_MACHINE_ROLE) `build`, `install`
 --- and `deps` refuse with a message: an own unsigned program is what the EDR (Falcon) reports there.
---- `list`, `clone`, `pull` and `uninstall` stay allowed (`native_repos/workstation.lua`).
+--- `list`, `clone`, `pull` and `uninstall` stay allowed (`lua/machine_guard.lua`).
 
 local notify = require("lib.nvim.notify").create("[usrcmds.native_repos]")
 local composer = require("lib.nvim.bindings.usercmd.composer")
 local ops = require("bindings.usrcmds.plugin_repos.ops")
 local natives = require("plugins.personal.core.natives")
 local toolchain = require("bindings.usrcmds.native_repos.toolchain")
-local workstation = require("bindings.usrcmds.native_repos.workstation")
+local workstation = require("machine_guard")
 
 local M = {}
 

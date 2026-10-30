@@ -24,7 +24,7 @@ end
 return function(H)
   local eq, ok = H.eq, H.ok
   local machine = require("machine")
-  local guard = require("bindings.usrcmds.native_repos.workstation")
+  local guard = require("machine_guard")
   local toolchain = require("bindings.usrcmds.native_repos.toolchain")
   local plugin_machine = require("bindings.usrcmds.plugin_repos.machine")
   local dialog = require("lib.nvim.ui.dialog")
@@ -36,7 +36,6 @@ return function(H)
     check = toolchain.check,
     notify = vim.notify,
     yesno = dialog.yesno,
-    native = package.loaded["bindings.usrcmds.native_repos"],
     telescope_actions = package.loaded["telescope.actions"],
     telescope_cfg = package.loaded["config.telescope"],
   }
@@ -46,15 +45,13 @@ return function(H)
     machine.is, vim.env.REPOS_DIR = saved.is, saved.repos
     toolchain.ensure, toolchain.check = saved.ensure, saved.check
     vim.notify, dialog.yesno = saved.notify, saved.yesno
-    package.loaded["bindings.usrcmds.native_repos"] = saved.native
     package.loaded["telescope.actions"] = saved.telescope_actions
     package.loaded["config.telescope"] = saved.telescope_cfg
   end
 
   local passed, err = pcall(function()
-    -- a fresh copy: native_repos_spec ends with an install whose probe never calls back, which
-    -- leaves the module's `running` set in this process
-    package.loaded["bindings.usrcmds.native_repos"] = nil
+    -- the module as native_repos_spec left it (TESTS/run.lua runs both in one process, no fresh
+    -- copy): that spec drives its runs to their end, so `running` must be free here
     local native = require("bindings.usrcmds.native_repos")
 
     local repos = H.tmpdir()

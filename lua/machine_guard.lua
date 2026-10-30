@@ -1,15 +1,17 @@
----@module 'bindings.usrcmds.native_repos.workstation'
+---@module 'machine_guard'
 ---@brief The workstation block: nothing this config offers may build, install or start a native program there.
 ---@description
 --- On the Tricentis workstation an own unsigned program is exactly what CrowdStrike Falcon reports
 --- (since 2026-10-27). The config is the same on both machines, so every path that builds, installs
 --- or starts a native app asks `refused()` first: `:MyNative build|install|deps` and `B` of
 --- `:MyPlugins machine`. The lazy.nvim `build` hooks that compile native code (fzf-native's cmake,
---- mdview's Go server) go through `lazy_build()` and are left out there. Removing is still allowed (`:MyNative uninstall`), and so is everything
---- that only reads or copies (`list`, `clone`, `pull`, `b`).
+--- mdview's Go server) go through `lazy_build()` and are left out there. Removing is still allowed
+--- (`:MyNative uninstall`), and so is everything that only reads or copies (`list`, `clone`, `pull`, `b`).
 ---
---- The role comes from `machine.lua` (`NVIM_MACHINE_ROLE`), asked at call time and never cached,
---- so a spec can simulate the workstation by replacing `require("machine").is`.
+--- Config-wide like `machine.lua` (next to it): plugin specs, config modules and user commands
+--- all ask it, so it belongs to none of them. The role comes from `machine.lua`
+--- (`NVIM_MACHINE_ROLE`), asked at call time and never cached, so a spec can simulate the
+--- workstation by replacing `require("machine").is`.
 
 local notify = require("lib.nvim.notify").create("[native workstation block]")
 

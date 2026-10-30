@@ -14,7 +14,7 @@
 ---  - `P`                     fast-forward every repo that can be (clean, on main, behind)
 ---  - `b`                     copy the build command of the repo under the cursor
 ---  - `B`                     run that build in a float terminal, in the repo's folder (refused on the
----                            workstation, `native_repos/workstation.lua`: the EDR reports own builds)
+---                            workstation, `lua/machine_guard.lua`: the EDR reports own builds)
 ---  - `a`                     show / hide the repos that are current
 ---  - `]` / `[`               next / previous line that needs attention
 ---  - `R`                     run the check again
@@ -27,7 +27,7 @@
 local notify = require("lib.nvim.notify").create("[usrcmds.plugin_repos.machine]")
 local open_named_scratch = require("lib.nvim.window.open_named_scratch")
 local help_float = require("bindings.usrcmds.plugin_repos.help_float")
-local workstation = require("bindings.usrcmds.native_repos.workstation")
+local workstation = require("machine_guard")
 
 local M = {}
 

@@ -27,7 +27,7 @@ return {
   ------------------------------------------------------------------------------
   {
     "nvim-telescope/telescope-fzf-native.nvim",
-    build = require("bindings.usrcmds.native_repos.workstation").lazy_build((function()
+    build = require("machine_guard").lazy_build((function()
       if vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1 then
         return table.concat({
           "cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release",

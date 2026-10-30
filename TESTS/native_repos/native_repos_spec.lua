@@ -146,9 +146,14 @@ return function(H)
   -- PATH: case and slashes do not count, a prefix is no match
   local saved_path = vim.env.PATH
   vim.env.PATH = [[C:\Windows;C:\Users\Me\.cargo\bin\]]
-  eq(toolchain._on_path("c:/users/me/.cargo/bin"), true, "the same folder, written another way")
-  eq(toolchain._on_path("C:/Users/Me/.cargo"), false, "a parent folder is not on PATH")
+  local path_ok, path_err = pcall(function()
+    eq(toolchain._on_path("c:/users/me/.cargo/bin"), true, "the same folder, written another way")
+    eq(toolchain._on_path("C:/Users/Me/.cargo"), false, "a parent folder is not on PATH")
+  end)
   vim.env.PATH = saved_path
+  if not path_ok then
+    error(path_err, 0)
+  end
 
   eq(natives.get("nope"), nil, "unknown name")
   eq(vim.tbl_contains(natives.names(), "takt"), true, "takt is listed")
@@ -222,51 +227,92 @@ return function(H)
   )
   eq(by_path.clone.args[1].type, "MYNATIVE_NAME", "clone completes the app names")
 
-  -- a run that throws before its first command (a tool check) must not block every later run of the session
-  local repos = H.tmpdir()
-  vim.fn.mkdir(repos .. "/ai-desktop", "p")
-  local saved_repos, saved_ensure = vim.env.REPOS_DIR, toolchain.ensure
-  vim.env.REPOS_DIR = repos
-  toolchain.ensure = function()
-    error("probe broke")
-  end
-  native.install("ai-desktop")
-
-  -- an uninstall is a running command while its question is open: a second command waits for the
-  -- answer instead of sharing the state with the uninstall that is answered later (the probe that
-  -- throws ends each install at once, so none of them stays running)
+  -- From here the spec runs real :MyNative commands. TESTS/run.lua runs every spec in this process,
+  -- so whatever is replaced below is put back on success and on failure, and the commands are
+  -- driven to their end: a run left half-way keeps the module's `running` set and every later
+  -- :MyNative command of the process (workstation_spec) would be refused as "already running".
   local dialog = require("lib.nvim.ui.dialog")
-  local real_yesno = dialog.yesno
-  local answer_cb
-  dialog.yesno = function(_, _, cb)
-    answer_cb = cb
+  local saved = {
+    repos = vim.env.REPOS_DIR,
+    ensure = toolchain.ensure,
+    yesno = dialog.yesno,
+  }
+  local function restore()
+    vim.env.REPOS_DIR, toolchain.ensure, dialog.yesno = saved.repos, saved.ensure, saved.yesno
   end
-  local ensured = 0
-  toolchain.ensure = function()
-    ensured = ensured + 1
-    error("probe broke")
-  end
-  native.uninstall("ai-desktop")
-  eq(type(answer_cb), "function", "the uninstall asks before it does anything")
-  native.install("ai-desktop")
-  eq(ensured, 0, "an install started while the question is open is refused")
-  answer_cb(false)
-  native.install("ai-desktop")
-  eq(ensured, 1, "...and runs once the question is answered with no")
-  dialog.yesno = function()
-    error("dialog broke")
-  end
-  eq(pcall(native.uninstall, "ai-desktop"), false, "a dialog that raises is reported")
-  native.install("ai-desktop")
-  eq(ensured, 2, "...and does not leave the command running")
-  dialog.yesno = real_yesno
 
-  local reached = false
-  toolchain.ensure = function()
-    reached = true
+  ---A tool step that reports every tool as missing and so ends the run without starting a program
+  ---(the app is held back, the run finishes with "nothing could run").
+  ---@param on_call fun()
+  local function all_missing(on_call)
+    return function(ids, _, on_done)
+      on_call()
+      local missing = {}
+      for _, id in ipairs(ids) do
+        missing[id] = true
+      end
+      on_done(missing, {})
+    end
   end
-  native.install("ai-desktop")
-  toolchain.ensure, vim.env.REPOS_DIR = saved_ensure, saved_repos
-  eq(reached, true, "the next install runs after one that threw")
+
+  local passed, err = pcall(function()
+    -- a run that throws before its first command (a tool check) must not block every later run of the session
+    local repos = H.tmpdir()
+    vim.fn.mkdir(repos .. "/ai-desktop", "p")
+    vim.env.REPOS_DIR = repos
+    toolchain.ensure = function()
+      error("probe broke")
+    end
+    native.install("ai-desktop")
+
+    -- an uninstall is a running command while its question is open: a second command waits for the
+    -- answer instead of sharing the state with the uninstall that is answered later (the probe that
+    -- throws ends each install at once, so none of them stays running)
+    local answer_cb
+    dialog.yesno = function(_, _, cb)
+      answer_cb = cb
+    end
+    local ensured = 0
+    toolchain.ensure = function()
+      ensured = ensured + 1
+      error("probe broke")
+    end
+    native.uninstall("ai-desktop")
+    eq(type(answer_cb), "function", "the uninstall asks before it does anything")
+    native.install("ai-desktop")
+    eq(ensured, 0, "an install started while the question is open is refused")
+    answer_cb(false)
+    native.install("ai-desktop")
+    eq(ensured, 1, "...and runs once the question is answered with no")
+    dialog.yesno = function()
+      error("dialog broke")
+    end
+    eq(pcall(native.uninstall, "ai-desktop"), false, "a dialog that raises is reported")
+    native.install("ai-desktop")
+    eq(ensured, 2, "...and does not leave the command running")
+    dialog.yesno = saved.yesno
+
+    local reached = false
+    toolchain.ensure = all_missing(function()
+      reached = true
+    end)
+    native.install("ai-desktop")
+    eq(reached, true, "the next install runs after one that threw")
+
+    -- that install ran to its end, so the command after it (here and in any later spec) is not refused
+    local after = false
+    toolchain.ensure = all_missing(function()
+      after = true
+    end)
+    native.install("ai-desktop")
+    eq(after, true, "a finished install leaves the next command free")
+  end)
+  restore()
+  if not passed then
+    -- a run this spec left half-way must not leak into later specs: drop the module (and its
+    -- `running`) so the next require starts clean
+    package.loaded["bindings.usrcmds.native_repos"] = nil
+    error(err, 0)
+  end
   H.cleanup()
 end
