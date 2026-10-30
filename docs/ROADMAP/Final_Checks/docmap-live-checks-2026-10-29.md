@@ -59,11 +59,15 @@ Vorbereitung: Wegwerf-Ordner mit Projekt `proj`, daneben `outside/` mit einer Ca
 Text). Nachweis „nichts gelesen“ über die LastAccessTime der Canary (vorher auf 2020 zurücksetzen,
 NTFS aktualisiert sie nur, wenn sie älter als eine Stunde ist).
 
-- [ ] **`docs/map` als Junction:** Junction `docs/map` anlegen und `docmap .` (generate) sowie
+- [x] **`docs/map` als Junction:** Junction `docs/map` anlegen und `docmap .` (generate) sowie
       `docmap . --check` ausführen: beide verweigern mit klarer Meldung. Stand 2026-10-17: Verweigerung
       ja, aber generate druckt sie als **Lua-Traceback** (`[string "documentation"]:594:`), deshalb
       damals nicht abgehakt; dazu gibt es die Bug-Task `docmap-generate-prints-a-refusal-as-a-lua-traceback`.
       Prüfen: ist das inzwischen behoben (saubere Meldung ohne Traceback, Exit-Code)?
+      **2026-10-30 behoben:** Rolling-Binary `standalone-latest` (aus 9609462): generate und `--check`
+      verweigern mit einer Zeile, ohne Traceback, Exit 2, Link-Report bleibt erhalten; nichts nach
+      `outside/` geschrieben, Canary-atime unverändert (Positivkontrolle ok). Junction im Projekt:
+      generate verweigert ebenso (Exit 2), `--check` liest durch (so dokumentiert). Details in der Task.
 - [ ] **OneDrive „Files on demand“:** ein Ordner mit Platzhaltern (nur online verfügbare Dateien) wird
       weiter gelesen (Platzhalter sind keine Links). Voraussetzung: laufender OneDrive-Client mit
       aktivierten On-Demand-Dateien; am 2026-10-17 nicht testbar (Client lief nicht, nur `desktop.ini`).

@@ -76,11 +76,11 @@ Werden von `setup-claude-code.ps1` pro Maschine gesetzt (User-Scope):
 ## Doku-Struktur (nicht verwechseln)
 
 - Repo-Docs (README, Feature-Docs) -> für Endnutzer, im jeweiligen Repo.
-- `$NVIM_CONFIG_DIR/docs` -> Reports, Handover-Files (Originale).
+- `$REPOS_DIR/tasks-vault/<area>` -> Reports und Handover-Files (Originale);
+  in `$NVIM_CONFIG_DIR/docs` liegen nur Symlinks darauf.
 - `$REPOS_DIR/tasks-vault/**` bzw.
   `.../Development/**` -> Backlogs, interne Notizen, Roadmaps, Features -
-  alles was Endnutzer nicht betrifft. In den wkdbooks liegen dann Symlinks
-  auf die Originale aus `$NVIM_CONFIG_DIR/docs`.
+  alles was Endnutzer nicht betrifft.
 - Im Zweifelsfall nachfragen, es sind aber idR genug Files vorhanden, um
   Ableitungen zu treffen.
 - `$REPOS_DIR/tasks-vault/TOOLS/TOOL-PLACEMENT.md`
