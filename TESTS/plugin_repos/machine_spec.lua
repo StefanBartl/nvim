@@ -3,7 +3,8 @@
 -- The command is read-only unless --pull is given, so the one thing that must hold is that
 -- -Pull appears in the argv exactly when asked for, and that the script it points at exists.
 
-return function(H)
+---@param H table
+local function spec(H)
   local eq, ok = H.eq, H.ok
   local machine = require("bindings.usrcmds.plugin_repos.machine")
 
@@ -461,4 +462,19 @@ return function(H)
   runs[#runs].opts.on_exit(1)
 
   H.has(table.concat(machine.help_lines(), "\n"), " B ", "the cheat sheet names B")
+end
+
+-- B refuses on the workstation (lua/machine_guard.lua, its own spec: workstation_spec): the builds
+-- here are the private machine's, whatever NVIM_MACHINE_ROLE this process has; put back on failure too
+return function(H)
+  local role = require("machine")
+  local saved_is = role.is
+  role.is = function(r)
+    return r == "default"
+  end
+  local passed, err = pcall(spec, H)
+  role.is = saved_is
+  if not passed then
+    error(err, 0)
+  end
 end

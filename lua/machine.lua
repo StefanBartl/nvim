@@ -1,7 +1,8 @@
 ---@module 'machine'
 ---@brief Machine-role detection for per-machine config/plugin behavior overrides.
 ---@description
---- Reads the `NVIM_MACHINE_ROLE` environment variable (case-insensitive).
+--- Reads the `NVIM_MACHINE_ROLE` environment variable (case-insensitive, surrounding
+--- whitespace ignored).
 --- Cross-platform: `vim.env` works the same on Windows/Linux/macOS, only how
 --- you *set* a persistent env var differs by OS/shell:
 ---   Windows (persists across sessions): setx NVIM_MACHINE_ROLE workstation
@@ -33,8 +34,11 @@ local role = "default"
 
 do
   local env_value = vim.env.NVIM_MACHINE_ROLE
-  if type(env_value) == "string" and env_value ~= "" then
-    local normalized = env_value:lower()
+  -- Trimmed: cmd's `set NVIM_MACHINE_ROLE=workstation ` keeps the blank, and an unknown value
+  -- falls back to "default", which would switch the workstation block (machine_guard) off.
+  local value = type(env_value) == "string" and vim.trim(env_value) or ""
+  if value ~= "" then
+    local normalized = value:lower()
     if ROLES[normalized] then
       role = normalized
     else

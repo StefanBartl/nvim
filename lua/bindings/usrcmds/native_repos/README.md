@@ -17,11 +17,14 @@ Sister of `:MyPlugins` for the native apps next to the plugin checkouts. The lis
 - **Blocked on the workstation.** With `NVIM_MACHINE_ROLE=workstation` (read by `lua/machine.lua`,
   `require("machine").is("workstation")`) `build`, `install` and `deps` stop at once with an error message: an own
   unsigned program is exactly what CrowdStrike Falcon reports there. `list`, `clone`, `pull` and `uninstall` stay
-  allowed. The same block covers `B` of `:MyPlugins machine` (`b`, copying the command, still works) and the
-  lazy.nvim `build` hooks that compile native code: telescope-fzf-native gets no build there (telescope then
-  skips the `fzf` extension and keeps its Lua sorter) and mdview.nvim builds without `build:go` (no Go server).
-  Code: [`lua/machine_guard.lua`](../../../machine_guard.lua) (`refused()`, `lazy_build()`), config-wide next to
-  `lua/machine.lua`, since plugin specs and `config.telescope` ask it too.
+  allowed. The same block covers `B` of `:MyPlugins machine` (`b`, copying the command, still works),
+  `:MyPlugins runner start` and `runner autostart on` (a runner builds the native apps in its CI jobs; `stop`,
+  `status` and `autostart off|status` still work) and the lazy.nvim `build` hooks that compile native code:
+  telescope-fzf-native gets no build there (telescope then skips the `fzf` extension and keeps its Lua sorter) and
+  mdview.nvim gets no build at all (`build:go` is the Go server, and `npm run build` is wasm-pack, whose cargo
+  compiles and runs build scripts and which fetches and runs `wasm-bindgen.exe`/`wasm-opt.exe`); mdview then uses
+  its release assets. Code: [`lua/machine_guard.lua`](../../../machine_guard.lua) (`refused()`, `lazy_build()`),
+  config-wide next to `lua/machine.lua`, since plugin specs and `config.telescope` ask it too.
 - A build is **stale** when the newest commit touching its sources is newer than the artifact (same rule as
   `scripts/sync-machine.ps1`, which keeps its own copy of the table: keep both in step).
 - Every desktop app has the same three scripts: `scripts/build-install.ps1 -BuildOnly` is the build,

@@ -315,6 +315,10 @@ that process automatically — without it, a push to one of these repos sits "Qu
   account without this user's PATH (scoop shims, cargo, ...). Normally no elevated shell is needed; on a machine
   that insists, run the same `schtasks /Create /SC ONLOGON ...` line (see `autostart_argv` in `runner.lua`) from an
   administrator PowerShell.
+- **Blocked on the workstation** (`NVIM_MACHINE_ROLE=workstation`, `lua/machine_guard.lua`): `runner start` and
+  `runner autostart on` stop with an error message. A runner takes the CI jobs that build and start the native apps,
+  and the logon task is a hidden PowerShell; both are what CrowdStrike Falcon reports there. `stop`, `status` and
+  `autostart off|status` stay allowed.
 
 No "install as a service" command here: that needs an elevated shell (`setup-runner.ps1 -Service`, see the doc
 above) and is a one-time, manual, admin-rights step — not something a usercmd on an ordinary session should do.

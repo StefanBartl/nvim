@@ -1,6 +1,7 @@
 -- TESTS/native_repos/native_repos_spec.lua -- :MyNative: the staleness rule and the registry.
 
-return function(H)
+---@param H table
+local function spec(H)
   local eq, ok = H.eq, H.ok
   local native = require("bindings.usrcmds.native_repos")
   local natives = require("plugins.personal.core.natives")
@@ -315,4 +316,20 @@ return function(H)
     error(err, 0)
   end
   H.cleanup()
+end
+
+-- build, install and deps refuse on the workstation (lua/machine_guard.lua, its own spec:
+-- workstation_spec): the runs here are the private machine's, whatever NVIM_MACHINE_ROLE this
+-- process has; put back on failure too
+return function(H)
+  local role = require("machine")
+  local saved_is = role.is
+  role.is = function(r)
+    return r == "default"
+  end
+  local passed, err = pcall(spec, H)
+  role.is = saved_is
+  if not passed then
+    error(err, 0)
+  end
 end

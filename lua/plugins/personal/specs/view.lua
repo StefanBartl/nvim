@@ -652,12 +652,12 @@ return {
   {
     "WKDSteve/mdview.nvim",
     dependencies = { "WKDSteve/lib.nvim" },
-    -- `build:go` compiles the unsigned mdview-server binary: left out on the
-    -- workstation (EDR), the JS/wasm build still runs there.
-    build = require("machine_guard").lazy_build(
-      "npm ci && npm run build:go && npm run build",
-      "npm ci && npm run build"
-    ),
+    -- No part of this build is free of native programs: `build:go` compiles
+    -- the unsigned mdview-server, and `npm run build` is wasm-pack, whose cargo
+    -- compiles and runs build scripts and proc-macro DLLs on the host and
+    -- which fetches and runs wasm-bindgen.exe/wasm-opt.exe. So no build at all
+    -- on the workstation (EDR); mdview then uses its release assets.
+    build = require("machine_guard").lazy_build("npm ci && npm run build:go && npm run build"),
     ft = { "markdown" },
     cmd = { "MDView" },
     config = function()

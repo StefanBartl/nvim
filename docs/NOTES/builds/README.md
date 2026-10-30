@@ -28,11 +28,14 @@ landet in der Quickfix-Liste.
 Weitere Befehle: `:MyNative list` (Git- und Build-Stand), `:MyNative build [name]` (nur bauen, die veralteten),
 `:MyNative uninstall [name]`, `:MyNative deps [name]`. Hilfe: `lua/bindings/usrcmds/native_repos/README.md`.
 
-**Auf der Workstation gesperrt:** Mit `NVIM_MACHINE_ROLE=workstation` (`lua/machine.lua`) brechen `:MyNative build`,
-`install` und `deps` sowie `B` in `:MyPlugins machine` mit einer Fehlermeldung ab, weil CrowdStrike Falcon dort
-eigene unsignierte Programme meldet. `list`, `clone`, `pull` und `uninstall` bleiben erlaubt. Auch die
-lazy.nvim-`build`-Hooks bauen dort nichts Natives: telescope-fzf-native wird nicht gebaut (Telescope lädt dann die
-`fzf`-Erweiterung nicht), mdview.nvim baut ohne `build:go` (kein Go-Server).
+**Auf der Workstation gesperrt:** Mit `NVIM_MACHINE_ROLE=workstation` (`lua/machine.lua`, Sperre in
+`lua/machine_guard.lua`) brechen `:MyNative build`, `install` und `deps`, `B` in `:MyPlugins machine` sowie
+`:MyPlugins runner start` und `runner autostart on` mit einer Fehlermeldung ab, weil CrowdStrike Falcon dort eigene
+unsignierte Programme meldet (ein Runner baut die nativen Apps in seinen CI-Jobs). `list`, `clone`, `pull`,
+`uninstall`, `runner stop|status` und `runner autostart off|status` bleiben erlaubt. Auch die lazy.nvim-`build`-Hooks
+bauen dort nichts Natives: telescope-fzf-native wird nicht gebaut (Telescope lädt dann die `fzf`-Erweiterung nicht),
+mdview.nvim baut dort gar nicht, denn auch `npm run build` (wasm-pack) kompiliert und startet native Build-Skripte
+und lädt `wasm-bindgen.exe`/`wasm-opt.exe`; mdview nimmt dann seine Release-Dateien.
 
 ## Ohne nvim
 

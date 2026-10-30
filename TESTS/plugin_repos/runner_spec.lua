@@ -2,7 +2,8 @@
 -- terminal_name). start/stop/status are not tested here: they drive a real terminal.nvim job (or gh api),
 -- not deterministic data in, data out.
 
-return function(H)
+---@param H table
+local function spec(H)
   local eq, ok = H.eq, H.ok
   local runner = require("bindings.usrcmds.plugin_repos.runner")
 
@@ -171,5 +172,21 @@ return function(H)
   uv.os_unsetenv("ZZSPEC_NVIM_DIR")
   if before.ZZSPEC_NVIM_DIR then
     uv.os_setenv("ZZSPEC_NVIM_DIR", before.ZZSPEC_NVIM_DIR)
+  end
+end
+
+-- start refuses on the workstation (lua/machine_guard.lua, its own spec: workstation_spec): the
+-- start here is the private machine's, whatever NVIM_MACHINE_ROLE this process has; put back on
+-- failure too
+return function(H)
+  local role = require("machine")
+  local saved_is = role.is
+  role.is = function(r)
+    return r == "default"
+  end
+  local passed, err = pcall(spec, H)
+  role.is = saved_is
+  if not passed then
+    error(err, 0)
   end
 end

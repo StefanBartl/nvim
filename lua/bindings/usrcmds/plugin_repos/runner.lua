@@ -17,6 +17,10 @@
 ---                             `scripts/runners.ps1 ensure all` at every logon (no elevated shell needed on most
 ---                             machines); `off` removes it
 ---
+--- On the workstation (`lua/machine_guard.lua`) `start` and `autostart on` refuse: a runner takes CI jobs that
+--- build and start the native apps, and the logon task is a hidden PowerShell, both what the EDR reports there.
+--- `stop`, `status` and `autostart off|status` stay allowed.
+---
 --- This is the GitHub-registered runner SERVICE, not local CI: `testing ci` / `:Testing ci` (testing.nvim) runs a
 --- repo's pipeline on this machine without going through GitHub Actions at all -- the two are independent.
 ---
@@ -25,6 +29,7 @@
 --- usercmd should do on an ordinary Neovim session.
 
 local notify = require("lib.nvim.notify").create("[usrcmds.plugin_repos.runner]")
+local workstation = require("machine_guard")
 
 local M = {}
 
@@ -202,6 +207,10 @@ end
 ---Start one runner (or all of them).
 ---@param repo? string
 function M.start(repo)
+  -- a runner takes the CI jobs that build and start the native apps: not on the workstation (EDR)
+  if workstation.refused(":MyPlugins runner start") then
+    return
+  end
   for _, name in ipairs(repo and { repo } or M.REPOS) do
     start_one(name)
   end
@@ -295,6 +304,11 @@ end
 ---Switch the start at logon on or off, or say whether it is set up.
 ---@param action "on"|"off"|"status"
 function M.autostart(action)
+  -- `on` registers a hidden PowerShell that starts the runners at every logon: not on the workstation
+  -- (EDR); `off` and `status` only remove or read the task
+  if action == "on" and workstation.refused(":MyPlugins runner autostart on") then
+    return
+  end
   local argv, why = M.autostart_argv(action)
   if not argv then
     notify.error(why or "autostart: nothing to do")
@@ -342,7 +356,7 @@ function M.routes()
     {
       path = { "runner", "start" },
       args = repo_arg,
-      desc = "Start the self-hosted GitHub Actions runner of one private repo (or all of them: see M.REPOS) in a terminal.nvim split runner-<repo>",
+      desc = "Start the self-hosted GitHub Actions runner of one private repo (or all of them: see M.REPOS) in a terminal.nvim split runner-<repo>. Blocked on the workstation (EDR)",
       run = function(ctx)
         M.start(ctx.args.repo)
       end,
@@ -365,7 +379,7 @@ function M.routes()
     },
     {
       path = { "runner", "autostart", "on" },
-      desc = "Start all runners at every logon (a scheduled task 'GitHub Runners' running scripts/runners.ps1 ensure all)",
+      desc = "Start all runners at every logon (a scheduled task 'GitHub Runners' running scripts/runners.ps1 ensure all). Blocked on the workstation (EDR)",
       run = function()
         M.autostart("on")
       end,
