@@ -1,0 +1,1 @@
+E:/repos/tasks-vault/nvim-config/ROADMAP/reports/externe-deps-ersatz-aufwand-2026-10-30.md
