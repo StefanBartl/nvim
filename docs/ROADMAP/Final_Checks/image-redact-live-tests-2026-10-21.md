@@ -31,9 +31,9 @@ Testbild: ein Screenshot mit Text, z. B. `C:/repos/Notes/testbild.png`.
 
 ## 3. Rückgängig, Schreiben, Schließen — offen: nachtesten
 
-- [x] `u` nimmt die letzte Box weg (sie ist wieder sichtbar), `2u` zwei -> funktiernt nicht, das geht nu mit <BS> _(auto 2026-10-29: images.nvim/TESTS/redact_spec.lua grün)_
+- [x] `u` nimmt die letzte Box weg (sie ist wieder sichtbar), `2u` zwei -> funktiernt nicht, das geht nu mit <BS> _(auto 2026-10-29: images.nvim/TESTS/redact_spec.lua grün)_ (Probe 2026-10-30 mit der echten Config: im Redact-Fenster sind `u`/`w` an Redact gebunden, `gs`/`gy`/`<BS>` gar nicht. Die Notiz stammt aus dem Fenster vor dem Umbau auf Zen vom 21.10., images.nvim f8d214b/49a074f.)
 - [x] `gs`, `gy`, `<BS>` tun im Redact-Fenster nichts _(auto 2026-10-29: images.nvim/TESTS/redact_spec.lua grün)_
-- [ ] `w`: Meldung `redacted copy saved: …/testbild.redacted.png`, Fenster schließt -> wmmacht  nchts, mit gs kann ich speichern
+- [ ] `w`: Meldung `redacted copy saved: …/testbild.redacted.png`, Fenster schließt -> wmmacht  nchts, mit gs kann ich speichern _(alter Stand, siehe oben: `w` ist heute an Redact gebunden, `gs` nicht. Bitte live nachtesten.)_
 - [ ] Die Datei `testbild.redacted.png` öffnen (`:Image zen …`): die Boxen sind schwarz,
       das Original `testbild.png` ist unverändert
 - [ ] Erneut `:Image redact`, eine Box, dann `q`: nichts wird geschrieben

@@ -58,7 +58,8 @@ Specs decken das Kästchen nur teilweise.
 - **markdown.nvim:** Die Raster-Zeilen hängen am Puffer, nicht am Fenster. Ob zwei Fenster mit
   unterschiedlicher Breite je ein passendes Raster bekommen, ist ungeprüft und lohnt die Handprüfung.
 - **image-redact `u`/`2u`:** abgehakt (redact_spec grün im echten Redact-Fenster); die alte Handnotiz
-  „funktioniert nicht“ stammt vermutlich aus einem normalen Zen-Fenster. Bitte gegenlesen.
+  „funktioniert nicht“ stammt aus dem Fenster vor dem Umbau auf Zen (21.10.). Am 2026-10-30 mit
+  der echten Config geprüft: `u`/`w` gehören im Redact-Fenster Redact, `gs`/`gy`/`<BS>` sind dort ungebunden.
 - **docmap Junction-Traceback:** `docmap.nvim/TESTS/out_dir_links_spec.lua` zeigt die saubere
   Verweigerung über `cli.run`. Mit dem gebauten Binary ist das noch nicht geprüft, das Kästchen ist offen.
 
