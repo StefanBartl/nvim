@@ -69,6 +69,7 @@ local specs = {
   "bindings_explorer/report_dir_spec.lua",
   "bindings_explorer/checklist_drift_spec.lua",
   "bindings/insert_moves_spec.lua",
+  "bindings/copy_ctrl_c_spec.lua",
   "profile/profile_spec.lua",
   "startup/heartbeat_spec.lua",
   "repo_backup/repo_backup_spec.lua",

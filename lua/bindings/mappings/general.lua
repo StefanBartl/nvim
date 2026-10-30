@@ -12,6 +12,32 @@
 
 local M = {}
 
+---Copy the whole buffer of `win` into `reg` (linewise) and say so -- for a
+---file buffer only (`buftype == ""`); a picker, prompt, help or terminal
+---buffer is not copied. A float is fine: `:UI zen` edits the file in one.
+---@param win integer Window handle, 0 = current.
+---@param reg string Register name, `+` for the system clipboard.
+---@return integer|nil lines Lines copied, nil when the buffer is not a file buffer.
+function M.copy_file(win, reg)
+  win = win == 0 and vim.api.nvim_get_current_win() or win
+  local buf = vim.api.nvim_win_get_buf(win)
+  if vim.bo[buf].buftype ~= "" then
+    return nil
+  end
+  local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+  vim.fn.setreg(reg, lines, "V")
+  local name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buf), ":t")
+  vim.notify(
+    ("Copied %d line%s of %s"):format(
+      #lines,
+      #lines == 1 and "" or "s",
+      name ~= "" and name or "[No Name]"
+    ),
+    vim.log.levels.INFO
+  )
+  return #lines
+end
+
 ---@return nil
 function M.setup()
   local map = require("lib.nvim.bindings.keymap")
@@ -59,7 +85,14 @@ function M.setup()
   map("n", "<Esc>", function()
     vim.cmd("noh")
   end, { desc = "[General] Clear search highlight" })
-  map("n", "<C-c>", "<cmd>%y+<CR>", { desc = "[General] Copy whole file" })
+  -- <C-c> copies what is selected; with nothing selected, the whole file --
+  -- but only in a file window. A picker, prompt, float or terminal buffer
+  -- (terminal.nvim's <C-c> leaves terminal mode, a second one landed here)
+  -- used to be copied silently, which reads as "Ctrl+C copied the old text".
+  map("x", "<C-c>", '"+y', { desc = "[General] Copy selection to system clipboard" })
+  map("n", "<C-c>", function()
+    M.copy_file(0, "+")
+  end, { desc = "[General] Copy whole file" })
 
   -- Format via Conform (fallback handled in LSP attach)
   map({ "n", "x" }, "<leader>fm", function()
