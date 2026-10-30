@@ -124,6 +124,8 @@ switch ($Action) {
     # The runner also inherits the user's dependency overrides (LIB_NVIM_DIR=<local checkout>), and scripts/test.sh
     # lets a set override win over .deps/, so CI would test the working tree instead of ci-verified. Take them out of
     # this process for the start only (user environment untouched), put them back afterwards.
+    # (`:MyPlugins runner start` does the same from the editor: runner.lua, OVERRIDE_PATTERN -- keep both in step.
+    # Known gaps, harmless today: overrides without the .nvim suffix such as SNACKS_DIR, and the old LIB_NVIM_PATH.)
     $overrides = @{}
     foreach ($e in Get-ChildItem Env: | Where-Object { $_.Name -match '^[A-Z0-9_]+_NVIM_DIR$' }) { $overrides[$e.Name] = $e.Value }
     try {

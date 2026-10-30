@@ -87,11 +87,64 @@ function M.terminal_name(name)
   return "runner-" .. name
 end
 
+---Lua pattern of the dependency-checkout overrides (`LIB_NVIM_DIR=<local checkout>`, ...) that `scripts/test.sh`
+---lets win over `.deps/`. Twin of the regex in `scripts/runners.ps1` (`^[A-Z0-9_]+_NVIM_DIR$`); the two cannot
+---share code (PowerShell vs Lua), so a change goes into both. Known gaps, harmless today: no `.nvim` suffix
+---(`SNACKS_DIR`, `NVIM_TREE_LUA_DIR`) and the old spelling `LIB_NVIM_PATH`.
+M.OVERRIDE_PATTERN = "^[A-Z0-9_]+_NVIM_DIR$"
+
+---The names in `environ` that are dependency overrides. Windows environment names are case-insensitive, so they
+---are matched upper-cased there (the returned names keep their spelling, they are what `os_unsetenv` needs).
+---@param environ table<string, string> Like `vim.fn.environ()`.
+---@param case_insensitive? boolean Default: true on Windows.
+---@return string[] names Sorted.
+function M.override_names(environ, case_insensitive)
+  if case_insensitive == nil then
+    case_insensitive = require("lib.nvim.cross.platform.is_windows")()
+  end
+  local names = {}
+  for name in pairs(environ) do
+    local key = case_insensitive and name:upper() or name
+    if key:match(M.OVERRIDE_PATTERN) then
+      names[#names + 1] = name
+    end
+  end
+  table.sort(names)
+  return names
+end
+
+---Run `fn` with the dependency overrides taken out of THIS editor's environment, then put them back (also when
+---`fn` throws). A runner started from the editor is a child of it and would inherit `LIB_NVIM_DIR`, so CI would
+---test the working tree instead of ci-verified (same bug as `scripts/runners.ps1`, fixed there in e4b3147).
+---`term.run` can only ADD to a child's environment (`env`), never remove, hence the in-process removal; it is
+---safe because the native backend spawns the job synchronously inside `term.run`.
+---@param fn fun(): ...
+---@return any ... Whatever `fn` returned.
+function M.without_overrides(fn)
+  local saved = {}
+  for _, name in ipairs(M.override_names(vim.fn.environ())) do
+    saved[name] = vim.uv.os_getenv(name)
+    vim.uv.os_unsetenv(name)
+  end
+  local res = vim.F.pack_len(pcall(fn))
+  for name, value in pairs(saved) do
+    vim.uv.os_setenv(name, value)
+  end
+  if not res[1] then
+    error(res[2], 0)
+  end
+  return unpack(res, 2, res.n)
+end
+
 ---terminal.nvim, when it can run a listener (same contract `ci.lua` uses, minus the backend check: a runner's
 ---output is not time-critical the way a CI job's completion report is, so tmux/WezTerm are fine here too).
+---`M._terminal` is a seam for specs (a fake with `names`/`run`).
 ---@return table|nil term
 ---@return string|nil why
 local function terminal_module()
+  if M._terminal then
+    return M._terminal, nil
+  end
   local ok, term = pcall(require, "terminal")
   if not ok or type(term) ~= "table" or type(term.run) ~= "function" then
     return nil, "terminal.nvim is not available"
@@ -127,16 +180,18 @@ local function start_one(name)
     notify.warn(("%s: already running (terminal %s)"):format(name, M.terminal_name(name)))
     return
   end
-  local ok, started, err = pcall(term.run, { dir .. "/run.cmd" }, {
-    name = M.terminal_name(name),
-    direct = true,
-    cwd = dir,
-    layout = "split",
-    focus = false,
-    start_insert = false,
-    close = "never",
-    session = false,
-  })
+  local ok, started, err = pcall(M.without_overrides, function()
+    return term.run({ dir .. "/run.cmd" }, {
+      name = M.terminal_name(name),
+      direct = true,
+      cwd = dir,
+      layout = "split",
+      focus = false,
+      start_insert = false,
+      close = "never",
+      session = false,
+    })
+  end)
   if not ok or not started then
     notify.error(("%s: cannot start: %s"):format(name, tostring(ok and err or started)))
     return
