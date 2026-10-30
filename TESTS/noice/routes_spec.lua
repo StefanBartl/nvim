@@ -1,6 +1,7 @@
 -- TESTS/noice/routes_spec.lua -- noice's router stops at the first matching route, so the generic
--- `event = "notify"` -> mini route must not sit in front of the notify skip rules, and no skip
--- rule may match the cmdline itself (noice routes it through the same router).
+-- `event = "notify"` -> mini route must not sit in front of the notify skip rules, and no route
+-- (skip or view) may match the cmdline itself (noice routes it through the same router) unless it
+-- names "cmdline" on purpose and says why in `cmdline_reason`.
 
 return function(H)
   local eq = H.eq
@@ -113,13 +114,63 @@ return function(H)
     nil,
     "a cmdline containing 'No signature help' is not skipped"
   )
-  for i, r in ipairs(routes) do
-    if r.opts and r.opts.skip then
-      eq(
-        r.filter.event ~= nil,
-        true,
-        "skip route #" .. i .. " names its event (else it can hide the cmdline)"
-      )
+  -- Every route -- skip AND view -- must name its event: an event-less filter also
+  -- matches the cmdline (event "cmdline") and would hide it (skip) or move it into
+  -- another view. A route that targets "cmdline" on purpose must say why in a
+  -- top-level `cmdline_reason` string (noice's Router.add only reads filter/opts/view,
+  -- so the extra key is inert).
+  -- Returns nil when the route is fine, else a short reason.
+  local function event_problem(r)
+    local ev = r.filter and r.filter.event
+    if ev == nil or (type(ev) == "table" and #ev == 0) then
+      return "names no event (it also matches the cmdline)"
     end
+    local events = type(ev) == "table" and ev or { ev }
+    if vim.tbl_contains(events, "cmdline") then
+      if type(r.cmdline_reason) ~= "string" or vim.trim(r.cmdline_reason) == "" then
+        return "touches event 'cmdline' without a `cmdline_reason`"
+      end
+    end
+    return nil
+  end
+
+  -- The checker itself: it must flag what the task is about.
+  eq(
+    event_problem({ filter = { find = "x" }, view = "mini" }) ~= nil,
+    true,
+    "checker flags an event-less view route"
+  )
+  eq(
+    event_problem({ filter = { find = "x" }, opts = { skip = true } }) ~= nil,
+    true,
+    "checker flags an event-less skip route"
+  )
+  eq(
+    event_problem({ filter = { event = {}, find = "x" }, view = "mini" }) ~= nil,
+    true,
+    "checker flags an empty event list"
+  )
+  eq(
+    event_problem({ filter = { event = { "msg_show", "cmdline" } }, view = "mini" }) ~= nil,
+    true,
+    "checker flags a cmdline route without a reason"
+  )
+  eq(
+    event_problem({
+      filter = { event = "cmdline" },
+      view = "mini",
+      cmdline_reason = "deliberate",
+    }),
+    nil,
+    "checker accepts a cmdline route with a reason"
+  )
+  eq(
+    event_problem({ filter = { event = { "msg_show", "notify" } }, view = "mini" }),
+    nil,
+    "checker accepts an event list without cmdline"
+  )
+
+  for i, r in ipairs(routes) do
+    eq(event_problem(r), nil, "route #" .. i .. " names its event (else it can catch the cmdline)")
   end
 end
