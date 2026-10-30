@@ -54,6 +54,7 @@ M.state = { started = false, running = false, window = M.WINDOW, beats = {} }
 ---@field tick? number
 ---@field jitter? number
 ---@field stall? number
+---@field window? number  ms; `busy` lists only the seconds that start inside it
 
 --- Turn beat arrival times into stalls and busy time per second. Pure.
 ---@param beats number[]  ascending arrival times in ms
@@ -109,7 +110,13 @@ function M.analyse(beats, opts)
     end
   end
 
-  for sec = 0, math.floor((res.last - first) / 1000) do
+  local last_sec = math.floor((res.last - first) / 1000)
+  if opts.window then
+    -- Recording stops at the first beat past the window, so the second after it
+    -- would only hold that beat's gap: list the window's own seconds.
+    last_sec = math.min(last_sec, math.max(1, math.ceil(opts.window / 1000)) - 1)
+  end
+  for sec = 0, last_sec do
     local ms = busy[sec] or 0
     res.busy[sec + 1] = ms
     res.busy_total = res.busy_total + ms
@@ -162,10 +169,11 @@ function M.start(opts)
   return true
 end
 
---- Stats of what has been recorded so far, plus the recording state.
+--- Stats of what has been recorded so far (busy seconds limited to the window),
+--- plus the recording state.
 ---@return Startup.Heartbeat.Stats stats, Startup.Heartbeat.State state
 function M.snapshot()
-  return M.analyse(M.state.beats), M.state
+  return M.analyse(M.state.beats, { window = M.state.window }), M.state
 end
 
 return M

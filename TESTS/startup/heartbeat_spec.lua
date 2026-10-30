@@ -1,6 +1,7 @@
 -- TESTS/startup/heartbeat_spec.lua -- `startup.heartbeat`: stall detection and busy time per
--- second from synthetic beat times (boundaries, split over seconds, empty input), start() honours
--- the switch, stops and closes itself after its window, and the :StartupReport section
+-- second from synthetic beat times (boundaries, split over seconds, empty input, busy seconds
+-- limited to the window), start() honours the switch, stops and closes its timer handle after its
+-- window, drops beats that were queued before the stop, and the :StartupReport section
 -- (`startup.report.heartbeat_lines`) renders stalls, busy seconds and the recording state.
 
 return function(H)
@@ -27,6 +28,18 @@ return function(H)
       end, lines),
       "\n"
     )
+  end
+
+  --- Timer handles in the loop that are open and not closing.
+  ---@return integer
+  local function live_timers()
+    local n = 0
+    vim.uv.walk(function(h)
+      if h:get_type() == "timer" and not h:is_closing() then
+        n = n + 1
+      end
+    end)
+    return n
   end
 
   local done, err = pcall(function()
@@ -68,6 +81,21 @@ return function(H)
     eq(hb.analyse({ 0, 17 }).busy, { 7 }, "above the jitter: the gap minus one tick")
     eq(#hb.analyse({ 0, 40 }, { stall = 30 }).stalls, 1, "the stall threshold is an option")
 
+    -- A finished recording ends with the first beat past its window; the second
+    -- after the window holds only that beat's gap and is not listed.
+    local past = {}
+    for t = 0, 5990, 10 do
+      past[#past + 1] = t
+    end
+    past[#past + 1] = 6400 -- a stall across the end of the window
+    eq(#hb.analyse(past).busy, 7, "without a window: every second up to the last beat")
+    local clipped = hb.analyse(past, { window = 6000 })
+    eq(#clipped.busy, 6, "with the window: only its six seconds")
+    eq(clipped.busy[6], 0, "busy past the window is not folded into the last second")
+    eq(clipped.busy_total, 0, "the total is the sum of the listed seconds")
+    eq(clipped.stall_max, 410, "the stall across the end is still counted as a stall")
+    eq(#hb.analyse({ 0, 10, 20 }, { window = 6000 }).busy, 1, "a running window lists what it has")
+
     -- ── start ──────────────────────────────────────────────────────────────
     vim.g.startup_heartbeat = false
     hb = fresh()
@@ -76,9 +104,11 @@ return function(H)
 
     vim.g.startup_heartbeat = nil
     hb = fresh()
+    local timers_before = live_timers()
     ok(hb.start({ window = 80 }), "start() arms the timer")
     ok(not hb.start(), "a second start() is a no-op")
     ok(hb.state.running, "recording right after start()")
+    eq(live_timers(), timers_before + 1, "start() opens exactly one timer handle")
     ok(
       vim.wait(3000, function()
         return not hb.state.running
@@ -90,6 +120,43 @@ return function(H)
     ok(hb.state.beats[n] - hb.state.beats[1] >= 80, "recorded at least the window")
     vim.wait(100)
     eq(#hb.state.beats, n, "no beats after the window")
+    eq(live_timers(), timers_before, "the timer handle is closed after the window")
+
+    -- Beats that queue up while the loop runs libuv but no scheduled callbacks
+    -- (a nested wait such as system() or jobwait(); here vim.wait with fast_only)
+    -- are delivered in one burst afterwards. The first one past the window stops
+    -- the timer; the rest must be dropped, not recorded (and must not close the
+    -- handle a second time).
+    hb = fresh()
+    ok(hb.start({ window = 100 }), "start() for the backlog case")
+    ok(
+      vim.wait(2000, function()
+        return #hb.state.beats > 0
+      end, 1),
+      "the first beat arrives"
+    )
+    local before_backlog = #hb.state.beats
+    vim.wait(300, function()
+      return false
+    end, 10, true)
+    ok(
+      vim.wait(2000, function()
+        return not hb.state.running
+      end, 1),
+      "the backlog closes the window"
+    )
+    vim.wait(50)
+    eq(#hb.state.beats, before_backlog + 1, "only the beat that closes the window is recorded")
+    eq(live_timers(), timers_before, "the backlog case closes its handle too")
+
+    -- snapshot() limits the busy seconds to the recorded window.
+    hb = fresh()
+    local synthetic = {}
+    for t = 0, 1010, 10 do
+      synthetic[#synthetic + 1] = t
+    end
+    hb.state = { started = true, running = false, window = 1000, beats = synthetic }
+    eq(#hb.snapshot().busy, 1, "snapshot() passes the window to analyse()")
 
     -- ── report section ─────────────────────────────────────────────────────
     package.loaded["startup.report"] = nil
