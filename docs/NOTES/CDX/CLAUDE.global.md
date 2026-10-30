@@ -26,7 +26,8 @@ Rust, C++, Web/Tauri) stehen in der `CLAUDE.md` des jeweiligen Repos
 - Chip-/Background-Tasks (spawn_task) ebenfalls auf Deutsch anlegen.
 - Geteilte Checkouts: In den Repos unter `$REPOS_DIR` arbeiten oft mehrere
   Sitzungen gleichzeitig. Fremde uncommittete Änderungen nie committen,
-  stashen, zurücksetzen oder formatieren; nur eigene Dateien mit Pfad stagen
+  zurücksetzen, formatieren oder stashen (nur `pull --rebase --autostash`
+  legt sie sofort zurück); nur eigene Dateien mit Pfad stagen
   (nie `git add -A`/`.`, `commit -a`). Änderungen über viele Repos nur auf
   sauberem Baum, je Repo Suite grün vor dem Commit; schmutzige Repos
   auslassen, in der Task notieren und später nachziehen.
