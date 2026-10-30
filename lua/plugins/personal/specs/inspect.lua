@@ -1457,11 +1457,14 @@ return {
   {
     -- testing.nvim: the `:Testing` test runner (specs, conformance, surface).
     -- On demand only: `cmd` is the whole trigger, nothing registers at startup.
-    -- setup() takes only the two options below. The per-project settings (roots, guards, jobs, ...)
-    -- live in `.testing.lua` in the project root (docs/CONFIG.md), not here.
+    -- setup() options are listed below (plus `hover` and `surface_view`, left at their defaults,
+    -- testing.nvim's lua/testing/config/DEFAULTS.lua). The per-project settings (roots, guards, jobs, the `ci`
+    -- pipeline, ...) live in `.testing.lua` in the project root (docs/CONFIG.md), not here.
     -- `:Testing terminal` repeats the last run (otherwise the project) as a job in the
     -- terminal.nvim terminal `testing`, showing the reporter output (to scroll and copy,
     -- no quickfix list). Needs terminal.nvim, no option here.
+    -- Local CI is `:Testing ci` / `testing ci` (docs/CI.md), the pre-push hook is
+    -- `testing ci hook install`; the former `:MyPlugins ci` of this config is gone.
     "WKDSteve/testing.nvim",
     cmd = "Testing",
     dependencies = { "WKDSteve/lib.nvim" },
@@ -1470,6 +1473,11 @@ return {
       -- notify_prefix = "[testing]",
       -- Moves or drops named keymap actions; false binds no key (docs/BINDINGS.md).
       -- keymaps = {},
+      -- The repositories `:Testing ci repos` runs one after the other: every sub-directory of a root
+      -- whose `.testing.lua` has a `ci` section ("$VAR" is expanded by testing.nvim); `include` /
+      -- `exclude` narrow them by directory name.
+      -- Default: { roots = {}, include = {}, exclude = {} }.
+      ci = { repos = { roots = { "$REPOS_DIR" } } },
     },
   },
 }

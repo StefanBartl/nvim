@@ -6,7 +6,7 @@
   One runner per private repository lives in %USERPROFILE%\actions-runners\<repo> (made by
   tasks-vault/TOOLS/scripts/self-hosted-runner/setup-runner.ps1, see tasks-vault/TOOLS/self-hosted-runner.md).
   A runner only takes jobs while its process runs; this script is the one way to look at that and to start it,
-  for a person, for `:MyPlugins ci runners` and for a Claude Code session that needs a CI run.
+  for a person, for `:MyPlugins runner` and for a Claude Code session that needs a CI run.
 
   Actions:
     status  one line per runner: <repo> <local: running|stopped> <github: online|offline|missing> [busy]

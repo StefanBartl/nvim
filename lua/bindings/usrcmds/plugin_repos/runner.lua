@@ -17,8 +17,8 @@
 ---                             `scripts/runners.ps1 ensure all` at every logon (no elevated shell needed on most
 ---                             machines); `off` removes it
 ---
---- This is the GitHub-registered runner SERVICE, not `:MyPlugins ci` (`ci.lua`), which runs `scripts/ci.sh`
---- locally without going through GitHub Actions at all -- the two are independent and both exist.
+--- This is the GitHub-registered runner SERVICE, not local CI: `testing ci` / `:Testing ci` (testing.nvim) runs a
+--- repo's pipeline on this machine without going through GitHub Actions at all -- the two are independent.
 ---
 --- No "install as a Windows service" here on purpose: that needs an elevated shell
 --- (`setup-runner.ps1 -Service`, see the doc) and is a one-time, manual, admin-rights step, not something a
@@ -136,7 +136,7 @@ function M.without_overrides(fn)
   return unpack(res, 2, res.n)
 end
 
----terminal.nvim, when it can run a listener (same contract `ci.lua` uses, minus the backend check: a runner's
+---terminal.nvim, when it can run a listener (same contract the former `ci.lua` used, minus the backend check: a runner's
 ---output is not time-critical the way a CI job's completion report is, so tmux/WezTerm are fine here too).
 ---`M._terminal` is a seam for specs (a fake with `names`/`run`).
 ---@return table|nil term

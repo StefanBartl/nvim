@@ -24,9 +24,6 @@ those names no longer exist.
 :MyPlugins sync [dir] [--only=<name>] [--dry-run] [--no-fetch] [--jobs=<n>]
 :MyPlugins sync issues
 :MyPlugins machine [--pull] [--only=a,b]    " report; <CR> pulls the repo, P all, b build cmd, B build in a float terminal, a show current, ? cheat sheet
-:MyPlugins ci [repo] [--fast] [--quiet]      " local CI of the private repos (live terminal; --quiet: quickfix)
-:MyPlugins ci status [repo]                  " last result per repo, current commit or not
-:MyPlugins ci hook install|remove [repo]     " pre-push hook (scripts/ci.sh --fast)
 :MyPlugins reclone [dir] [--only=<name>]
 :MyPlugins dashboard [dir] [--fetch] [--fetch-this]
 :MyPlugins mode [auto|dir|remote|disabled]
@@ -289,38 +286,19 @@ quitting Neovim waits up to 20 s for a running assist (it must not stop between 
 outside anyway, it may leave a stale `.git/index.lock`; a failure that mentions it says so and what
 to do. After a pull, `:checktime` reloads buffers whose file changed.
 
-### `:MyPlugins ci [repo] [--fast] [--quiet]`, `ci status`, `ci hook install|remove`
+### Local CI: `:Testing ci` (testing.nvim), no longer `:MyPlugins ci`
 
-Local CI of the private repos `rules-vault`, `casedesk.nvim`, `tasks-vault` and `my.nvim`. GitHub-hosted minutes of
-private repositories are limited (and stop with a spending-limit message), so the checks run here instead. Each repo
-has a `scripts/ci.sh` with exactly the steps of its workflow; the workflow calls the same script, so there is one
-source. (`casedesk.nvim` and `my.nvim` ALSO have their GitHub workflow itself run on a self-hosted runner — see
-`:MyPlugins runner` below — independently of this local `ci.sh` path; their `ci.sh` runs the same four gates: stylua,
-luacheck, test suite, conformance.)
-
-- `ci [repo]`: runs `scripts/ci.sh` of one repo, or of all four one after the other (never in parallel), through Git
-  Bash on Windows. Each repo runs live in a terminal.nvim split of its own (`ci-<repo>`) that keeps the focus where it
-  is and stays open after the run; the verdict comes as a notification. A new run replaces the terminal of a repo.
-  Hiding the split (`:q`) does not end the run; after 15 minutes a run that is still going is closed and red. What no
-  terminal shows (a repo without `scripts/ci.sh`, a terminal that did not open, a timeout) goes to the quickfix list.
-- `ci --quiet`: no terminal; the output goes to the quickfix list (opened when a repo is red), for prompts and agents
-  that do not need to see it. The same happens when terminal.nvim is not installed or runs on its tmux or WezTerm
-  backend (those never report the end of a job, which the next repo waits for).
-- `ci --fast`: only the cheap gates (stylua, luacheck for casedesk.nvim; the other two take seconds anyway).
-- `ci status [repo]`: reads `<repo>/.ci-last.json` (commit, time, green/red; gitignored, written by `ci.sh`) and says
-  whether the result is for the current commit.
-- `ci hook install|remove [repo]`: a `pre-push` hook that runs `scripts/ci.sh --fast` and blocks the push when it is
-  red; `git push --no-verify` skips it. A hook that is not ours is never overwritten or removed.
-
-`scripts/ci.sh` also runs from a shell: `scripts/ci.sh` in the repo. It finds `lib.nvim`, `rules.nvim`, `tasks.nvim`
-(and for casedesk.nvim `ui.nvim`, `testing.nvim`) via `$<NAME>_DIR`, `<repo>/.deps/<name>` or a sibling checkout.
-Code: `ci.lua`; spec: `TESTS/plugin_repos/ci_spec.lua`.
+`:MyPlugins ci`, `ci status` and `ci hook` are gone. The pipeline of a repo (the `ci` section of its `.testing.lua`)
+runs through testing.nvim: `:Testing ci` / `testing ci` for one repo, `:Testing ci repos` for every repo below the
+roots of `opts.ci.repos` (the spec in `lua/plugins/personal/specs/inspect.lua` sets `$REPOS_DIR`), `testing ci verify`
+for the proof of a commit and `testing ci hook install|remove` for the `pre-push` hook. See testing.nvim's
+`docs/CI.md`.
 
 ### `:MyPlugins runner start|stop|status [repo]`, `runner autostart on|off|status`
 
 The GitHub Actions SELF-HOSTED RUNNERS of the private repos (`casedesk.nvim`, `my.nvim`, `tasks.nvim`, `rules.nvim`,
-`tasks-vault`, `rules-vault`, `appkit`, `tasks-desktop`, `rules-desktop`, `ai-desktop`, `docmap-desktop`) — a different thing from `:MyPlugins ci` above. Those repos' own `.github/workflows/ci.yml` runs on `runs-on: [self-hosted, windows]` rather than
-GitHub-hosted minutes (same billing reason as `ci` above), which means a push only actually triggers CI once a
+`tasks-vault`, `rules-vault`, `appkit`, `tasks-desktop`, `rules-desktop`, `ai-desktop`, `docmap-desktop`) — a different thing from the local `:Testing ci` above. Those repos' own `.github/workflows/ci.yml` runs on `runs-on: [self-hosted, windows]` rather than
+GitHub-hosted minutes (private repos have none in this plan), which means a push only actually triggers CI once a
 runner process is listening; setup (one time, per repo) is `tasks-vault/TOOLS/self-hosted-runner.md`. Nothing starts
 that process automatically — without it, a push to one of these repos sits "Queued" on GitHub with no red mark.
 

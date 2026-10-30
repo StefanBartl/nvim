@@ -1,6 +1,6 @@
 -- TESTS/plugin_repos/runner_spec.lua -- :MyPlugins runner: the pure data functions (is_known, runner_dir,
--- terminal_name). start/stop/status are not tested here, same as ci.lua's own spec leaves M.run untested:
--- both drive a real terminal.nvim job (or gh api), not deterministic data in, data out.
+-- terminal_name). start/stop/status are not tested here: they drive a real terminal.nvim job (or gh api),
+-- not deterministic data in, data out.
 
 return function(H)
   local eq, ok = H.eq, H.ok

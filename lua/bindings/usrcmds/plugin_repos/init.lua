@@ -1166,14 +1166,6 @@ function M.enable()
     notify.warn(":MyPlugins machine is unavailable: " .. tostring(machine))
   end
 
-  -- `ci` (local CI of the private repos, runs their scripts/ci.sh). Guarded like the others.
-  local ok_ci, ci = pcall(require, "bindings.usrcmds.plugin_repos.ci")
-  if ok_ci then
-    ci.register_types()
-  else
-    notify.warn(":MyPlugins ci is unavailable: " .. tostring(ci))
-  end
-
   -- `runner` (start/stop/status of a private repo's self-hosted GitHub Actions runner). Guarded like the others.
   local ok_runner, runner = pcall(require, "bindings.usrcmds.plugin_repos.runner")
   if ok_runner then
@@ -1370,11 +1362,8 @@ function M.enable()
         vim.list_extend(
           ok_machine and machine.routes() or {},
           vim.list_extend(
-            ok_ci and ci.routes() or {},
-            vim.list_extend(
-              ok_runner and runner.routes() or {},
-              ok_tasks and tasks_routes.routes() or {}
-            )
+            ok_runner and runner.routes() or {},
+            ok_tasks and tasks_routes.routes() or {}
           )
         )
       )
