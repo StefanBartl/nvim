@@ -168,6 +168,11 @@ return {
           ["<Right>"] = { "select_and_accept", "fallback" },
         },
       })
+
+      -- blink's cmdline source shortens PATH around shellcmd completion and
+      -- restores it without pcall; see config/blink_path_guard.lua. The plugin
+      -- is on the runtimepath when lazy resolves `opts`.
+      require("config.blink_path_guard").install()
     end,
   },
 }

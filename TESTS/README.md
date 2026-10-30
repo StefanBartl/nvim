@@ -38,6 +38,7 @@ The specs of the task system (engine, CLI, editor front ends) moved with it into
 | File | Covers |
 |---|---|
 | `bindings_explorer/checklist_drift_spec.lua` | `bindings_audit.drift` (`:BindingsRuntimeChecklistDrift`): entries by section/group/code span, ticks/notes/descriptions are not drift, gone/new with line numbers, the backtick-key and `` `` x `` `` spans, the real checklist parses completely |
+| `blink/path_guard_spec.lua` | `config.blink_path_guard`: blink.cmp's cmdline `get_completions` gets PATH back when getcompletion() throws (fake module and, on Windows with blink.cmp installed, the real one), the error and success return values pass through, install is idempotent |
 | `bindings_explorer/report_dir_spec.lua` | `config.report_dir()` (target of `:Bindings report` and `:BindingsRuntimeChecklist`) names a folder this checkout has, and `BINDINGS-RUNTIME-CHECKLIST.md` sits in it |
 | `neotree/event_handlers_spec.lua` | the `neo_tree_window_after_open` handler: the tree window gets `foldmethod=manual` / `foldenable` off window-locally (no leak into buffers shown there later or windows split off the editor), also when the tree window is not the current one; hostile arguments do not throw |
 | `noice/routes_spec.lua` | the generic notify route sits behind the notify skip rules (first match wins) |
