@@ -108,6 +108,20 @@ M.views.notify = {
   timeout = 4000,
 }
 
+-- Route rules (checked by TESTS/noice/routes_spec.lua):
+--  * The router stops at the first matching route: skip rules go before the
+--    generic route of the same event (see the notify and msg_show routes below).
+--  * Every route, skip or view, names `filter.event`. noice routes the command
+--    line itself through this router (event "cmdline"), so an event-less filter
+--    also matches the line being typed and hides it or moves it to another view.
+--  * A route whose `filter.event` includes "cmdline" on purpose carries a
+--    top-level `cmdline_reason` string that says why. noice's Router.add only
+--    reads filter/opts/view, so the key is inert and only documents the intent:
+--      {
+--        filter = { event = "cmdline", find = "^:lua " },
+--        view = "cmdline_popup",
+--        cmdline_reason = "show :lua lines in the popup while typing",
+--      },
 M.routes = {
   {
     view = "mini",
