@@ -23,6 +23,11 @@
 
 local env = require("lib.nvim.system.env")
 
+---@class config.ui_open.Debug
+---@field orig_open fun(path: string, opt?: table): vim.SystemObj?, string? # core vim.ui.open before setup()
+
+---@class config.ui_open
+---@field _debug? config.ui_open.Debug # set by setup() on Windows; inspection only
 local M = {}
 
 ---Whether `target` is a URL/URI rather than a filesystem path. Requires a
@@ -55,7 +60,12 @@ function M.setup()
     end
     return orig_open(target, opt)
   end
-  M._orig_open = orig_open
+  -- Debug handle only, deliberately inside a table: runtime-analysis'
+  -- telemetry wraps every function-valued field of a `config.*` module (only
+  -- top-level fields, no recursion into tables). A top-level `M._orig_open`
+  -- therefore read back as a telemetry wrapper in a live session and looked
+  -- like a second setup(). The truth is the upvalue chain of vim.ui.open.
+  M._debug = { orig_open = orig_open }
 end
 
 return M
