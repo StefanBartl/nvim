@@ -2002,8 +2002,8 @@ return {
             -- accent as background, like the statusline pill), not a group
             -- NAME: ui.kit.chip would tint a name's fg toward the window
             -- background, which reads as a washed-out version of the accent.
-            -- Being a table, it is not re-tinted on `:colorscheme` -- it
-            -- refreshes on the next mode change.
+            -- ui.kit.chip re-calls this function on `:colorscheme` too, so
+            -- the chip follows a scheme change without waiting for a mode change.
             local hl = vim.api.nvim_get_hl(0, { name = group, link = false })
             if not hl.fg or not hl.bg then
               return nil -- ui.kit.chip falls back to its own default colour
