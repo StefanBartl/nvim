@@ -14,8 +14,11 @@
   Lines go to the console and are appended to the log file.
 
   Run it in a spare terminal and leave it open; when the bug shows up, look at the
-  lines just before the bad paste: the entry that wrote the stale value names the
-  culprit. A copy you made that has NO entry never reached the clipboard.
+  lines just before the bad paste: the entry that wrote the stale value shows WHEN
+  it happened and what was written. The owner is often empty: command-line tools
+  such as win32yank open the clipboard without a window (OpenClipboard(NULL)), so
+  the writer is told by the text, not by the process. A copy you made that has NO
+  entry never reached the clipboard.
 
 .PARAMETER LogPath
   Where to append the log. Default: $env:LOCALAPPDATA\clipboard-monitor.log
@@ -107,7 +110,8 @@ function Get-ClipText {
 
 function Write-Entry([string]$line) {
   Write-Host $line
-  Add-Content -LiteralPath $LogPath -Value $line -Encoding utf8
+  # UTF-8 without BOM in both shells (Windows PowerShell's `-Encoding utf8` writes a BOM, pwsh does not)
+  [IO.File]::AppendAllText($LogPath, $line + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
 }
 
 $listener = [ClipMon.Listener]::new()
@@ -126,14 +130,14 @@ $listener.add_Changed({
 
 Write-Entry ('# clipboard-monitor started {0}, log: {1}' -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $LogPath)
 try {
-  if ($Seconds -gt 0) {
-    $deadline = (Get-Date).AddSeconds($Seconds)
-    while ((Get-Date) -lt $deadline) {
-      [System.Windows.Forms.Application]::DoEvents()
-      Start-Sleep -Milliseconds 20
-    }
-  } else {
-    [System.Windows.Forms.Application]::Run()
+  # Pump the message loop from PowerShell, never [Application]::Run(): that call blocks the
+  # pipeline thread in native code, so Ctrl+C would only take effect inside the next clipboard
+  # event (a PipelineStoppedException in the handler, shown as a WinForms error dialog) and the
+  # finally block would not run.
+  $deadline = if ($Seconds -gt 0) { (Get-Date).AddSeconds($Seconds) } else { [datetime]::MaxValue }
+  while ((Get-Date) -lt $deadline) {
+    [System.Windows.Forms.Application]::DoEvents()
+    Start-Sleep -Milliseconds 20
   }
 } finally {
   $listener.Dispose()
