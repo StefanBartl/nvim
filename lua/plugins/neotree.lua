@@ -68,6 +68,9 @@ return {
       "mrbjarksen/neo-tree-diagnostics.nvim",
     },
     config = function(_, opts)
+      -- utils.job never closes the uv_process_t of the git commands it runs
+      -- (one leaked handle per save/DirChanged); see config/neotree/job_handle_close.lua.
+      require("config.neotree.job_handle_close").install()
       require("neo-tree").setup(opts)
       NEOTEST.load_with_tests_source()
     end,
