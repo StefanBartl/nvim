@@ -38,6 +38,10 @@ Werden von `setup-claude-code.ps1` pro Maschine gesetzt (User-Scope):
   mit `regeln/`, `gates/`, `belege/`, `nachschlagen/` und `rulesets/native`). Wird
   gesetzt, wenn `$REPOS_DIR/rules-vault` existiert; sonst Repo klonen und das
   Setup-Skript erneut laufen lassen.
+- `$TESTING_TRUST_ROOTS` - Wurzeln, unter denen testing.nvim Projekten vertraut
+  (Default `$REPOS_DIR`). Ohne sie enden lokale Läufe (`scripts/test.sh`,
+  `:Testing`) mit Exit 2, weil `.testing.lua` erst nach Vertrauen ausgeführt
+  wird; die CI vertraut über `CI=true`.
 - `$NVIM_MACHINE_ROLE` - `workstation` auf der Tricentis-Workstation, sonst
   nicht gesetzt (= privater Rechner). Dieselbe Variable liest `lua/machine.lua`
   der nvim-Config. Das Setup-Skript setzt sie nie, es zeigt sie nur an: auf einer

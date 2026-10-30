@@ -61,6 +61,16 @@ if (-not $rulesVault) {
     Write-Host "  RULES_VAULT bereits gesetzt: $rulesVault"
 }
 
+# TESTING_TRUST_ROOTS: testing.nvim fuehrt die .testing.lua eines Projekts erst aus, wenn es vertraut ist (Workspace
+# trust, docs/CONFIG.md). Alle eigenen Repos unter $REPOS_DIR gelten als vertraut; sonst enden lokale Laeufe
+# (scripts/test.sh, :Testing) mit Exit 2. Eine schon gesetzte Liste (mehrere Wurzeln, ';'-getrennt) bleibt stehen.
+$trustRoots = [Environment]::GetEnvironmentVariable('TESTING_TRUST_ROOTS', 'User')
+if (-not $trustRoots) {
+    Set-UserEnvVar -name 'TESTING_TRUST_ROOTS' -value $reposDir
+} else {
+    Write-Host "  TESTING_TRUST_ROOTS bereits gesetzt: $trustRoots"
+}
+
 # TASKS_VAULT: Wurzel des Repos tasks-vault (Task-Vault: Areas mit ROADMAP/tasks, Backlog, Notizen, TOOLS). Der Hub
 # von tasks-desktop und die CLI von tasks.nvim lesen sie; der Vault ist seit 2026-10-12 ein eigenes Repo, nicht
 # mehr ein Ordner in WKDBooks. Auf jeder Maschine liegt er unter $REPOS_DIR/tasks-vault.
