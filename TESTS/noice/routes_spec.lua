@@ -1,5 +1,6 @@
 -- TESTS/noice/routes_spec.lua -- noice's router stops at the first matching route, so the generic
--- `event = "notify"` -> mini route must not sit in front of the notify skip rules.
+-- `event = "notify"` -> mini route must not sit in front of the notify skip rules, and no skip
+-- rule may match the cmdline itself (noice routes it through the same router).
 
 return function(H)
   local eq = H.eq
@@ -16,8 +17,12 @@ return function(H)
         error("routes_spec model does not support filter key '" .. k .. "'")
       end
     end
-    if filter.event and filter.event ~= msg.event then
-      return false
+    if filter.event then
+      -- noice accepts a single event or a list of events.
+      local events = type(filter.event) == "table" and filter.event or { filter.event }
+      if not vim.tbl_contains(events, msg.event) then
+        return false
+      end
     end
     if filter.kind and filter.kind ~= msg.kind then
       return false
@@ -72,4 +77,49 @@ return function(H)
     "mini",
     "an `any` route is modelled (msg_show 'written' -> mini)"
   )
+
+  -- The BufReadPost text is still skipped as a message and as a notify ...
+  local bufread = "Error detected while processing BufReadPost Autocommands for x"
+  eq(
+    route({ event = "msg_show", kind = "emsg", text = bufread }),
+    "skip",
+    "BufReadPost emsg is skipped"
+  )
+  eq(
+    route({ event = "notify", kind = "error", text = bufread }),
+    "skip",
+    "BufReadPost notify is skipped"
+  )
+  eq(
+    route({ event = "msg_show", kind = "", text = "No signature help" }),
+    "skip",
+    "'No signature help' message is skipped"
+  )
+
+  -- ... but noice routes the command line itself through the same router: a skip
+  -- route without an event matched the line being typed and hid the cmdline
+  -- (`:lua vim.notify('... Autocommands for x')` vanished at "for").
+  eq(
+    route({
+      event = "cmdline",
+      kind = "",
+      text = "lua vim.notify('" .. bufread .. "', vim.log.levels.ERROR)",
+    }),
+    nil,
+    "a cmdline containing the BufReadPost text is not skipped"
+  )
+  eq(
+    route({ event = "cmdline", kind = "", text = "echo 'No signature help'" }),
+    nil,
+    "a cmdline containing 'No signature help' is not skipped"
+  )
+  for i, r in ipairs(routes) do
+    if r.opts and r.opts.skip then
+      eq(
+        r.filter.event ~= nil,
+        true,
+        "skip route #" .. i .. " names its event (else it can hide the cmdline)"
+      )
+    end
+  end
 end

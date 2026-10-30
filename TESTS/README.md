@@ -41,7 +41,7 @@ The specs of the task system (engine, CLI, editor front ends) moved with it into
 | `blink/path_guard_spec.lua` | `config.blink_path_guard`: blink.cmp's cmdline `get_completions` gets PATH back when getcompletion() throws (fake module and, on Windows with blink.cmp installed, the real one), the error and success return values pass through, install is idempotent |
 | `bindings_explorer/report_dir_spec.lua` | `config.report_dir()` (target of `:Bindings report` and `:BindingsRuntimeChecklist`) names a folder this checkout has, and `BINDINGS-RUNTIME-CHECKLIST.md` sits in it |
 | `neotree/event_handlers_spec.lua` | the `neo_tree_window_after_open` handler: the tree window gets `foldmethod=manual` / `foldenable` off window-locally (no leak into buffers shown there later or windows split off the editor), also when the tree window is not the current one; hostile arguments do not throw |
-| `noice/routes_spec.lua` | the generic notify route sits behind the notify skip rules (first match wins) |
+| `noice/routes_spec.lua` | the generic notify route sits behind the notify skip rules (first match wins); no skip rule hides the cmdline |
 | `strip_coauthor/git_spec.lua` | `scripts/strip_coauthor/git.lua` on a throwaway repo: a trailer on the root commit, both spellings, no cap on the trailer commits, tree/subjects untouched by the rewrite |
 
 Every spec works on a fresh temp directory (`H.tmpdir()`, removed after the

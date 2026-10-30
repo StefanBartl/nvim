@@ -146,10 +146,21 @@ M.routes = {
   { filter = { event = "msg_show", kind = "emsg", find = "E351" }, opts = { skip = true } },
   { filter = { event = "msg_show", kind = "emsg", find = "E418" }, opts = { skip = true } },
 
-  -- Hide specific generic texts (no explicit event → matches across sources where applicable).
-  { filter = { find = "No signature help" }, opts = { skip = true } },
+  -- Hide specific generic texts, whether they arrive as a message or as a notify.
+  -- The event list is not optional: noice routes the command line itself through
+  -- the same router (event "cmdline"), so an event-less `find` also matched the
+  -- line being typed and skipped it -- typing `:lua vim.notify('... Autocommands
+  -- for x')` made the cmdline vanish at the word "for" while Neovim stayed in
+  -- cmdline mode.
   {
-    filter = { find = "Error detected while processing BufReadPost Autocommands for" },
+    filter = { event = { "msg_show", "notify" }, find = "No signature help" },
+    opts = { skip = true },
+  },
+  {
+    filter = {
+      event = { "msg_show", "notify" },
+      find = "Error detected while processing BufReadPost Autocommands for",
+    },
     opts = { skip = true },
   },
 
@@ -173,8 +184,8 @@ M.routes = {
   },
 
   -- Generic notify route. MUST stay behind every notify skip rule above (and the
-  -- event-less "No signature help" and "Error detected while processing BufReadPost
-  -- Autocommands for" skips, which also catch notifies): the router stops at the first match, so
+  -- msg_show+notify "No signature help" and "Error detected while processing BufReadPost
+  -- Autocommands for" skips): the router stops at the first match, so
   -- placed first it shadowed them all.
   {
     filter = { event = "notify" },
