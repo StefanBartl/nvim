@@ -13,7 +13,8 @@
 ---  - `<CR>` / double click   fast-forward the repo under the cursor (`git pull --ff-only`)
 ---  - `P`                     fast-forward every repo that can be (clean, on main, behind)
 ---  - `b`                     copy the build command of the repo under the cursor
----  - `B`                     run that build in a float terminal, in the repo's folder
+---  - `B`                     run that build in a float terminal, in the repo's folder (refused on the
+---                            workstation, `native_repos/workstation.lua`: the EDR reports own builds)
 ---  - `a`                     show / hide the repos that are current
 ---  - `]` / `[`               next / previous line that needs attention
 ---  - `R`                     run the check again
@@ -26,6 +27,7 @@
 local notify = require("lib.nvim.notify").create("[usrcmds.plugin_repos.machine]")
 local open_named_scratch = require("lib.nvim.window.open_named_scratch")
 local help_float = require("bindings.usrcmds.plugin_repos.help_float")
+local workstation = require("bindings.usrcmds.native_repos.workstation")
 
 local M = {}
 
@@ -259,6 +261,11 @@ end
 ---@return boolean started
 function M.build_in_terminal(item, deps)
   deps = deps or {}
+  -- the builds here are native programs (desktop apps, mdview's Go server): on the workstation the
+  -- EDR reports them, so B refuses there; b (copy the command) stays
+  if workstation.refused(":MyPlugins machine B (build)") then
+    return false
+  end
   if not item then
     notify.info("No build command for this line.")
     return false
@@ -582,6 +589,7 @@ function M.help_lines()
     " Yellow  dirty, off main, stale or missing build",
     " Only repos marked v are ever pulled (git pull --ff-only).",
     " A build starts only on B; b copies the command instead.",
+    " On the workstation (NVIM_MACHINE_ROLE) B is blocked (EDR).",
     "",
   }
 end
@@ -804,7 +812,7 @@ function M.routes()
         },
         { name = "only", type = "STRING", desc = "Comma list of repo names to check" },
       },
-      desc = "Machine-switch check over ALL repos in $REPOS_DIR (plugins, vaults, native apps): behind / ahead / dirty and stale native builds in a scratch buffer, sorted by what you can do; <CR> pulls the repo under the cursor, P pulls all that can be, b copies the build command, B runs it in a float terminal in the repo's folder, a shows the current ones, ? opens the cheat sheet. --pull fast-forwards before the report, --only=a,b limits the run. Runs scripts/sync-machine.ps1",
+      desc = "Machine-switch check over ALL repos in $REPOS_DIR (plugins, vaults, native apps): behind / ahead / dirty and stale native builds in a scratch buffer, sorted by what you can do; <CR> pulls the repo under the cursor, P pulls all that can be, b copies the build command, B runs it in a float terminal in the repo's folder (blocked on the workstation, EDR), a shows the current ones, ? opens the cheat sheet. --pull fast-forwards before the report, --only=a,b limits the run. Runs scripts/sync-machine.ps1",
       run = function(ctx)
         M.run({ pull = ctx.flags.pull == true, only = ctx.flags.only })
       end,

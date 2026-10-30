@@ -652,7 +652,12 @@ return {
   {
     "WKDSteve/mdview.nvim",
     dependencies = { "WKDSteve/lib.nvim" },
-    build = "npm ci && npm run build:go && npm run build",
+    -- `build:go` compiles the unsigned mdview-server binary: left out on the
+    -- workstation (EDR), the JS/wasm build still runs there.
+    build = require("bindings.usrcmds.native_repos.workstation").lazy_build(
+      "npm ci && npm run build:go && npm run build",
+      "npm ci && npm run build"
+    ),
     ft = { "markdown" },
     cmd = { "MDView" },
     config = function()

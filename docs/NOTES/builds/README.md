@@ -28,6 +28,12 @@ landet in der Quickfix-Liste.
 Weitere Befehle: `:MyNative list` (Git- und Build-Stand), `:MyNative build [name]` (nur bauen, die veralteten),
 `:MyNative uninstall [name]`, `:MyNative deps [name]`. Hilfe: `lua/bindings/usrcmds/native_repos/README.md`.
 
+**Auf der Workstation gesperrt:** Mit `NVIM_MACHINE_ROLE=workstation` (`lua/machine.lua`) brechen `:MyNative build`,
+`install` und `deps` sowie `B` in `:MyPlugins machine` mit einer Fehlermeldung ab, weil CrowdStrike Falcon dort
+eigene unsignierte Programme meldet. `list`, `clone`, `pull` und `uninstall` bleiben erlaubt. Auch die
+lazy.nvim-`build`-Hooks bauen dort nichts Natives: telescope-fzf-native wird nicht gebaut (Telescope lädt dann die
+`fzf`-Erweiterung nicht), mdview.nvim baut ohne `build:go` (kein Go-Server).
+
 ## Ohne nvim
 
 In jedem App-Repo, in einem nicht erhöhten PowerShell:

@@ -18,12 +18,17 @@
 ---                     setup.exe (which SmartScreen stops on a managed workstation); without a name, every cloned
 ---                     app. Output goes to the quickfix list.
 ---  - `uninstall [name]` scripts/uninstall.ps1 of the app; without a name, every cloned app.
+---
+--- On the workstation (`require("machine").is("workstation")`, from NVIM_MACHINE_ROLE) `build`, `install`
+--- and `deps` refuse with a message: an own unsigned program is what the EDR (Falcon) reports there.
+--- `list`, `clone`, `pull` and `uninstall` stay allowed (`native_repos/workstation.lua`).
 
 local notify = require("lib.nvim.notify").create("[usrcmds.native_repos]")
 local composer = require("lib.nvim.bindings.usercmd.composer")
 local ops = require("bindings.usrcmds.plugin_repos.ops")
 local natives = require("plugins.personal.core.natives")
 local toolchain = require("bindings.usrcmds.native_repos.toolchain")
+local workstation = require("bindings.usrcmds.native_repos.workstation")
 
 local M = {}
 
@@ -248,6 +253,11 @@ local labels = { build = "Build", install = "Install", uninstall = "Uninstall" }
 ---@param kind "build"|"install"|"uninstall"
 ---@param only? string
 local function run(kind, only)
+  -- build and install make a native program run on this machine; on the workstation that is
+  -- what the EDR reports, so only the uninstall goes on there
+  if kind ~= "uninstall" and workstation.refused(":MyNative " .. kind) then
+    return
+  end
   local base = base_dir()
   if not base then
     return
@@ -426,6 +436,10 @@ end
 ---Checks the tools of the cloned apps (or of the named one) and installs the missing ones it can.
 ---@param only? string
 function M.deps(only)
+  -- installs programs (rustup, tauri-cli, MSYS2 packages): not on the workstation
+  if workstation.refused(":MyNative deps") then
+    return
+  end
   local base = base_dir()
   if not base then
     return
@@ -503,22 +517,22 @@ function M.routes()
     ),
     route(
       "build",
-      "Build the native apps whose build is stale or missing (output to the quickfix list); with a name, that app. Never installs or starts anything",
+      "Build the native apps whose build is stale or missing (output to the quickfix list); with a name, that app. Never installs or starts anything. Blocked on the workstation (EDR)",
       M.build
     ),
     route(
       "install",
-      "Install the missing tools, then build and install every cloned native app for the current user, without a downloaded setup.exe (output to the quickfix list); with a name, that app",
+      "Install the missing tools, then build and install every cloned native app for the current user, without a downloaded setup.exe (output to the quickfix list); with a name, that app. Blocked on the workstation (EDR)",
       M.install
     ),
     route(
       "uninstall",
-      "Remove the installation of every cloned native app for the current user (scripts/uninstall.ps1); with a name, that app",
+      "Remove the installation of every cloned native app for the current user (scripts/uninstall.ps1); with a name, that app. Allowed on the workstation too",
       M.uninstall
     ),
     route(
       "deps",
-      "Check the tools the cloned native apps build with and install the missing ones that need no administrator (rustup, tauri-cli, MSYS2 packages)",
+      "Check the tools the cloned native apps build with and install the missing ones that need no administrator (rustup, tauri-cli, MSYS2 packages). Blocked on the workstation (EDR)",
       M.deps
     ),
   }

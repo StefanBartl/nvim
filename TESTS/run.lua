@@ -60,6 +60,7 @@ local specs = {
   "plugin_repos/runner_spec.lua",
   "plugin_repos/list_vaults_spec.lua",
   "native_repos/native_repos_spec.lua",
+  "native_repos/workstation_spec.lua",
   "dialogs_spec.lua",
   "noice/routes_spec.lua",
   "plugins_nui_spec.lua",

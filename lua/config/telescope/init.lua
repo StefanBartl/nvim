@@ -44,9 +44,13 @@ function M.extensions()
   return {}
 end
 
--- Returns list of extensions to load
+-- Returns list of extensions to load. fzf-native is not built on the
+-- workstation (plugins/telescope.lua), so its extension is not loaded there.
 ---@return string[] extensions
 function M.extensions_list()
+  if require("bindings.usrcmds.native_repos.workstation").active() then
+    return {}
+  end
   return { "fzf" }
 end
 

@@ -14,6 +14,13 @@ Sister of `:MyPlugins` for the native apps next to the plugin checkouts. The lis
 :MyNative uninstall [name]   " remove the installation of every cloned app (asks first; scripts/uninstall.ps1)
 ```
 
+- **Blocked on the workstation.** With `NVIM_MACHINE_ROLE=workstation` (read by `lua/machine.lua`,
+  `require("machine").is("workstation")`) `build`, `install` and `deps` stop at once with an error message: an own
+  unsigned program is exactly what CrowdStrike Falcon reports there. `list`, `clone`, `pull` and `uninstall` stay
+  allowed. The same block covers `B` of `:MyPlugins machine` (`b`, copying the command, still works) and the
+  lazy.nvim `build` hooks that compile native code: telescope-fzf-native gets no build there (telescope then
+  skips the `fzf` extension and keeps its Lua sorter) and mdview.nvim builds without `build:go` (no Go server).
+  Code: [`workstation.lua`](workstation.lua) (`refused()`, `lazy_build()`).
 - A build is **stale** when the newest commit touching its sources is newer than the artifact (same rule as
   `scripts/sync-machine.ps1`, which keeps its own copy of the table: keep both in step).
 - Every desktop app has the same three scripts: `scripts/build-install.ps1 -BuildOnly` is the build,
@@ -36,4 +43,5 @@ Sister of `:MyPlugins` for the native apps next to the plugin checkouts. The lis
 - Tools, paths and install folders: `docs/NOTES/builds/toolchain.md`; what to keep in step when a repo changes or an
   app is added: `docs/NOTES/builds/maintenance.md`.
 
-Code: `init.lua`, `toolchain.lua`; spec: `TESTS/native_repos/native_repos_spec.lua`.
+Code: `init.lua`, `toolchain.lua`, `workstation.lua`; specs: `TESTS/native_repos/native_repos_spec.lua`,
+`TESTS/native_repos/workstation_spec.lua` (the workstation block, simulated).
