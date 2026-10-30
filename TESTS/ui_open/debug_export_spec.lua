@@ -2,7 +2,8 @@
 -- reachable for diagnosis, but not as a function-valued module field: runtime-analysis'
 -- telemetry wraps every top-level function field of `config.*` modules, so such a field
 -- read back as a telemetry wrapper and looked like a second setup(). The original sits
--- in the `_debug` table (not wrapped), and it is core's own function from vim/ui.lua.
+-- in the `_debug` table (not wrapped), and it is core's own function from vim/ui.lua --
+-- also after a second setup() (config reload), which must not stack another wrapper.
 
 return function(H)
   local eq, ok = H.eq, H.ok
@@ -19,12 +20,19 @@ return function(H)
     M.setup()
 
     ok(vim.ui.open ~= core_open, "setup() installs the wrapper")
+    local wrapper = vim.ui.open
 
+    -- The telemetry wraps every string-keyed function field, whatever its name, so
+    -- the name check alone would let `M.orig_open = orig_open` through.
     for name, value in pairs(M) do
       if type(value) == "function" then
         ok(
           name:sub(1, 1) ~= "_",
           ("no underscore-prefixed function field is exported (found %s)"):format(name)
+        )
+        ok(
+          value ~= core_open,
+          ("core's vim.ui.open is not exported as a function field (found it in %s)"):format(name)
         )
       end
     end
@@ -37,6 +45,11 @@ return function(H)
       src:match("vim[/\\]ui%.lua$") ~= nil,
       ("_debug.orig_open is defined in vim/ui.lua (got %s)"):format(src)
     )
+
+    -- A config reload calls setup() again on the cached module.
+    M.setup()
+    ok(vim.ui.open == wrapper, "a second setup() keeps the installed wrapper (no double wrap)")
+    ok(M._debug.orig_open == core_open, "after a second setup() _debug.orig_open is still core's")
   end)
 
   vim.ui.open = core_open

@@ -30,6 +30,11 @@ local env = require("lib.nvim.system.env")
 ---@field _debug? config.ui_open.Debug # set by setup() on Windows; inspection only
 local M = {}
 
+---The wrapper setup() put into `vim.ui.open`, so a second call can tell that
+---it is still in place.
+---@type function?
+local installed
+
 ---Whether `target` is a URL/URI rather than a filesystem path. Requires a
 ---scheme of at least two characters so a Windows drive letter ("C:\...")
 ---is never mistaken for one.
@@ -42,6 +47,14 @@ end
 ---@return nil
 function M.setup()
   if not env.get().is_windows then
+    return
+  end
+  -- Idempotent: a config reload runs setup() again (startup/init.lua allows
+  -- re-registering phases). Wrapping again would stack a second wrapper on
+  -- our own and leave `_debug.orig_open` pointing at the first one (this
+  -- file) instead of core's function -- the very misreading `_debug` exists
+  -- to prevent.
+  if installed ~= nil and vim.ui.open == installed then
     return
   end
 
@@ -60,6 +73,7 @@ function M.setup()
     end
     return orig_open(target, opt)
   end
+  installed = vim.ui.open
   -- Debug handle only, deliberately inside a table: runtime-analysis'
   -- telemetry wraps every function-valued field of a `config.*` module (only
   -- top-level fields, no recursion into tables). A top-level `M._orig_open`

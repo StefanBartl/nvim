@@ -20,6 +20,14 @@ views/notify), assembled here rather than inline in the plugin spec.
   `Router.add` only reads `filter`/`opts`/`view`, so the key is inert; it only
   documents the intent, and the spec rejects a cmdline route without it.
 
+A route without `view` is a skip route: `Router.add` sets `opts.skip` when the
+view is missing, also for an opts-only route like `{ skip_empty = true }`.
+
+The event rule also covers the routes of every enabled entry in `M.presets`:
+noice appends them right behind `M.routes` and in front of its own
+`event = "cmdline"` route. The spec reads them from noice's own preset table
+when lazy.nvim has noice installed.
+
 ```lua
 {
   filter = { event = "cmdline", find = "^:lua " },
