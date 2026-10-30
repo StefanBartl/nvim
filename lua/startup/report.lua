@@ -52,6 +52,84 @@ local SLOW_SHARE = 0.25
 ---@field text string
 ---@field hl string|nil
 
+--- How many stalls the event-loop section lists by name (longest first).
+local STALLS_LISTED = 5
+
+--- The event-loop section: stalls and busy time per second from
+--- `startup.heartbeat`. Pure: takes the stats and the recording state, so the
+--- rendering is testable from synthetic samples.
+---@param stats Startup.Heartbeat.Stats
+---@param state Startup.Heartbeat.State
+---@return Startup.Report.Line[]
+function M.heartbeat_lines(stats, state)
+  local hb = require("startup.heartbeat")
+  ---@type Startup.Report.Line[]
+  local out = {}
+  local function add(text, hl)
+    out[#out + 1] = { text = text, hl = hl }
+  end
+
+  if not state.started then
+    add(
+      "  Event loop: not recorded (vim.g.startup_heartbeat = false, or start() not called).",
+      "StartupMuted"
+    )
+    add("  Stalls with their owners: scripts/startup-probe (PROBE=stall,where)", "StartupMuted")
+    return out
+  end
+  if not stats.first then
+    add("  Event loop: no heartbeat yet — the loop has not run since start().", "StartupMuted")
+    return out
+  end
+
+  add(
+    ("  Event loop, %.0f s from the first heartbeat at %.0f ms%s"):format(
+      state.window / 1000,
+      stats.first,
+      state.running and "  (still recording)" or ""
+    ),
+    "StartupHeader"
+  )
+
+  local n = #stats.stalls
+  add(
+    ("  %-20s %d, %.0f ms blocked, longest %.0f ms"):format(
+      ("stalls > %d ms"):format(hb.STALL),
+      n,
+      stats.stall_sum,
+      stats.stall_max
+    ),
+    n > 0 and "StartupSlow" or "StartupLabel"
+  )
+  local sorted = vim.list_slice(stats.stalls)
+  table.sort(sorted, function(a, b)
+    return a.gap > b.gap
+  end)
+  for i = 1, math.min(#sorted, STALLS_LISTED) do
+    add(("  %20s %6.0f ms  at %7.0f ms"):format("", sorted[i].gap, sorted[i].at), "StartupSlow")
+  end
+  if n > STALLS_LISTED then
+    add(("  %20s … %d more"):format("", n - STALLS_LISTED), "StartupMuted")
+  end
+
+  local secs = vim.tbl_map(function(ms)
+    return ("%.0f"):format(ms)
+  end, stats.busy)
+  add(
+    ("  %-20s %s ms  (total %.0f ms)"):format(
+      "busy per second",
+      table.concat(secs, " · "),
+      stats.busy_total
+    ),
+    "StartupLabel"
+  )
+  add(
+    "  In-process view of this session. Owners of a stall: scripts/startup-probe (PROBE=stall,where).",
+    "StartupMuted"
+  )
+  return out
+end
+
 --- Build the report as annotated lines.
 ---@return Startup.Report.Line[]
 function M.lines()
@@ -137,6 +215,10 @@ function M.lines()
 
   add("")
   add("  Phase bodies are only part of startup — the bulk is lazy.setup().", "StartupMuted")
+
+  add("")
+  local stats, hb_state = require("startup.heartbeat").snapshot()
+  vim.list_extend(out, M.heartbeat_lines(stats, hb_state))
 
   return out
 end

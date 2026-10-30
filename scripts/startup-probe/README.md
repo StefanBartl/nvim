@@ -16,6 +16,28 @@ Startup-Policy nennt den `require`-Wrapper schon). Deshalb liegt es jetzt hier.
 | `tui.lua` | startet den gemessenen Neovim **mit UI** (Pseudo-Terminal) |
 | `bench.lua` | mehrere Starts, Median / Min / Max der Vergleichszahlen |
 
+### Probe oder `:StartupReport`?
+
+`:StartupReport` zeigt für die **laufende Sitzung** ohne Zusatzaufwand die
+Phasen und einen Abschnitt „Event loop“: Stöße > 60 ms und Belegung pro
+Sekunde in den ersten 6 s, gemessen von `lua/startup/heartbeat.lua` mit
+derselben Methode wie die Sonde `stall` (10-ms-Herzschlag). Das reicht für
+„war dieser Start zäh und wann“.
+
+Dieses Werkzeug ist für **Ursachen und Vergleiche**: wem ein Stoß gehört
+(`where`), was `require`, `exepath`, Prozesse oder lazy.nvim kosten, und
+Mediane über mehrere Starts für A/B (`bench.lua`). Es misst einen eigens
+gestarteten Neovim, nicht die Sitzung, in der man gerade sitzt.
+
+Den Herzschlag für einen A/B-Lauf abschalten:
+`bench.lua 5 tui --cmd "lua vim.g.startup_heartbeat = false"`. Sein Aufwand
+(2026-10-30, `STEVESPC`, headless, Zeit *in* den Rückrufen per `vim.uv.hrtime`
+um jeden Schlag gemessen): rund 360 Rückrufe im 6-s-Fenster (Windows-Timer
+schlagen grob alle 16 ms statt 10 ms), zusammen 0,7 bis 1,9 ms Hauptthread über
+drei Läufe, also weit unter dem Rauschen eines Starts (siehe „Wie man die
+Zahlen liest“). Ein A/B mit `bench.lua 5 tui` war am selben Tag wegen Rauschen
+nicht aussagekräftig.
+
 ---
 
 ## Erst lesen: headless misst einen anderen Start

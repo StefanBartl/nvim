@@ -70,6 +70,7 @@ local specs = {
   "bindings_explorer/checklist_drift_spec.lua",
   "bindings/insert_moves_spec.lua",
   "profile/profile_spec.lua",
+  "startup/heartbeat_spec.lua",
   "repo_backup/repo_backup_spec.lua",
   "cdx/usrcmds_help_spec.lua",
   "cdx/prompt_templates_spec.lua",
