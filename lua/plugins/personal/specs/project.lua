@@ -1104,6 +1104,14 @@ return {
       -- Folders that are areas although they hold neither ROADMAP/ nor Backlog/.
       -- Default: {}.
       extra_areas = { "ALL", "nvim-config", "docmap-desktop", "migrate.nvim" },
+      -- Area groups: a filter name for several areas (`:Tasks list nvim`, `next native`, the dashboard).
+      -- Shared definition (CLI, Neovim, tasks-desktop): <vault>/area-groups.json, today `nvim` (*.nvim,
+      -- nvim-nexus, refinder) and `native` (*-desktop, takt, appkit). Groups set here add to it or replace
+      -- one by name, inside Neovim only. `include`/`exclude`: area names or `*`/`?` globs.
+      -- Default: {}.
+      -- area_groups = {
+      --   lua = { include = { "*.nvim", "nvim-config" }, exclude = { "migrate.nvim" } },
+      -- },
       -- Dashboard behind `:Tasks list`.
       -- dashboard = {
       --   -- Refresh the list when a task or Backlog file changes (file watchers).
