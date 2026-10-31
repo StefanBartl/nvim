@@ -2,7 +2,7 @@
 
 Sister of `:MyPlugins` for the native apps next to the plugin checkouts. The list is
 [`plugins.personal.core.natives`](../../../plugins/personal/core/natives.lua): `tasks-desktop`, `rules-desktop`,
-`ai-desktop`, `takt`, `docmap-desktop`, `appkit`. They are no lazy specs (built, not loaded), so `:MyPlugins` never sees them.
+`ai-desktop`, `takt`, `streamtap`, `docmap-desktop`, `appkit`. They are no lazy specs (built, not loaded), so `:MyPlugins` never sees them.
 
 ```vim
 :MyNative list               " per app: git state, build current / stale / missing
@@ -30,7 +30,8 @@ Sister of `:MyPlugins` for the native apps next to the plugin checkouts. The lis
 - Every desktop app has the same three scripts: `scripts/build-install.ps1 -BuildOnly` is the build,
   `scripts/build-install.ps1` builds and installs, `scripts/uninstall.ps1` removes. ai-desktop's `build-install.ps1`
   hands over to `scripts/setup.ps1`, which configures `build/` when it is not there (a bare `cmake --build build`
-  cannot). `takt` (a skeleton) and `appkit` (a library) have no command and only print their hint.
+  cannot). `takt` (a skeleton) and `appkit` (a library) have no command and only print their hint. `streamtap`
+  (spike stage) builds its sink CLI with cargo and has no install or uninstall command yet.
 - `deps`: the tools are in [`toolchain.lua`](toolchain.lua), each app names its own (`needs`). Installed for the
   current user: rustup (winget), the Tauri CLI (cargo), the MinGW-w64 packages of MSYS2 (pacman). Only named, since
   they need an administrator: Node.js, CMake, the MSVC build tools, MSYS2 itself.

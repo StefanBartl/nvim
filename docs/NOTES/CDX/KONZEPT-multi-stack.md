@@ -9,6 +9,7 @@ Status: umgesetzt (2026-09-25). Abweichungen: `setup-devtools` und `new-project-
 | `*.nvim`-Plugins| Lua (Neovim)             |
 | docmap-desktop  | Tauri (Rust) + Web (TS)   |
 | takt            | C++ / Rust (in Planung)   |
+| streamtap       | Rust + MV3-Extension (JS) |
 | wkd             | C++                       |
 
 ## Kernentscheidung: drei getrennte Schichten

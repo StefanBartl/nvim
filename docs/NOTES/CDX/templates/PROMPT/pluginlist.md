@@ -53,6 +53,7 @@ tasks-desktop
 rules-desktop
 ai-desktop
 takt
+streamtap (privates repo)
 
 ---
 

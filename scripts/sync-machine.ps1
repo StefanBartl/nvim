@@ -40,7 +40,8 @@ if (-not $ReposDir -or -not (Test-Path $ReposDir)) {
 $extra = @(
     'tasks-vault', 'rules-vault', 'WKDBooks', 'WKDBook-Tricentis', 'Configs',
     'my-zsh', 'wkd', 'FightingGame', 'Kurse',
-    'tasks-desktop', 'rules-desktop', 'docmap-desktop', 'ai-desktop', 'appkit'
+    'tasks-desktop', 'rules-desktop', 'docmap-desktop', 'ai-desktop', 'appkit',
+    'streamtap'
 )
 
 # Native build artifacts: where the artifact lives, which paths feed it, and
@@ -83,6 +84,12 @@ $natives = @{
         Sources  = @('src', 'src-tauri', 'engine.lock')
         Hint     = 'scripts\build-install.ps1 -BuildOnly   (build and install: without -BuildOnly; tools: :MyNative deps)'
         Command  = 'powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build-install.ps1 -BuildOnly'
+    }
+    'streamtap' = @{
+        Artifact = 'desktop\target\release\streamtap-sink.exe'
+        Sources  = @('desktop\crates', 'desktop\Cargo.toml', 'desktop\Cargo.lock')
+        Hint     = 'cargo build --release --locked --manifest-path desktop\Cargo.toml   (spike: no install; extension is loaded unpacked)'
+        Command  = 'cargo build --release --locked --manifest-path desktop\Cargo.toml'
     }
 }
 

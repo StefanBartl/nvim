@@ -158,6 +158,10 @@ local function spec(H)
 
   eq(natives.get("nope"), nil, "unknown name")
   eq(vim.tbl_contains(natives.names(), "takt"), true, "takt is listed")
+  -- streamtap (spike): a cargo build of the sink, no install yet
+  local streamtap = natives.get("streamtap")
+  ok(streamtap and streamtap.build and streamtap.build[1] == "cargo", "streamtap builds with cargo")
+  eq(streamtap and streamtap.install, nil, "streamtap has no install command yet")
 
   -- what a build run covers: only apps with a plain build command are built, the others are named
   local with_build = { repo = "o/a", name = "a", build = { "x" }, hint = "ha" }

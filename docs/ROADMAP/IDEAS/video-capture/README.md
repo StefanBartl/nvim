@@ -5,9 +5,10 @@ Download, Mitschnitt „was ich sehe“, oder bit-genauer Hintergrund-Mitschnitt
 Hook auf `SourceBuffer.appendBuffer()` (Media Source Extensions). Gilt für alles ohne DRM;
 DRM-Inhalte werden erkannt und nicht angefasst.
 
-Angelegt: 2026-10-30 · Status: Spike 1 umgesetzt (Hook loggt Segmente, live auf
-ARD-Mediathek bestätigt) · Repo: `github.com/WKDSteve/streamtap` (privat),
-lokal `$REPOS_DIR/streamtap`
+Angelegt: 2026-10-30 · Status: Spike 1 und 2 umgesetzt. Am 2026-10-31 im echten Chrome
+auf der ARD-Mediathek bestätigt: Hook, Sink und Mux ergeben eine abspielbare MP4.
+Repo: `github.com/WKDSteve/streamtap` (privat), lokal `$REPOS_DIR/streamtap`.
+Plan, Tasks und Gate-Stand: `$REPOS_DIR/tasks-vault/streamtap/`.
 
 ## Dateien
 

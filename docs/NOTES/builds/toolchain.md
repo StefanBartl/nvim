@@ -44,6 +44,8 @@ Fallen:
 | docmap-desktop | rust, msvc, tauri-cli | Engine aus `standalone-latest` von docmap.nvim nach `src-tauri\binaries` und `src-tauri\resources\grammars`, dann `cargo tauri build --bundles nsis` | `src-tauri\target\release\docmap-desktop.exe` und `src-tauri\target\release\bundle\nsis\docmap-desktop_<version>_x64-setup.exe` | NSIS-Setup still (`/S`) für den Benutzer, `%LOCALAPPDATA%\docmap-desktop` (Standard von Tauri für `installMode: currentUser`) | `scripts\uninstall.ps1` (Deinstaller still) |
 | ai-desktop | cmake, mingw64 | `scripts\setup.ps1 -SkipInstall`: `third_party\` holen (SHA-256 geprüft), CMake „MinGW Makefiles“ nach `build\` | `build\ai-desktop.exe` | `%LOCALAPPDATA%\ai-desktop\app` und Starter `%LOCALAPPDATA%\ai-desktop\ai-desktop.cmd`, der Ordner kommt auf den Benutzer-PATH; das Setup des Release installiert dagegen nach `%LOCALAPPDATA%\Programs\ai-desktop` | `scripts\uninstall.ps1` (entfernt beide) |
 
+| streamtap | rust, msvc | `cargo build --release --locked --manifest-path desktop\Cargo.toml` (Spike: nur der Sink) | `desktop\target\release\streamtap-sink.exe` | noch nicht installiert (Spike); die Browser-Erweiterung wird entpackt aus `extension\` geladen | – |
+
 takt (noch ein Gerüst) und appkit (Bibliothek der Apps) werden nicht gebaut. appkit kommt über die Pins in
 `Cargo.toml` und `ui/package.json` der Apps von GitHub.
 

@@ -72,6 +72,16 @@ M.list = {
     name = "takt",
     hint = "nothing to build yet (the repo is still a skeleton)",
   },
+  -- spike stage: only the sink CLI is built; no installer yet, the extension is loaded unpacked from extension/
+  {
+    repo = "WKDSteve/streamtap",
+    name = "streamtap",
+    artifact = "desktop/target/release/streamtap-sink.exe",
+    sources = { "desktop/crates", "desktop/Cargo.toml", "desktop/Cargo.lock" },
+    needs = { "rust", "msvc" },
+    build = { "cargo", "build", "--release", "--locked", "--manifest-path", "desktop/Cargo.toml" },
+    hint = "cargo build --release --locked --manifest-path desktop/Cargo.toml (no install yet; extension: load unpacked)",
+  },
   desktop({
     repo = "WKDSteve/docmap-desktop",
     name = "docmap-desktop",
