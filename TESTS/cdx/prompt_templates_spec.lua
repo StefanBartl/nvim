@@ -112,6 +112,45 @@ return function(H)
   vim.cmd("Cdx prompt review")
   eq(copied, "review prompt", "the old short name still works")
 
+  -- --open: the text becomes a buffer and the clipboard stays untouched
+  local function opened()
+    local buf = vim.api.nvim_get_current_buf()
+    return table.concat(vim.api.nvim_buf_get_lines(buf, 0, -1, false), "\n"), buf
+  end
+  copied = nil
+  vim.cmd("Cdx prompt full --open")
+  local text1, buf1 = opened()
+  eq(text1, "full prompt", "--open shows the text in the current window")
+  eq(copied, nil, "--open leaves the clipboard alone")
+  eq(vim.bo[buf1].filetype, "markdown")
+  has(vim.api.nvim_buf_get_name(buf1), "cdx-prompt://")
+  vim.cmd("Cdx prompt full --open")
+  local text2, buf2 = opened()
+  ok(buf2 ~= buf1, "a second --open is a buffer of its own")
+  eq(text2, "full prompt")
+  has(vim.api.nvim_buf_get_name(buf2), "cdx-prompt://")
+  vim.cmd("Cdx prompt ultra_sha abc1234 def5678 --open")
+  eq((opened()), "check abc1234, def5678 please", "--open also takes the SHAs")
+  eq(copied, nil, "still no clipboard")
+  vim.cmd("Cdx prompt full")
+  eq(copied, "full prompt", "without --open it copies again")
+
+  -- a window that refuses the buffer: an error message, no orphan buffer, no throw
+  local keep = vim.api.nvim_get_current_buf()
+  local count = #vim.api.nvim_list_bufs()
+  vim.wo.winfixbuf = true
+  notes = {}
+  local thrown = pcall(vim.cmd, "Cdx prompt full --open")
+  vim.wo.winfixbuf = false
+  ok(thrown, "a refused buffer does not throw")
+  eq(vim.api.nvim_get_current_buf(), keep, "the window keeps its buffer")
+  eq(#vim.api.nvim_list_bufs(), count, "and no orphan buffer is left")
+  has(notes[#notes].msg, "Could not open")
+
+  for _, b in ipairs({ buf1, buf2, keep }) do
+    pcall(vim.api.nvim_buf_delete, b, { force = true })
+  end
+
   vim.notify = notify_was
   vim.fn.stdpath = stdpath
   package.loaded["lib.nvim.cross.copy_to_clipboard"] = copy_was

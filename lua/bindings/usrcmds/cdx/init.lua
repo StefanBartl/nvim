@@ -5,7 +5,9 @@
 --- are pasted into Claude Code by hand all day, so this saves the detour
 --- through a file manager:
 ---
----   :Cdx prompt <name> [sha ...]
+---   :Cdx prompt <name> [sha ...] [--open]
+---
+--- With `--open` the text is not copied but shown in a new scratch buffer.
 ---
 --- `<name>` is every `*.md` file of that folder, without the extension
 --- (`Base`, `full`, `review_w_ultracode`, `ultra_sha`, a new file the moment it
@@ -160,10 +162,36 @@ function M.parse_shas(tokens)
   return shas, nil
 end
 
+---Show the text in a new scratch buffer in the current window. The buffer number is part of the
+---name, so opening the same template twice never collides on the name.
 ---@param text string
 ---@param label string  shown in the confirmation
 ---@return boolean
-local function copy(text, label)
+local function open_buffer(text, label)
+  local buf = vim.api.nvim_create_buf(true, true)
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, vim.split(text, "\n", { plain = true }))
+  vim.bo[buf].filetype = "markdown"
+  vim.bo[buf].bufhidden = "hide"
+  vim.api.nvim_buf_set_name(buf, ("cdx-prompt://%d/%s"):format(buf, label))
+  -- Fails in a 'winfixbuf' window (E1513) or with 'nohidden' over a modified buffer (E37): no orphan buffer then.
+  local shown, serr = pcall(vim.api.nvim_win_set_buf, 0, buf)
+  if not shown then
+    pcall(vim.api.nvim_buf_delete, buf, { force = true })
+    notify.error(("Could not open %s: %s"):format(label, tostring(serr)))
+    return false
+  end
+  notify.info(("Opened %s (%d chars)"):format(label, vim.fn.strchars(text)))
+  return true
+end
+
+---@param text string
+---@param label string  shown in the confirmation
+---@param open? boolean  open as a buffer instead of copying to the clipboard
+---@return boolean
+local function copy(text, label, open)
+  if open then
+    return open_buffer(text, label)
+  end
   if not copy_to_clipboard(text) then
     notify.error("Could not write to the clipboard")
     return false
@@ -175,8 +203,9 @@ end
 ---Copy a template; `tokens` (SHAs) replace `{SHA}` when it has the placeholder and there are any.
 ---@param typed string  the name as typed
 ---@param tokens string[]
+---@param open? boolean  open the text as a buffer instead of copying it
 ---@return boolean
-function M.copy_prompt(typed, tokens)
+function M.copy_prompt(typed, tokens, open)
   local file, rerr = M.resolve(typed)
   if not file then
     notify.error(rerr or "unknown prompt template")
@@ -189,13 +218,13 @@ function M.copy_prompt(typed, tokens)
   end
   local has_placeholder = text:find(SHA_PLACEHOLDER, 1, true) ~= nil
   if #tokens == 0 then
-    return copy(text, file)
+    return copy(text, file, open)
   end
   if not has_placeholder then
     notify.warn(
       ("%s has no %s placeholder; the arguments are ignored"):format(file, SHA_PLACEHOLDER)
     )
-    return copy(text, file)
+    return copy(text, file, open)
   end
   local shas, perr = M.parse_shas(tokens)
   if not shas then
@@ -207,7 +236,7 @@ function M.copy_prompt(typed, tokens)
   local filled = text:gsub(vim.pesc(SHA_PLACEHOLDER), function()
     return table.concat(shas, SHA_JOIN)
   end)
-  return copy(filled, ("%s (%d SHA)"):format(file, #shas))
+  return copy(filled, ("%s (%d SHA)"):format(file, #shas), open)
 end
 
 ---@return nil
@@ -251,13 +280,20 @@ function M.enable()
           },
         },
         desc = "Copy a prompt template (any .md of PROMPT/) to the clipboard; SHAs (space- or comma-separated) replace {SHA}, none keeps it",
+        flags = {
+          {
+            name = "open",
+            bool = true,
+            desc = "Open the text as a buffer instead of copying it to the clipboard",
+          },
+        },
         run = function(ctx)
           local tokens = {}
           if ctx.args.sha then
             tokens[#tokens + 1] = ctx.args.sha
           end
           vim.list_extend(tokens, ctx.rest)
-          M.copy_prompt(ctx.args.name, tokens)
+          M.copy_prompt(ctx.args.name, tokens, ctx.flags.open)
         end,
       },
     },
