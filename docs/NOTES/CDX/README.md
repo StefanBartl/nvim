@@ -16,7 +16,7 @@ Ordner muesste man Regeln/Settings auf jedem Rechner von Hand nachpflegen.
 |------------------------------|------------------------------------------------------------------------|
 | `CLAUDE.global.md`           | Quelle der Wahrheit fuer `~/.claude/CLAUDE.md` (Verhaltensregeln, Konventionen) |
 | `settings.global.json`       | Quelle der Wahrheit fuer `~/.claude/settings.json` (Permissions-Allowlist + Hooks) |
-| `check-hook.js`              | Vom PostToolUse-Hook aufgerufener Dispatcher: prueft je nach Endung `.lua` (stylua+luacheck), `.rs` (rustfmt), C/C++ (clang-format, nur mit `.clang-format`), `.ts/.js/.css/.json` (projektlokales prettier) |
+| `check-hook.js`              | Vom PostToolUse-Hook aufgerufener Dispatcher: prueft je nach Endung `.lua` (stylua+luacheck), `.rs` (rustfmt mit der Edition aus der naechsten `Cargo.toml`, auch `edition.workspace`), C/C++ (clang-format, nur mit `.clang-format`), `.ts/.js/.css/.json` (projektlokales prettier) |
 | `check-stop.js`              | Stop-Hook: bei geaenderten Dateien `cargo clippy -D warnings` (Rust) bzw. `tsc --noEmit` (TS) |
 | `WORKFLOW.md`                | Anleitung: neuer Chat, neues Repo, neue Maschine |
 | `setup-devtools.js` + `tools.json` | Installiert fehlende Toolchains pro Profil (`nvim`, `cpp`, `rust`, `web`, `tauri`, oder `all` für alle) via winget/apt/brew. `node setup-devtools.js --profile nvim,rust --dry-run`; `node setup-devtools.js --status` zeigt je Profil, was schon installiert ist, und installiert nichts |

@@ -57,6 +57,26 @@ function projectRoot(file) {
   return git ? path.dirname(git) : dir;
 }
 
+/**
+ * Rust edition for `file`: the first `edition = "YYYY"` found walking up the
+ * Cargo.toml files from the file's directory to `root`. A member's
+ * `edition.workspace = true` does not match, so the walk continues to the
+ * workspace's `[workspace.package]` edition. Falls back to 2021 (rustfmt's
+ * own default differs per version, and the edition changes import sorting).
+ */
+function rustEdition(file, root) {
+  let dir = path.dirname(file);
+  for (;;) {
+    const manifest = findUp(dir, 'Cargo.toml', root);
+    if (!manifest) return '2021';
+    const m = fs.readFileSync(manifest, 'utf8').match(/^\s*edition\s*=\s*["'](\d{4})["']/m);
+    if (m) return m[1];
+    const parent = path.dirname(path.dirname(manifest));
+    if (path.dirname(manifest) === root || parent === path.dirname(manifest)) return '2021';
+    dir = parent;
+  }
+}
+
 /** Returns a list of [bin, args] checks for `file` under `root`, or [] when none apply. */
 function checksFor(file, root) {
   const dir = path.dirname(file);
@@ -69,7 +89,7 @@ function checksFor(file, root) {
         ['luacheck', [file]],
       ];
     case '.rs':
-      return [['rustfmt', ['--check', '--edition', '2021', file]]];
+      return [['rustfmt', ['--check', '--edition', rustEdition(file, root), file]]];
     case '.c':
     case '.cc':
     case '.cpp':
