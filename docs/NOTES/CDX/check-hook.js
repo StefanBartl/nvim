@@ -69,17 +69,24 @@ const FALLBACK_EDITION = '2021';
  * Only keys in those two tables count; multi-line strings are skipped.
  *
  * This is a heuristic, not a TOML parser. It is built so that a misread
- * manifest ends in FALLBACK_EDITION, never in a confident wrong answer:
- * `mentionsEdition` records whether the raw text names an edition at all,
- * and only a manifest that does not may yield cargo's default 2015.
+ * manifest ends in FALLBACK_EDITION rather than a confident wrong answer:
+ * - `mentionsEdition`: the raw text names an edition at all; only a manifest
+ *   that does not may yield cargo's default 2015.
+ * - `ambiguous`: the text has multi-line strings (where the line scan can
+ *   lose track) and the raw text holds more than one distinct edition value.
+ * - `hasWorkspace`: the manifest is a workspace root, where cargo stops
+ *   looking for inherited keys.
  */
 function parseManifest(text) {
+  const rawEditions = new Set([...text.matchAll(/^\s*edition\s*=\s*["'](\d{4})/gm)].map((m) => m[1]));
   const out = {
     hasPackage: false,
+    hasWorkspace: false,
     pkgEdition: null,
     inherits: false,
     wsEdition: null,
     mentionsEdition: /^\s*\[?\s*["']?(package\.)?edition\b/m.test(text),
+    ambiguous: /"""|'''/.test(text) && rawEditions.size > 1,
   };
   let table = '';
   let closer = null; // delimiter of the open multi-line string, if any
@@ -90,7 +97,8 @@ function parseManifest(text) {
     }
     // A line opening a multi-line string: """ or ''' where a value starts
     // (after `=`, `[`, `,` or at the line start), not closed on the same
-    // line. Delimiters inside a one-line string or a comment do not count.
+    // line. A delimiter inside a one-line string or comment can still be
+    // taken for one; `ambiguous` makes that case fail safe.
     const open = line.match(/(^|[=[,])\s*("""|''')/);
     if (open) {
       const rest = line.slice(open.index + open[0].length);
@@ -102,8 +110,10 @@ function parseManifest(text) {
     if (header) {
       table = header[1];
       if (table === 'package') out.hasPackage = true;
+      if (table === 'workspace' || table.startsWith('workspace.')) out.hasWorkspace = true;
       continue;
     }
+    if (table === '' && /^\s*workspace\s*[.=]/.test(line)) out.hasWorkspace = true;
     const value = line.match(/^\s*edition\s*=\s*["'](\d{4})["']/);
     if (table === 'package') {
       if (value) out.pkgEdition = value[1];
@@ -130,8 +140,8 @@ function known(edition) {
   return EDITIONS.has(edition) ? edition : FALLBACK_EDITION;
 }
 
-// Without a .git there is no repo root to stop at; a crate's own manifest is
-// at most this many levels above a source file (src/bin/x.rs -> 3).
+// Without a .git there is no repo root to stop at; the search checks the
+// file's directory plus this many parents, enough for src/bin/x/main.rs.
 const NO_GIT_LEVELS = 3;
 
 /** Nearest Cargo.toml at most `levels` directories above `start` (inclusive). */
@@ -166,11 +176,13 @@ function rustEdition(file, root) {
     : findManifestNear(start, NO_GIT_LEVELS);
   if (!manifest) return FALLBACK_EDITION;
   const own = readManifest(manifest);
-  if (!own || !own.hasPackage) return FALLBACK_EDITION;
+  if (!own || !own.hasPackage || own.ambiguous) return FALLBACK_EDITION;
   if (own.pkgEdition) return known(own.pkgEdition);
   if (!own.inherits) return own.mentionsEdition ? FALLBACK_EDITION : '2015';
-  if (own.wsEdition) return known(own.wsEdition);
+  if (own.hasWorkspace) return own.wsEdition ? known(own.wsEdition) : FALLBACK_EDITION;
 
+  // Like cargo: the nearest ancestor that is a workspace root decides, even
+  // if this heuristic cannot read its edition (then the fallback applies).
   let dir = path.dirname(manifest);
   for (;;) {
     const parent = path.dirname(dir);
@@ -178,7 +190,10 @@ function rustEdition(file, root) {
     const ws = findUp(parent, 'Cargo.toml');
     if (!ws) break;
     const parsed = readManifest(ws);
-    if (parsed && parsed.wsEdition) return known(parsed.wsEdition);
+    if (!parsed) return FALLBACK_EDITION;
+    if (parsed.hasWorkspace) {
+      return parsed.wsEdition && !parsed.ambiguous ? known(parsed.wsEdition) : FALLBACK_EDITION;
+    }
     dir = path.dirname(ws);
   }
   return FALLBACK_EDITION;
