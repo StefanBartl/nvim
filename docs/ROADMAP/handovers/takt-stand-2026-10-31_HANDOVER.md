@@ -1,0 +1,1 @@
+E:/repos/tasks-vault/takt/handovers/takt-stand-2026-10-31_HANDOVER.md
