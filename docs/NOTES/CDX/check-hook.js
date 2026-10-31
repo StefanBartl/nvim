@@ -57,24 +57,91 @@ function projectRoot(file) {
   return git ? path.dirname(git) : dir;
 }
 
+const EDITIONS = new Set(['2015', '2018', '2021', '2024']);
+// Used when nothing better is known: no manifest, unreadable manifest, or an
+// edition this hook does not know (rustfmt would reject it anyway).
+const FALLBACK_EDITION = '2021';
+
 /**
- * Rust edition for `file`: the first `edition = "YYYY"` found walking up the
- * Cargo.toml files from the file's directory to `root`. A member's
- * `edition.workspace = true` does not match, so the walk continues to the
- * workspace's `[workspace.package]` edition. Falls back to 2021 (rustfmt's
- * own default differs per version, and the edition changes import sorting).
+ * The edition-relevant keys of a Cargo.toml: `[package] edition`, whether the
+ * package inherits it (`edition.workspace = true` or
+ * `edition = { workspace = true }`), and `[workspace.package] edition`.
+ * Only keys in those two tables count; multi-line strings are skipped.
+ */
+function parseManifest(text) {
+  const out = { hasPackage: false, pkgEdition: null, inherits: false, wsEdition: null };
+  let table = '';
+  let inMultiline = false;
+  for (const line of text.split(/\r?\n/)) {
+    const quotes = (line.match(/"""|'''/g) || []).length;
+    if (inMultiline) {
+      if (quotes % 2 === 1) inMultiline = false;
+      continue;
+    }
+    if (quotes % 2 === 1) inMultiline = true;
+    const header = line.match(/^\s*\[{1,2}\s*([^\]]+?)\s*\]{1,2}/);
+    if (header) {
+      table = header[1];
+      if (table === 'package') out.hasPackage = true;
+      continue;
+    }
+    const value = line.match(/^\s*edition\s*=\s*["'](\d{4})["']/);
+    if (table === 'package') {
+      if (value) out.pkgEdition = value[1];
+      if (/^\s*edition\.workspace\s*=\s*true\b/.test(line) || /^\s*edition\s*=\s*\{[^}]*\bworkspace\s*=\s*true\b/.test(line)) {
+        out.inherits = true;
+      }
+    } else if (table === 'workspace.package' && value) {
+      out.wsEdition = value[1];
+    }
+  }
+  return out;
+}
+
+/** Parsed manifest at `file`, or null when it cannot be read. */
+function readManifest(file) {
+  try {
+    return parseManifest(fs.readFileSync(file, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function known(edition) {
+  return EDITIONS.has(edition) ? edition : FALLBACK_EDITION;
+}
+
+/**
+ * Rust edition for `file`, as cargo would pick it: the nearest Cargo.toml's
+ * `[package] edition`; `2015` (cargo's default) when the package sets none;
+ * the nearest ancestor's `[workspace.package] edition` when the package
+ * inherits it. The edition matters because 2024 sorts imports differently.
+ *
+ * Reading a manifest runs nothing, so without a `.git` the search may go
+ * above `root` (otherwise a crate checked out without git would never find
+ * its own Cargo.toml); inside a repo it stays within it.
  */
 function rustEdition(file, root) {
-  let dir = path.dirname(file);
-  for (;;) {
-    const manifest = findUp(dir, 'Cargo.toml', root);
-    if (!manifest) return '2021';
-    const m = fs.readFileSync(manifest, 'utf8').match(/^\s*edition\s*=\s*["'](\d{4})["']/m);
-    if (m) return m[1];
-    const parent = path.dirname(path.dirname(manifest));
-    if (path.dirname(manifest) === root || parent === path.dirname(manifest)) return '2021';
-    dir = parent;
+  const boundary = fs.existsSync(path.join(root, '.git')) ? root : null;
+  const manifest = findUp(path.dirname(file), 'Cargo.toml', boundary);
+  if (!manifest) return FALLBACK_EDITION;
+  const own = readManifest(manifest);
+  if (!own || !own.hasPackage) return FALLBACK_EDITION;
+  if (own.pkgEdition) return known(own.pkgEdition);
+  if (!own.inherits) return '2015';
+  if (own.wsEdition) return known(own.wsEdition);
+
+  let dir = path.dirname(manifest);
+  while (dir !== boundary) {
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    const ws = findUp(parent, 'Cargo.toml', boundary);
+    if (!ws) break;
+    const parsed = readManifest(ws);
+    if (parsed && parsed.wsEdition) return known(parsed.wsEdition);
+    dir = path.dirname(ws);
   }
+  return FALLBACK_EDITION;
 }
 
 /** Returns a list of [bin, args] checks for `file` under `root`, or [] when none apply. */
@@ -122,8 +189,12 @@ process.stdin.on('end', () => {
     process.exit(0);
   }
 
-  const file = data.tool_input && data.tool_input.file_path;
-  if (!file || file.split(/[\\/]/).includes('node_modules')) process.exit(0);
+  const raw = data.tool_input && data.tool_input.file_path;
+  if (!raw || raw.split(/[\\/]/).includes('node_modules')) process.exit(0);
+  // Normalised once: findUp compares directories as strings, so a path with
+  // forward slashes on Windows would never equal the (backslashed) repo root
+  // and the search would run past it -- up to tools outside the repo.
+  const file = path.resolve(raw);
 
   // Computed once and reused for both the binary search boundary and cwd --
   // it does its own filesystem walk up to .git, and neither use changes
