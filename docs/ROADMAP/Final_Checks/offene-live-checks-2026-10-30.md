@@ -161,6 +161,11 @@ Alle Punkte stehen in [docmap-desktop-live-tests-2026-10-02.md](docmap-desktop-l
 
 ## ui.nvim
 
+> **Stand 2026-10-31:** Die drei Checks unten sind jetzt Testblätter (`ui.nvim/TESTS/sheets/`).
+> Der automatische Teil läuft mit der Suite; was nur du beurteilen kannst, steht in der
+> Abnahme-Inbox von [testblaetter-report.md](testblaetter-report.md) (erzeugt mit
+> `testing sheets report`). Dort abarbeiten, die Punkte hier sind nur noch der Verweis.
+
 - [ ] ui.slots: Live-Abnahme in der echten Konfiguration (`ui.nvim/slots-live-check`): siehe [ui.nvim.md](ui.nvim.md), Abschnitt „Sichtprüfung ui.slots“
 - [ ] :UI option-Float in echter Sitzung (`ui.nvim/try-the-ui-option-float-in-a-real-session`): siehe [ui.nvim.md](ui.nvim.md), Abschnitt „Option-Float von :UI“
 - [ ] **Hotkey-Markierung der Dialog-Buttons im echten Terminal** (`ui.nvim/sichtpruefung-hotkey-markierung-der-dialog-buttons-im-echten`)
