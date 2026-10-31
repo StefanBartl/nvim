@@ -14,6 +14,9 @@
     ensure  start, then wait until GitHub reports each one online (-WaitSeconds, default 90)
             start and ensure run the tool check first when a runner is about to be started and warn about
             MISSING/WARN lines (they never stop the start; -SkipCheck leaves the check out)
+            start and ensure also write the job-started hook that keeps foreign code off the runner (pull requests,
+            foreign actors, unreviewed commits of public repositories; testing.nvim docs/RUNNER-GUARD.md); -NoGuard
+            leaves that out, `testing ci trust <owner/repo>` releases a commit after you reviewed it
     stop    stop the runner processes (a running job is cancelled)
     check   are the tools the workflows rely on here (git, gh, nvim, cargo, jq, shellcheck, Inno Setup, ...)? One
             line per tool, exit 1 when one is missing; also finds a ~/.cargo/bin whose programs vanished
@@ -32,7 +35,8 @@ param(
   [string] $Root = (Join-Path $env:USERPROFILE 'actions-runners'),
   [string] $Owner = 'WKDSteve',
   [int] $WaitSeconds = 90,
-  [switch] $SkipCheck
+  [switch] $SkipCheck,
+  [switch] $NoGuard
 )
 
 $ErrorActionPreference = 'Stop'
@@ -119,6 +123,19 @@ switch ($Action) {
       if ($problems.Count -gt 0) {
         Write-Output "warning: the tool check found $($problems.Count) problem(s); the runners start anyway (details: runners.ps1 check, -SkipCheck silences this)"
         $problems | ForEach-Object { Write-Output "  $_" }
+      }
+    }
+    # Foreign code must not reach the runner: the job-started hook (testing.nvim, docs/RUNNER-GUARD.md) refuses pull
+    # requests, foreign actors and unreviewed commits of public repositories. It lives in each runner's .env, which
+    # the runner reads at its start, so this is the moment to (re)write it. Idempotent; -NoGuard leaves it out
+    # (`testing ci runner-guard remove` takes it away again).
+    if ($toStart.Count -gt 0 -and -not $NoGuard) {
+      $testingLua = Join-Path $env:REPOS_DIR 'testing.nvim\scripts\testing.lua'
+      if ($env:REPOS_DIR -and (Test-Path $testingLua)) {
+        $guardOut = @(& nvim --headless -u NONE -l $testingLua ci runner-guard install "--runners=$Root" 2>&1 | ForEach-Object { "$_" })
+        if ($LASTEXITCODE -ne 0) { Write-Output "warning: runner-guard install exited $LASTEXITCODE; the runners may be unguarded"; $guardOut | ForEach-Object { Write-Output "  $_" } }
+      } else {
+        Write-Output "warning: $testingLua not found: the runners start WITHOUT the guard against foreign code"
       }
     }
     # The runner also inherits the user's dependency overrides (LIB_NVIM_DIR=<local checkout>), and scripts/test.sh
