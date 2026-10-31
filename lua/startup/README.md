@@ -27,4 +27,5 @@ Policy and rationale: `docs/NOTES/ARCHITECTURE/startup.md`.
   costs time and does not describe your current session.
 
 Switch the heartbeat off for an A/B run:
-`--cmd "lua vim.g.startup_heartbeat = false"` (e.g. behind `bench.lua 5 tui`).
+`--cmd "lua vim.g.startup_heartbeat = false"` (e.g. behind `bench.lua 5 tui`);
+`let g:startup_heartbeat = 0` switches it off as well.

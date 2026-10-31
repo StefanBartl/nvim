@@ -19,7 +19,8 @@
 --- above the timer's own jitter, minus the tick it would have idled anyway, and
 --- is split over the seconds (counted from the first beat) that it covers.
 ---
---- Switch off for an A/B run: `--cmd "lua vim.g.startup_heartbeat = false"`.
+--- Switch off for an A/B run: `--cmd "lua vim.g.startup_heartbeat = false"`
+--- (or `--cmd "let g:startup_heartbeat = 0"`; `false` and `0` both switch it off).
 
 local M = {}
 
@@ -126,11 +127,12 @@ end
 
 --- Start recording. Call once, as early as possible in init.lua; the first beat
 --- arrives when the loop first gets control. No-op when already started or when
---- `vim.g.startup_heartbeat == false`.
+--- `vim.g.startup_heartbeat` is `false` or `0` (Vimscript `let g:startup_heartbeat = 0`).
 ---@param opts? { window?: number }
 ---@return boolean started
 function M.start(opts)
-  if vim.g.startup_heartbeat == false or M.state.started then
+  local switch = vim.g.startup_heartbeat
+  if switch == false or switch == 0 or M.state.started then
     return false
   end
   local uv = vim.uv

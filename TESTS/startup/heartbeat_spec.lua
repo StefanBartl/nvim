@@ -102,6 +102,12 @@ return function(H)
     ok(not hb.start(), "switched off: start() does nothing")
     ok(not hb.state.started, "switched off: not marked as started")
 
+    -- Vimscript style (`let g:startup_heartbeat = 0`) switches it off the same way.
+    vim.g.startup_heartbeat = 0
+    hb = fresh()
+    ok(not hb.start(), "switched off with 0: start() does nothing")
+    ok(not hb.state.started, "switched off with 0: not marked as started")
+
     vim.g.startup_heartbeat = nil
     hb = fresh()
     local timers_before = live_timers()
