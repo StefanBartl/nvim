@@ -40,6 +40,8 @@ Security und Performance und behebt Befunde sofort.
   Fix rot wird. Ablauf: Fix herausnehmen, Test laufen lassen (rot), Fix
   zurücksetzen (grün). Nach einem Rebuild prüfen, dass die Sabotage wirklich
   gebaut wurde, sonst beweist ein grüner Test nichts.
+  Mehrere Fixes in einem Lauf: `$REPOS_DIR/tasks-vault/TOOLS/scripts/review-loop/sabotage.mjs`
+  (siehe `TOOLS/review-loop.md`).
 - Ein Detektor/Test, der "nichts" meldet, braucht einen Positivtest (gleiche
   Datei, eine Stelle mit garantiertem Treffer).
 - luacheck/stylua/clippy/svelte-check auf null Warnungen, nicht nur ansehen.

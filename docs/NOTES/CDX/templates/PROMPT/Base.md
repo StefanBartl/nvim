@@ -77,7 +77,7 @@ Nur für ein Vorhaben aus mehreren Tasks in Etappen mit eigenem Ziel (nicht für
 - Implementierter Code muss luacheck / stylua-grün sein.
 - Neue Features ggf. im plugin-eigenen `/TESTS/`-Ordner testen.
 - Warnungen von Lintern (`luacheck`, `clippy`, `svelte-check` ...) vor dem Commit auf null bringen, nicht nur ansehen. Eine Warnung, die ich sehe und stehen lasse, macht die CI rot.
-- Jeder Fix bekommt einen Test, der **ohne** den Fix rot wird: Fix herausnehmen, Test laufen lassen, Fix zurücksetzen. Nach einem Rebuild prüfen, dass die Sabotage wirklich gebaut wurde (sonst bleibt der Test grün und beweist nichts).
+- Jeder Fix bekommt einen Test, der **ohne** den Fix rot wird: Fix herausnehmen, Test laufen lassen, Fix zurücksetzen. Nach einem Rebuild prüfen, dass die Sabotage wirklich gebaut wurde (sonst bleibt der Test grün und beweist nichts). Mehrere Fixes auf einmal belegt `$REPOS_DIR/tasks-vault/TOOLS/scripts/review-loop/sabotage.mjs` (prüft per `expect`, dass der richtige Test rot wird; siehe `TOOLS/review-loop.md`).
 
 ## Geteilte Checkouts und Änderungen über viele Repos
 
