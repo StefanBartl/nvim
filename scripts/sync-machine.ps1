@@ -88,8 +88,8 @@ $natives = @{
     'streamtap' = @{
         Artifact = 'desktop\target\release\streamtap-sink.exe'
         Sources  = @('desktop\crates', 'desktop\Cargo.toml', 'desktop\Cargo.lock')
-        Hint     = 'cargo build --release --locked --manifest-path desktop\Cargo.toml   (spike: no install; extension is loaded unpacked)'
-        Command  = 'cargo build --release --locked --manifest-path desktop\Cargo.toml'
+        Hint     = 'scripts\build.ps1   (cargo release build of the sink; stop a running sink first; spike: no install)'
+        Command  = 'powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1'
     }
 }
 

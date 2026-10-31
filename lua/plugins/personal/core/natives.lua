@@ -79,8 +79,9 @@ M.list = {
     artifact = "desktop/target/release/streamtap-sink.exe",
     sources = { "desktop/crates", "desktop/Cargo.toml", "desktop/Cargo.lock" },
     needs = { "rust", "msvc" },
-    build = { "cargo", "build", "--release", "--locked", "--manifest-path", "desktop/Cargo.toml" },
-    hint = "cargo build --release --locked --manifest-path desktop/Cargo.toml (no install yet; extension: load unpacked)",
+    -- the script refuses while the sink runs (it locks the exe) and touches the exe, so a no-op build is current
+    build = ps("scripts/build.ps1"),
+    hint = "scripts/build.ps1 (cargo release build of the sink; no install yet; extension: load unpacked)",
   },
   desktop({
     repo = "WKDSteve/docmap-desktop",
