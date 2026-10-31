@@ -67,19 +67,38 @@ const FALLBACK_EDITION = '2021';
  * package inherits it (`edition.workspace = true` or
  * `edition = { workspace = true }`), and `[workspace.package] edition`.
  * Only keys in those two tables count; multi-line strings are skipped.
+ *
+ * This is a heuristic, not a TOML parser. It is built so that a misread
+ * manifest ends in FALLBACK_EDITION, never in a confident wrong answer:
+ * `mentionsEdition` records whether the raw text names an edition at all,
+ * and only a manifest that does not may yield cargo's default 2015.
  */
 function parseManifest(text) {
-  const out = { hasPackage: false, pkgEdition: null, inherits: false, wsEdition: null };
+  const out = {
+    hasPackage: false,
+    pkgEdition: null,
+    inherits: false,
+    wsEdition: null,
+    mentionsEdition: /^\s*\[?\s*["']?(package\.)?edition\b/m.test(text),
+  };
   let table = '';
-  let inMultiline = false;
+  let closer = null; // delimiter of the open multi-line string, if any
   for (const line of text.split(/\r?\n/)) {
-    const quotes = (line.match(/"""|'''/g) || []).length;
-    if (inMultiline) {
-      if (quotes % 2 === 1) inMultiline = false;
+    if (closer) {
+      if (line.includes(closer)) closer = null;
       continue;
     }
-    if (quotes % 2 === 1) inMultiline = true;
-    const header = line.match(/^\s*\[{1,2}\s*([^\]]+?)\s*\]{1,2}/);
+    // A line opening a multi-line string: """ or ''' where a value starts
+    // (after `=`, `[`, `,` or at the line start), not closed on the same
+    // line. Delimiters inside a one-line string or a comment do not count.
+    const open = line.match(/(^|[=[,])\s*("""|''')/);
+    if (open) {
+      const rest = line.slice(open.index + open[0].length);
+      if (!rest.includes(open[2])) closer = open[2];
+    }
+    // A header is a whole line ([name] or [[name]], optional comment), so
+    // array elements such as `  ["a", "b"],` are not taken for one.
+    const header = line.match(/^\s*\[{1,2}\s*([^\]]+?)\s*\]{1,2}\s*(#.*)?$/);
     if (header) {
       table = header[1];
       if (table === 'package') out.hasPackage = true;
@@ -111,31 +130,52 @@ function known(edition) {
   return EDITIONS.has(edition) ? edition : FALLBACK_EDITION;
 }
 
+// Without a .git there is no repo root to stop at; a crate's own manifest is
+// at most this many levels above a source file (src/bin/x.rs -> 3).
+const NO_GIT_LEVELS = 3;
+
+/** Nearest Cargo.toml at most `levels` directories above `start` (inclusive). */
+function findManifestNear(start, levels) {
+  let dir = start;
+  for (let i = 0; i <= levels; i++) {
+    const candidate = path.join(dir, 'Cargo.toml');
+    if (fs.existsSync(candidate)) return candidate;
+    const parent = path.dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+  return null;
+}
+
 /**
  * Rust edition for `file`, as cargo would pick it: the nearest Cargo.toml's
- * `[package] edition`; `2015` (cargo's default) when the package sets none;
+ * `[package] edition`; `2015` (cargo's default) when the package names none;
  * the nearest ancestor's `[workspace.package] edition` when the package
  * inherits it. The edition matters because 2024 sorts imports differently.
  *
- * Reading a manifest runs nothing, so without a `.git` the search may go
- * above `root` (otherwise a crate checked out without git would never find
- * its own Cargo.toml); inside a repo it stays within it.
+ * Reading a manifest runs nothing, so the search is not bounded the way tool
+ * lookup is: inside a repo the package manifest is searched up to the repo
+ * root, without a .git only a few levels up (an unrelated Cargo.toml in a
+ * home directory must not decide), and the workspace manifest of an
+ * inheriting package anywhere above (it may sit above a submodule's .git).
  */
 function rustEdition(file, root) {
-  const boundary = fs.existsSync(path.join(root, '.git')) ? root : null;
-  const manifest = findUp(path.dirname(file), 'Cargo.toml', boundary);
+  const start = path.dirname(file);
+  const manifest = fs.existsSync(path.join(root, '.git'))
+    ? findUp(start, 'Cargo.toml', root)
+    : findManifestNear(start, NO_GIT_LEVELS);
   if (!manifest) return FALLBACK_EDITION;
   const own = readManifest(manifest);
   if (!own || !own.hasPackage) return FALLBACK_EDITION;
   if (own.pkgEdition) return known(own.pkgEdition);
-  if (!own.inherits) return '2015';
+  if (!own.inherits) return own.mentionsEdition ? FALLBACK_EDITION : '2015';
   if (own.wsEdition) return known(own.wsEdition);
 
   let dir = path.dirname(manifest);
-  while (dir !== boundary) {
+  for (;;) {
     const parent = path.dirname(dir);
     if (parent === dir) break;
-    const ws = findUp(parent, 'Cargo.toml', boundary);
+    const ws = findUp(parent, 'Cargo.toml');
     if (!ws) break;
     const parsed = readManifest(ws);
     if (parsed && parsed.wsEdition) return known(parsed.wsEdition);
